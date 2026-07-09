@@ -28,6 +28,7 @@ param(
     [string]$Monitor    = "",
     [switch]$Report,
     [switch]$Clean,
+    [switch]$Status,
     [switch]$Version
 )
 
@@ -124,6 +125,57 @@ function Get-RamBar {
     $filled = [math]::Round($Pct / 10)
     $empty  = 10 - $filled
     return ([string]$C_FULL * $filled) + ([string]$C_LIGHT * $empty)
+}
+
+function Show-StatusDashboard {
+    $config   = Get-ProfileConfig
+    $active   = Get-ActiveProfile -Config $config
+    $ram      = Get-RamInfo
+    $ramBar   = Get-RamBar -Pct $ram.pct
+    $ramColor = if ($ram.pct -ge 80) { "Red" } elseif ($ram.pct -ge 60) { "Yellow" } else { "Green" }
+
+    # Statut monitoring
+    $monTask  = Get-ScheduledTask -TaskName "WSL2-RamMonitor" -ErrorAction SilentlyContinue
+    $monState = if ($monTask) { "ACTIF ($($monTask.State))" } else { "INACTIF" }
+    $monColor = if ($monTask) { "Green" } else { "DarkGray" }
+
+    # Derniere alerte
+    $cooldown  = Join-Path $Global:WSLRoot "data\monitor_cooldown.txt"
+    $lastAlert = if (Test-Path $cooldown) { (Get-Content $cooldown -Raw).Trim() } else { "Aucune" }
+
+    # Historique (3 derniers switchs)
+    $histPath = Join-Path $Global:WSLRoot "data\history.json"
+    $lastSwitches = @()
+    if (Test-Path $histPath) {
+        $history = Get-Content $histPath -Raw | ConvertFrom-Json
+        $lastSwitches = @($history) | Where-Object { $_.action -eq "SWITCH" } | Select-Object -Last 3
+    }
+
+    Clear-Host
+    Write-Host ""
+    Write-Host $LINE_TOP -ForegroundColor Cyan
+    Write-Host (New-BoxLine "    " "   WSL2 Profile Switcher  v$($Global:AppVersion) -- Status") -ForegroundColor Cyan
+    Write-Host $LINE_MID -ForegroundColor Cyan
+    Write-Host (New-BoxLine "    " "  RAM Windows  $ramBar  $($ram.pct)%  ($($ram.used)/$($ram.total) GB)") -ForegroundColor $ramColor
+    Write-Host $LINE_SEP -ForegroundColor DarkGray
+    Write-Host (New-BoxLine "    " "  Profil actif : $($active.name)") -ForegroundColor White
+    Write-Host (New-BoxLine "    " "  RAM allouee  : $($active.memory)") -ForegroundColor Gray
+    Write-Host (New-BoxLine "    " "  CPU alloues  : $($active.processors)") -ForegroundColor Gray
+    Write-Host $LINE_SEP -ForegroundColor DarkGray
+    Write-Host (New-BoxLine "    " "  Monitoring   : $monState") -ForegroundColor $monColor
+    Write-Host (New-BoxLine "    " "  Derniere alerte : $lastAlert") -ForegroundColor Gray
+    Write-Host $LINE_SEP -ForegroundColor DarkGray
+    Write-Host (New-BoxLine "    " "  Historique (3 derniers switchs)") -ForegroundColor DarkGray
+    if ($lastSwitches.Count -eq 0) {
+        Write-Host (New-BoxLine "    " "  Aucun switch enregistre") -ForegroundColor DarkGray
+    } else {
+        foreach ($s in $lastSwitches) {
+            $line = "  $($s.timestamp)  $($s.profile.PadRight(10)) $($s.details)"
+            Write-Host (New-BoxLine "    " $line) -ForegroundColor Gray
+        }
+    }
+    Write-Host $LINE_BOT -ForegroundColor Cyan
+    Write-Host ""
 }
 
 function Show-Header {
@@ -239,6 +291,11 @@ function Show-InteractiveMenu {
 }
 
 # ---- Point d'entree -------------------------------------------------
+
+if ($Status) {
+    Show-StatusDashboard
+    exit
+}
 
 if ($Version) {
     Write-Host "WSL2 Profile Switcher v$($Global:AppVersion)" -ForegroundColor Cyan
