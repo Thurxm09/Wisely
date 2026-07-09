@@ -142,6 +142,7 @@ function Set-WslProfile {
     }
 
     Backup-WslConfig
+    $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
     Write-Host ""
     Write-Host "  Activation du profil $($profileDef.displayName)..." -ForegroundColor $profileDef.color
     Write-Host "  Arret de WSL2..." -ForegroundColor Gray
@@ -155,11 +156,12 @@ function Set-WslProfile {
         return
     }
 
-    Write-Host "  OK - $($profileDef.displayName) actif - $($profileDef.memory) / $($profileDef.processors) CPU" -ForegroundColor Green
+    $stopwatch.Stop()
+    $elapsed = [math]::Round($stopwatch.Elapsed.TotalSeconds, 1)
+    Write-Host "  OK - $($profileDef.displayName) actif en ${elapsed}s - $($profileDef.memory) / $($profileDef.processors) CPU" -ForegroundColor Green    
     Write-Host "  WSL2 demarrera avec ce profil au prochain lancement." -ForegroundColor DarkGray
     Write-Host ""
-    Write-SwitchLog -Action "SWITCH" -ProfileKey $Key -Details "$($profileDef.memory), $($profileDef.processors) CPU"
-}
+    Write-SwitchLog -Action "SWITCH" -ProfileKey $Key -Details "$($profileDef.memory), $($profileDef.processors) CPU, ${elapsed}s"}
 
 # ---- Profils personnalises ------------------------------------------
 
