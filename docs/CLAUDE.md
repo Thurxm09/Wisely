@@ -1,0 +1,42 @@
+# Memory
+
+## Me
+
+Thuram (GitHub: Thurxm09), développeur solo — niveau débutant/intermédiaire en PowerShell, mais code produit de niveau pro. Machine : HP All-in-One (i5, 16GB RAM, 512GB NVMe), Windows 11 Pro, WSL2/Ubuntu. Les 16GB sont une vraie contrainte (WSL2 + VS Code + navigateur en simultané) — c'est la raison d'être du projet.
+
+## Projet principal
+
+| Nom | Quoi |
+|-----|------|
+| **WSL Switcher** | Outil CLI PowerShell pour gérer dynamiquement des profils de ressources WSL2 (RAM, CPU, monitoring, reporting). Passé d'un script basique à un outil modulaire pro. Actuellement en v2.0.0 stable, v2.1 en dev actif. |
+
+## Termes
+
+| Terme | Signification |
+|------|---------|
+| `.wslconfig` | Fichier de config WSL2, chemin `C:\Users\othur\.wslconfig` — les chemins de swap doivent utiliser des slashs (`C:/Temp/wsl-swap.vhdx`) |
+| `wsl-switch -Status` | Dashboard intégré : barre RAM, profil actif, 3 derniers historiques |
+| `Get-ProfileConfig` / `Import-Profiles` | Fonctions ciblées en priorité par les tests Pester |
+| AUDIT.md / ROADMAP.md | Docs de suivi d'état et de vision stratégique du projet |
+
+## Repos
+
+- `git@github.com:Thurxm09/wsl-switch.git`
+- `git@github.com:Thurxm09/dotfiles.git` (privé)
+
+## Préférences & principes techniques
+
+- Toujours réécrire les fichiers `.ps1` en entier plutôt que patcher (regex incrémental = bugs récurrents)
+- ASCII pur obligatoire pour tout `.ps1` (Unicode → `[char]0xXXXX`)
+- `([string]$char * $n)` pour la répétition de caractères
+- `throw`, jamais `exit`, dans les modules dot-sourcés
+- `git pull --rebase` en cas de divergence
+- Scope `$script:` préféré à `$Global:` pour la mémoïsation
+- Priorité fixée : tests Pester avant tout nouveau chantier structurel
+- Aime comprendre le code en profondeur, pas juste livrer des features
+- Préfère avancer une feature à la fois, bien comprise, avant de passer à la suivante
+- Utilise des scripts bootstrap Python (ASCII-safe, réécriture complète, sortie `[OK]`/`[SKIP]`) comme mécanisme standard de livraison de fichiers générés
+
+## Stack
+
+PowerShell 5.1 + 7, WSL2/Ubuntu, VS Code, GitHub CLI, Docker Desktop, conda/miniforge, pyenv, nvm, pnpm. Terminal : Oh My Posh (Tokyo Night), Cascadia Code NF, eza, bat, fd-find, ripgrep, btop, lazygit, zoxide, fzf. Tests : Pester (à venir), PSScriptAnalyzer (CI, en place).
