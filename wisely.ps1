@@ -1,17 +1,17 @@
 # ============================================================
-#  WSL2 Profile Switcher v2.0 - Thuram Dev Setup
+#  Wisely v2.0 - Thuram Dev Setup
 # ============================================================
 #
 #  USAGE
 #  -----
-#  .\wsl-switch.ps1                    -> menu interactif
-#  .\wsl-switch.ps1 web                -> switch direct
-#  .\wsl-switch.ps1 data -DryRun       -> simulation sans ecriture
-#  .\wsl-switch.ps1 -Rollback          -> restauration backup
-#  .\wsl-switch.ps1 -History           -> voir l'historique
-#  .\wsl-switch.ps1 -NewProfile "perf 8GB 4 Description"
-#  .\wsl-switch.ps1 -Export            -> exporter profils
-#  .\wsl-switch.ps1 -Import path.json  -> importer profils
+#  .\wisely.ps1                    -> menu interactif
+#  .\wisely.ps1 web                -> switch direct
+#  .\wisely.ps1 data -DryRun       -> simulation sans ecriture
+#  .\wisely.ps1 -Rollback          -> restauration backup
+#  .\wisely.ps1 -History           -> voir l'historique
+#  .\wisely.ps1 -NewProfile "perf 8GB 4 Description"
+#  .\wisely.ps1 -Export            -> exporter profils
+#  .\wisely.ps1 -Import path.json  -> importer profils
 #
 # ============================================================
 
@@ -154,7 +154,7 @@ function Show-StatusDashboard {
     Clear-Host
     Write-Host ""
     Write-Host $LINE_TOP -ForegroundColor Cyan
-    Write-Host (New-BoxLine "    " "   WSL2 Profile Switcher  v$($Global:AppVersion) -- Status") -ForegroundColor Cyan
+    Write-Host (New-BoxLine "    " "   Wisely  v$($Global:AppVersion) -- Status") -ForegroundColor Cyan
     Write-Host $LINE_MID -ForegroundColor Cyan
     Write-Host (New-BoxLine "    " "  RAM Windows  $ramBar  $($ram.pct)%  ($($ram.used)/$($ram.total) GB)") -ForegroundColor $ramColor
     Write-Host $LINE_SEP -ForegroundColor DarkGray
@@ -188,7 +188,7 @@ function Show-Header {
     Clear-Host
     Write-Host ""
     Write-Host $LINE_TOP -ForegroundColor Cyan
-    Write-Host (New-BoxLine "    " "   WSL2 Profile Switcher  v$($Global:AppVersion)   ") -ForegroundColor Cyan
+    Write-Host (New-BoxLine "    " "   Wisely  v$($Global:AppVersion)   ") -ForegroundColor Cyan
     Write-Host $LINE_MID -ForegroundColor Cyan
 
     # Ligne RAM - construite en une seule string, couleur unique par Write-Host
@@ -298,7 +298,7 @@ if ($Status) {
 }
 
 if ($Version) {
-    Write-Host "WSL2 Profile Switcher v$($Global:AppVersion)" -ForegroundColor Cyan
+    Write-Host "Wisely v$($Global:AppVersion)" -ForegroundColor Cyan
     exit
 }
 

@@ -1,6 +1,6 @@
 # ============================================================
 #  ProfileManager.ps1 - Gestion des profils WSL2
-#  Dot-source depuis wsl-switch.ps1
+#  Dot-source depuis wisely.ps1
 #  Utilise $Global:WSLRoot defini dans le script principal
 # ============================================================
 

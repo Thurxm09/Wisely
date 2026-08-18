@@ -1,4 +1,4 @@
-# Vision stratégique & Roadmap — WSL2 Profile Switcher
+# Vision stratégique & Roadmap — Wisely
  
 > Document de stratégie produit long terme — version 1.0  
 > Rédigé après stabilisation de la v2.0.0 et complétion de l'audit qualité.
@@ -23,7 +23,7 @@
  
 ### Cas d'usage couverts
  
-WSL2 Profile Switcher répond aujourd'hui à un problème réel et précis : la rigidité de la configuration mémoire de WSL2. Windows ne propose aucun mécanisme natif pour basculer dynamiquement entre des allocations de ressources selon le contexte de travail. L'outil couvre aujourd'hui trois grandes situations : le développement web léger (VS Code + navigateur), la data science intensive (Jupyter, Pandas, ML), et le mode minimal de conservation de RAM. Il ajoute à cela une couche de monitoring passif via le Task Scheduler, un historique des opérations, et un système d'import/export de profils.
+Wisely répond aujourd'hui à un problème réel et précis : la rigidité de la configuration mémoire de WSL2. Windows ne propose aucun mécanisme natif pour basculer dynamiquement entre des allocations de ressources selon le contexte de travail. L'outil couvre aujourd'hui trois grandes situations : le développement web léger (VS Code + navigateur), la data science intensive (Jupyter, Pandas, ML), et le mode minimal de conservation de RAM. Il ajoute à cela une couche de monitoring passif via le Task Scheduler, un historique des opérations, et un système d'import/export de profils.
  
 ### Public cible actuel
  
@@ -41,9 +41,9 @@ Plusieurs limites bloquent le passage à une adoption plus large. L'installation
  
 ## 2. Vision long terme
  
-### Le rôle que peut jouer WSL2 Profile Switcher dans l'écosystème dev
+### Le rôle que peut jouer Wisely dans l'écosystème dev
  
-WSL2 est devenu la norme de développement sur Windows. Microsoft l'a intégré profondément dans VS Code, Windows Terminal, et Docker Desktop. Des millions de développeurs Windows travaillent quotidiennement dans un environnement hybride Windows/Linux, sans jamais avoir les bons outils pour gérer la frontière entre les deux. WSL2 Profile Switcher peut devenir **la couche de gestion des ressources WSL2 qui manque à Windows nativement**.
+WSL2 est devenu la norme de développement sur Windows. Microsoft l'a intégré profondément dans VS Code, Windows Terminal, et Docker Desktop. Des millions de développeurs Windows travaillent quotidiennement dans un environnement hybride Windows/Linux, sans jamais avoir les bons outils pour gérer la frontière entre les deux. Wisely peut devenir **la couche de gestion des ressources WSL2 qui manque à Windows nativement**.
  
 La vision n'est pas de concurrencer WSL2 lui-même, ni de remplacer Windows Terminal. C'est de devenir l'outil que tout développeur Windows installe en même temps que WSL2 — exactement comme on installe `ripgrep` ou `bat` juste après avoir configuré son shell. Un utilitaire de référence, discret, fiable, que personne ne remet en question une fois installé.
  
@@ -96,7 +96,7 @@ Complexité : **Élevée.** Nécessite un moteur de règles, une tâche planifi�
  
 Complexité : **Faible.** Impact : **Court terme**, valeur éducative et exploratoire.
  
-**Bibliothèque de profils communautaires.** Un dépôt GitHub secondaire (ou un répertoire `community-profiles/` dans le repo principal) où des contributeurs partagent des profils prêts à l'emploi pour des stacks précises : Docker + Kubernetes, Machine Learning, Rust, Go, Game Dev. L'outil pourrait intégrer une commande `wsl-switch -Browse` qui liste et télécharge ces profils.
+**Bibliothèque de profils communautaires.** Un dépôt GitHub secondaire (ou un répertoire `community-profiles/` dans le repo principal) où des contributeurs partagent des profils prêts à l'emploi pour des stacks précises : Docker + Kubernetes, Machine Learning, Rust, Go, Game Dev. L'outil pourrait intégrer une commande `wisely -Browse` qui liste et télécharge ces profils.
  
 Complexité : **Faible côté code** (c'est principalement de la gouvernance de contenu). Impact : **Moyen terme**, fort effet de communauté et d'adoption.
  
@@ -116,7 +116,7 @@ Complexité : **Faible.** Impact : **Court terme**, essentiel pour la scriptabil
  
 Complexité : **Très faible.** Impact : **Court terme**, amélioration UX immédiate.
  
-**Commande `wsl-switch status` dédiée.** Aujourd'hui, pour connaître le profil actif, il faut ouvrir le menu interactif ou inspecter `.wslconfig` manuellement. Une commande `wsl-switch status` qui affiche en une ligne le profil actif, la RAM allouée, et l'état du monitoring serait utile pour l'intégration dans des prompts shell (Windows Terminal, Oh My Posh).
+**Commande `wisely status` dédiée.** Aujourd'hui, pour connaître le profil actif, il faut ouvrir le menu interactif ou inspecter `.wslconfig` manuellement. Une commande `wisely status` qui affiche en une ligne le profil actif, la RAM allouée, et l'état du monitoring serait utile pour l'intégration dans des prompts shell (Windows Terminal, Oh My Posh).
  
 Complexité : **Faible.** Impact : **Court terme**, très utilisé une fois disponible.
  
@@ -172,7 +172,7 @@ Complexité : **Moyenne** (interroger WSL2 pour lister les distributions actives
  
 Complexité : **Faible à moyenne.** Impact : **Moyen terme**, transforme l'outil d'un configurateur en un observateur de performance réel.
  
-**Dashboard de monitoring en temps réel.** Une commande `wsl-switch -Watch` qui affiche un tableau de bord rafraîchi toutes les N secondes : RAM WSL2, CPU vmmem, profil actif, dernière alerte. Pas besoin d'ouvrir le Task Manager pour voir l'impact de WSL2 sur la machine.
+**Dashboard de monitoring en temps réel.** Une commande `wisely -Watch` qui affiche un tableau de bord rafraîchi toutes les N secondes : RAM WSL2, CPU vmmem, profil actif, dernière alerte. Pas besoin d'ouvrir le Task Manager pour voir l'impact de WSL2 sur la machine.
  
 Complexité : **Moyenne.** Impact : **Moyen terme**, feature visible et attractive pour la démonstration.
  
@@ -190,15 +190,15 @@ Ces évolutions sont toutes indépendantes les unes des autres et peuvent être 
  
 **v2.1 — Polish & Fiabilité**
  
-L'objectif est de clore tous les points d'audit restants et d'ajouter les améliorations à coût très faible. Corriger le badge LICENSE (MIT → GPL v3) dans le README. Ajouter le check admin dans `Stop-WslMonitor`. Ajouter le support des variables d'environnement dans `swapFile` (`%TEMP%`, `%USERPROFILE%`). Ajouter la validation du chemin `swapFile` avant l'écriture. Implémenter le backup versionné (N backups glissants). Ajouter la commande `wsl-switch status`. Ajouter les flags `-Verbose` et `-Quiet`. Afficher le temps de switch mesuré.
+L'objectif est de clore tous les points d'audit restants et d'ajouter les améliorations à coût très faible. Corriger le badge LICENSE (MIT → GPL v3) dans le README. Ajouter le check admin dans `Stop-WslMonitor`. Ajouter le support des variables d'environnement dans `swapFile` (`%TEMP%`, `%USERPROFILE%`). Ajouter la validation du chemin `swapFile` avant l'écriture. Implémenter le backup versionné (N backups glissants). Ajouter la commande `wisely status`. Ajouter les flags `-Verbose` et `-Quiet`. Afficher le temps de switch mesuré.
  
 **v2.2 — DX & Documentation**
  
-Rédiger `CONTRIBUTING.md`. Ajouter les templates d'issues et PRs GitHub. Enrichir le README avec une galerie de profils par stack. Rédiger le snippet Oh My Posh / Windows Terminal Prompt. Ajouter la commande `wsl-switch -Snapshot` pour capturer le profil courant.
+Rédiger `CONTRIBUTING.md`. Ajouter les templates d'issues et PRs GitHub. Enrichir le README avec une galerie de profils par stack. Rédiger le snippet Oh My Posh / Windows Terminal Prompt. Ajouter la commande `wisely -Snapshot` pour capturer le profil courant.
  
 **v2.3 — Observabilité**
  
-Implémenter la collecte de métriques post-switch (RAM delta, temps de restart). Enrichir les rapports hebdomadaires avec ces métriques. Implémenter `wsl-switch -Watch` (dashboard temps réel).
+Implémenter la collecte de métriques post-switch (RAM delta, temps de restart). Enrichir les rapports hebdomadaires avec ces métriques. Implémenter `wisely -Watch` (dashboard temps réel).
  
 ---
  
@@ -208,7 +208,7 @@ La v3.0 est une version majeure qui introduit des changements architecturaux et 
  
 **v3.0 — Distribution & Tests**
  
-Publier l'outil sur **PowerShell Gallery** comme module `WSLSwitch`. Cela permet `Install-Module WSLSwitch` et une mise à jour via `Update-Module` — c'est le changement d'adoption le plus impactant possible. Écrire la suite de tests avec **Pester** (framework de test natif PowerShell) couvrant les fonctions critiques de `ProfileManager.ps1` et `Logger.ps1`. Mettre en place le **mock de `wsl --shutdown`** dans les tests pour éviter de nécessiter WSL2 sur le runner CI. Intégrer la publication automatique sur PowerShell Gallery dans le workflow `release.yml`. Implémenter le système de hooks `pre-switch` / `post-switch`. Implémenter la migration automatique du schéma `profiles.json` entre versions.
+Publier l'outil sur **PowerShell Gallery** comme module `Wisely`. Cela permet `Install-Module Wisely` et une mise à jour via `Update-Module` — c'est le changement d'adoption le plus impactant possible. Écrire la suite de tests avec **Pester** (framework de test natif PowerShell) couvrant les fonctions critiques de `ProfileManager.ps1` et `Logger.ps1`. Mettre en place le **mock de `wsl --shutdown`** dans les tests pour éviter de nécessiter WSL2 sur le runner CI. Intégrer la publication automatique sur PowerShell Gallery dans le workflow `release.yml`. Implémenter le système de hooks `pre-switch` / `post-switch`. Implémenter la migration automatique du schéma `profiles.json` entre versions.
  
 ---
  
@@ -218,7 +218,7 @@ Ces évolutions supposent une communauté active et une base de code robustement
  
 **v4.0 — Intelligence & Écosystème**
  
-Moteur de règles pour l'auto-switch contextuel. Intégration VS Code (extension ou command palette hook). Intégration Windows Dev Home. Bibliothèque de profils communautaires avec commande `wsl-switch -Browse`. Support des profils composites (couches superposables). Exploration d'une interface graphique légère (Windows Forms ou WPF minimaliste) pour les utilisateurs moins à l'aise avec la CLI.
+Moteur de règles pour l'auto-switch contextuel. Intégration VS Code (extension ou command palette hook). Intégration Windows Dev Home. Bibliothèque de profils communautaires avec commande `wisely -Browse`. Support des profils composites (couches superposables). Exploration d'une interface graphique légère (Windows Forms ou WPF minimaliste) pour les utilisateurs moins à l'aise avec la CLI.
  
 ---
  
@@ -228,7 +228,7 @@ Cette section détaille les trois features avancées les plus susceptibles d'app
  
 ### Auto-switch contextuel
  
-C'est la feature qui transforme WSL Switcher de "switcher manuel" en "gestionnaire adaptatif". Le principe est un moteur de règles léger défini dans `profiles.json` :
+C'est la feature qui transforme Wisely de "switcher manuel" en "gestionnaire adaptatif". Le principe est un moteur de règles léger défini dans `profiles.json` :
  
 ```json
 "rules": [
@@ -247,11 +247,11 @@ C'est la feature qui transforme WSL Switcher de "switcher manuel" en "gestionnai
 ]
 ```
  
-Une tâche planifiée évalue ces règles toutes les N minutes. Si une règle de priorité supérieure change, un switch automatique est déclenché. L'utilisateur peut désactiver temporairement l'auto-switch avec `wsl-switch -AutoSwitch off`. L'historique trace explicitement les switchs automatiques vs manuels.
+Une tâche planifiée évalue ces règles toutes les N minutes. Si une règle de priorité supérieure change, un switch automatique est déclenché. L'utilisateur peut désactiver temporairement l'auto-switch avec `wisely -AutoSwitch off`. L'historique trace explicitement les switchs automatiques vs manuels.
  
 ### Intégration prompt terminal
  
-Un module compagnon léger (`WSLSwitchPrompt`) qui expose une fonction `Get-WslSwitchStatus` retournant le profil actif sous forme structurée. Cette fonction peut être appelée depuis n'importe quel thème Oh My Posh ou profil Windows Terminal pour afficher dynamiquement le profil actif dans le prompt. La valeur est double : utile pour l'utilisateur, viral pour la découverte du projet.
+Un module compagnon léger (`WiselyPrompt`) qui expose une fonction `Get-WslSwitchStatus` retournant le profil actif sous forme structurée. Cette fonction peut être appelée depuis n'importe quel thème Oh My Posh ou profil Windows Terminal pour afficher dynamiquement le profil actif dans le prompt. La valeur est double : utile pour l'utilisateur, viral pour la découverte du projet.
  
 ### API locale légère
  
@@ -266,9 +266,9 @@ Pour permettre l'intégration avec VS Code et d'autres outils, une API REST loca
 C'est le vecteur de distribution le plus naturel pour un module PowerShell. La publication requiert la transformation du projet en module structuré (fichier `.psd1` manifest + fichier `.psm1` qui dot-source les modules existants). La structure actuelle est déjà compatible avec cette transformation — c'est un refactoring de surface, pas une réécriture.
  
 ```
-WSLSwitch/
-├── WSLSwitch.psd1          ← Module manifest (version, auteur, exports)
-├── WSLSwitch.psm1          ← Point d'entrée du module (dot-sources)
+Wisely/
+├── Wisely.psd1          ← Module manifest (version, auteur, exports)
+├── Wisely.psm1          ← Point d'entrée du module (dot-sources)
 ├── Public/                 ← Fonctions exportées
 │   └── Invoke-WslSwitch.ps1
 ├── Private/                ← Fonctions internes (modules actuels)
@@ -280,11 +280,11 @@ WSLSwitch/
     └── profiles.json
 ```
  
-La commande d'installation devient `Install-Module WSLSwitch -Scope CurrentUser`, sans clone Git, sans modification manuelle du `$PROFILE`.
+La commande d'installation devient `Install-Module Wisely -Scope CurrentUser`, sans clone Git, sans modification manuelle du `$PROFILE`.
  
 ### Winget (priorité moyenne)
  
-Microsoft Winget est le package manager natif de Windows 11 et Windows 10 récent. Soumettre un manifest Winget permettrait `winget install WSLSwitch` pour les utilisateurs qui préfèrent ce vecteur. Cela nécessite uniquement un fichier YAML de manifest et le respect du processus de soumission de la communauté Winget. C'est une étape de visibilité plus que de distribution.
+Microsoft Winget est le package manager natif de Windows 11 et Windows 10 récent. Soumettre un manifest Winget permettrait `winget install Wisely` pour les utilisateurs qui préfèrent ce vecteur. Cela nécessite uniquement un fichier YAML de manifest et le respect du processus de soumission de la communauté Winget. C'est une étape de visibilité plus que de distribution.
  
 ### GitHub Releases (existant, à améliorer)
  
@@ -361,7 +361,7 @@ Cette heuristique est documentée et acceptée, mais elle a des limites. Sur cer
  
 ### Complexité croissante du code de menu interactif
  
-Le menu interactif dans `wsl-switch.ps1` est aujourd'hui la partie la plus monolithique du code — environ 80 lignes de logique de rendu imbriquée. Si le menu gagne de nouvelles entrées (profils composites, règles d'auto-switch, statut des tâches planifiées), cette section deviendra difficile à maintenir. La mitigation est une extraction anticipée vers un module `MenuRenderer.ps1` qui sépare la logique d'affichage de la logique de navigation.
+Le menu interactif dans `wisely.ps1` est aujourd'hui la partie la plus monolithique du code — environ 80 lignes de logique de rendu imbriquée. Si le menu gagne de nouvelles entrées (profils composites, règles d'auto-switch, statut des tâches planifiées), cette section deviendra difficile à maintenir. La mitigation est une extraction anticipée vers un module `MenuRenderer.ps1` qui sépare la logique d'affichage de la logique de navigation.
  
 ### Gouvernance solo
  
@@ -373,7 +373,7 @@ Un projet maintenu par une seule personne a un bus factor de 1. Si le mainteneur
  
 Ces principes doivent servir de filtre pour toutes les décisions d'évolution futures. Une feature qui viole plusieurs d'entre eux simultanément ne doit pas être implémentée, peu importe son attrait apparent.
  
-**Zéro configuration requise pour commencer.** Un utilisateur qui installe l'outil doit pouvoir exécuter `wsl-switch` immédiatement, sans modifier aucun fichier. Les profils par défaut doivent couvrir 80% des cas d'usage sans personnalisation. La personnalisation est possible mais jamais obligatoire.
+**Zéro configuration requise pour commencer.** Un utilisateur qui installe l'outil doit pouvoir exécuter `wisely` immédiatement, sans modifier aucun fichier. Les profils par défaut doivent couvrir 80% des cas d'usage sans personnalisation. La personnalisation est possible mais jamais obligatoire.
  
 **Réversibilité systématique.** Toute action qui modifie l'état du système (switch, import, rollback) doit être réversible. Aucune opération destructive irréversible ne doit être possible sans confirmation explicite. Le backup existe pour les fichiers ; les logs existent pour les actions.
  

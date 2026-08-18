@@ -1,4 +1,4 @@
-# WSL2 Profile Switcher - Changelog
+# Wisely - Changelog
 
 ## v2.0.0 - 2026-03-18
 
@@ -10,7 +10,7 @@
 ### Phase 1 - Foundation
 - Menu interactif a navigation clavier (fleches + Entree)
 - Backup automatique de .wslconfig avant chaque switch
-- Rollback instantane via wsl-switch -Rollback
+- Rollback instantane via wisely -Rollback
 - Validation post-ecriture avec rollback automatique si .wslconfig invalide
 - Historique complet des operations dans data/history.json
 - Mode simulation -DryRun sans ecriture systeme
@@ -26,15 +26,15 @@
 
 ### Phase 3 - Reporting
 - Rapport hebdomadaire automatique chaque lundi a 09h00
-- Generation manuelle via wsl-switch -Report
+- Generation manuelle via wisely -Report
 - Contenu : repartition par profil, profil dominant, heure de pointe, derniers switchs
 - Sauvegarde dans data/reports/report_YYYY-MM-DD.txt
 - Rotation automatique : 12 rapports maximum conserves
 
 ### Ameliorations transversales
-- Alias global PowerShell wsl-switch (disponible partout sans cd)
+- Alias global PowerShell wisely (disponible partout sans cd)
 - Validation du JSON profiles.json au demarrage avec messages d'erreur actionnables
-- Commande wsl-switch -Clean pour purger les fichiers temporaires
+- Commande wisely -Clean pour purger les fichiers temporaires
 
 ---
 

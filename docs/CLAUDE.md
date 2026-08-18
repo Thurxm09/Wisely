@@ -8,20 +8,20 @@ Thuram (GitHub: Thurxm09), développeur solo — niveau débutant/intermédiaire
 
 | Nom | Quoi |
 |-----|------|
-| **WSL Switcher** | Outil CLI PowerShell pour gérer dynamiquement des profils de ressources WSL2 (RAM, CPU, monitoring, reporting). Passé d'un script basique à un outil modulaire pro. Actuellement en v2.0.0 stable, v2.1 en dev actif. |
+| **Wisely** | Outil CLI PowerShell pour gérer dynamiquement des profils de ressources WSL2 (RAM, CPU, monitoring, reporting). Passé d'un script basique à un outil modulaire pro. Actuellement en v2.0.0 stable, v2.1 en dev actif. |
 
 ## Termes
 
 | Terme | Signification |
 |------|---------|
 | `.wslconfig` | Fichier de config WSL2, chemin `C:\Users\othur\.wslconfig` — les chemins de swap doivent utiliser des slashs (`C:/Temp/wsl-swap.vhdx`) |
-| `wsl-switch -Status` | Dashboard intégré : barre RAM, profil actif, 3 derniers historiques |
+| `wisely -Status` | Dashboard intégré : barre RAM, profil actif, 3 derniers historiques |
 | `Get-ProfileConfig` / `Import-Profiles` | Fonctions ciblées en priorité par les tests Pester |
 | AUDIT.md / ROADMAP.md | Docs de suivi d'état et de vision stratégique du projet |
 
 ## Repos
 
-- `git@github.com:Thurxm09/wsl-switch.git`
+- `git@github.com:Thurxm09/Wisely.git`
 - `git@github.com:Thurxm09/dotfiles.git` (privé)
 
 ## Préférences & principes techniques

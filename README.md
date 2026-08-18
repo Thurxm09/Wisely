@@ -1,4 +1,4 @@
-# WSL2 Profile Switcher
+# Wisely
 
 > Gérez vos ressources WSL2 en un instant — profils mémoire, surveillance RAM en arrière-plan et rapports hebdomadaires, le tout depuis un menu interactif ou une seule commande.
 
@@ -10,7 +10,7 @@
 
 ## Table des matières
 
-- [WSL2 Profile Switcher](#wsl2-profile-switcher)
+- [Wisely](#wisely)
   - [Table des matières](#table-des-matières)
   - [Pourquoi ce projet ?](#pourquoi-ce-projet-)
   - [Fonctionnalités](#fonctionnalités)
@@ -31,7 +31,7 @@
 
 ## Pourquoi ce projet ?
 
-Sur une machine de 16 Go de RAM, laisser WSL2 consommer 6 Go en permanence pour de la navigation web ou du travail léger est inutile et pénalisant. **WSL2 Profile Switcher** permet de basculer instantanément entre des profils mémoire adaptés à chaque usage, sans jamais éditer `.wslconfig` à la main.
+Sur une machine de 16 Go de RAM, laisser WSL2 consommer 6 Go en permanence pour de la navigation web ou du travail léger est inutile et pénalisant. **Wisely** permet de basculer instantanément entre des profils mémoire adaptés à chaque usage, sans jamais éditer `.wslconfig` à la main.
 
 - ✅ Changement de profil en une commande ou via un menu interactif
 - ✅ Sauvegarde automatique et rollback instantané à chaque opération
@@ -57,7 +57,7 @@ Sur une machine de 16 Go de RAM, laisser WSL2 consommer 6 Go en permanence pour 
 | **Historique complet**       | Toutes les opérations tracées dans `data/history.json`              |
 | **Profils personnalisés**    | Création de nouveaux profils depuis la CLI                          |
 | **Import / Export**          | Partage et sauvegarde des profils en JSON                           |
-| **Alias global**             | `wsl-switch` disponible partout dans le terminal PowerShell         |
+| **Alias global**             | `wisely` disponible partout dans le terminal PowerShell         |
 | **Nettoyage intégré**        | Purge des fichiers temporaires et anciens rapports                  |
 
 ---
@@ -76,22 +76,22 @@ Sur une machine de 16 Go de RAM, laisser WSL2 consommer 6 Go en permanence pour 
 
 ```powershell
 # 1. Cloner le dépôt
-git clone https://github.com/Thurxm09/wsl-switch.git C:\Scripts\WSL-Switch
+git clone https://github.com/Thurxm09/Wisely.git C:\Scripts\Wisely
 
 # 2. Autoriser l'exécution des scripts locaux (si ce n'est pas déjà fait)
 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 # 3. Débloquer les fichiers téléchargés
-Get-ChildItem C:\Scripts\WSL-Switch -Recurse -Filter *.ps1 | Unblock-File
+Get-ChildItem C:\Scripts\Wisely -Recurse -Filter *.ps1 | Unblock-File
 
 # 4. (Recommandé) Ajouter un alias global dans votre profil PowerShell
 Add-Content -Path $PROFILE `
-  -Value "`nfunction wsl-switch { & 'C:\Scripts\WSL-Switch\wsl-switch.ps1' @args }" `
+  -Value "`nfunction wisely { & 'C:\Scripts\Wisely\wisely.ps1' @args }" `
   -Encoding ASCII
 . $PROFILE
 ```
 
-> **Note :** L'étape 4 vous permet d'appeler `wsl-switch` depuis n'importe quel répertoire sans naviguer jusqu'au dossier d'installation.
+> **Note :** L'étape 4 vous permet d'appeler `wisely` depuis n'importe quel répertoire sans naviguer jusqu'au dossier d'installation.
 
 ---
 
@@ -99,13 +99,13 @@ Add-Content -Path $PROFILE `
 
 ```powershell
 # Ouvrir le menu interactif (recommandé pour débuter)
-wsl-switch
+wisely
 
 # Basculer directement vers un profil
-wsl-switch web
+wisely web
 
 # Simuler un switch sans rien écrire
-wsl-switch data -DryRun
+wisely data -DryRun
 ```
 
 ---
@@ -114,30 +114,30 @@ wsl-switch data -DryRun
 
 ```powershell
 # ── Navigation ─────────────────────────────────────────────────────────
-wsl-switch                          # Menu interactif (flèches + Entrée)
-wsl-switch <profil>                 # Switch direct vers un profil
-wsl-switch <profil> -DryRun         # Simulation sans écriture
+wisely                          # Menu interactif (flèches + Entrée)
+wisely <profil>                 # Switch direct vers un profil
+wisely <profil> -DryRun         # Simulation sans écriture
 
 # ── Récupération ───────────────────────────────────────────────────────
-wsl-switch -Rollback                # Restaurer le backup précédent
-wsl-switch -History                 # Afficher l'historique des opérations
+wisely -Rollback                # Restaurer le backup précédent
+wisely -History                 # Afficher l'historique des opérations
 
 # ── Surveillance RAM ────────────────────────────────────────────────────
-wsl-switch -Monitor start           # Démarrer la surveillance en arrière-plan
-wsl-switch -Monitor stop            # Arrêter la surveillance
-wsl-switch -Monitor status          # Vérifier l'état du monitoring
+wisely -Monitor start           # Démarrer la surveillance en arrière-plan
+wisely -Monitor stop            # Arrêter la surveillance
+wisely -Monitor status          # Vérifier l'état du monitoring
 
 # ── Reporting ───────────────────────────────────────────────────────────
-wsl-switch -Report                  # Générer un rapport d'utilisation maintenant
+wisely -Report                  # Générer un rapport d'utilisation maintenant
 
 # ── Gestion des profils ─────────────────────────────────────────────────
-wsl-switch -NewProfile "clé RAMgo NbCPU [description]"
+wisely -NewProfile "clé RAMgo NbCPU [description]"
                                     # Créer un profil personnalisé
-wsl-switch -Export                  # Exporter les profils vers un fichier JSON
-wsl-switch -Import chemin.json      # Importer des profils depuis un fichier JSON
+wisely -Export                  # Exporter les profils vers un fichier JSON
+wisely -Import chemin.json      # Importer des profils depuis un fichier JSON
 
 # ── Maintenance ─────────────────────────────────────────────────────────
-wsl-switch -Clean                   # Purger les fichiers temporaires et anciens rapports
+wisely -Clean                   # Purger les fichiers temporaires et anciens rapports
 ```
 
 ---
@@ -159,8 +159,8 @@ Tous les profils sont définis dans [`data/profiles.json`](data/profiles.json) e
 Créez un nouveau profil directement depuis la CLI :
 
 ```powershell
-# Syntaxe : wsl-switch -NewProfile "clé RAMgo NbCPU [description]"
-wsl-switch -NewProfile "gaming 12GB 6 Mode gaming haute performance"
+# Syntaxe : wisely -NewProfile "clé RAMgo NbCPU [description]"
+wisely -NewProfile "gaming 12GB 6 Mode gaming haute performance"
 ```
 
 - La clé doit être un mot unique (minuscules recommandées) et doit être un identifiant alphanumérique (lettres, chiffres, `_`, `-`)
@@ -174,19 +174,19 @@ Le profil est immédiatement disponible dans le menu interactif et dans la liste
 
 ## Surveillance RAM
 
-WSL2 Profile Switcher inclut un système de monitoring RAM qui s'exécute en arrière-plan via le Planificateur de tâches Windows, sans nécessiter de terminal ouvert.
+Wisely inclut un système de monitoring RAM qui s'exécute en arrière-plan via le Planificateur de tâches Windows, sans nécessiter de terminal ouvert.
 
 > **Note :** Le démarrage et l'arrêt du monitoring requièrent des **droits administrateur** — lancez PowerShell en tant qu'Administrateur pour ces commandes.
 
 ```powershell
 # Démarrer le monitoring
-wsl-switch -Monitor start
+wisely -Monitor start
 
 # Vérifier l'état
-wsl-switch -Monitor status
+wisely -Monitor status
 
 # Arrêter le monitoring
-wsl-switch -Monitor stop
+wisely -Monitor stop
 ```
 
 **Comportement :**
@@ -205,7 +205,7 @@ Un rapport d'utilisation est généré automatiquement chaque lundi à 09h00 **h
 
 ```powershell
 # Générer un rapport manuellement
-wsl-switch -Report
+wisely -Report
 ```
 
 **Contenu du rapport :**
@@ -218,7 +218,7 @@ wsl-switch -Report
 Les rapports sont sauvegardés dans `data/reports/report_YYYY-MM-DD.txt`. Un maximum de 12 rapports est conservé (rotation automatique). Pour nettoyer manuellement :
 
 ```powershell
-wsl-switch -Clean
+wisely -Clean
 ```
 
 ---
@@ -229,10 +229,10 @@ Partagez ou sauvegardez vos profils en dehors du dépôt :
 
 ```powershell
 # Exporter vers un fichier (par défaut : wsl-profiles-export.json)
-wsl-switch -Export
+wisely -Export
 
 # Importer depuis un fichier
-wsl-switch -Import C:\Backup\mes-profils.json
+wisely -Import C:\Backup\mes-profils.json
 ```
 
 L'importation crée automatiquement un backup du `.wslconfig` courant avant d'appliquer les nouveaux profils.
@@ -244,8 +244,8 @@ L'importation crée automatiquement un backup du `.wslconfig` courant avant d'ap
 ## Architecture
 
 ```
-WSL-Switch/
-├── wsl-switch.ps1              ← Point d'entrée unique
+Wisely/
+├── wisely.ps1              ← Point d'entrée unique
 ├── modules/
 │   ├── ProfileManager.ps1      ← Logique profils (apply, backup, rollback, import/export)
 │   ├── Logger.ps1              ← Historique JSON
@@ -258,7 +258,7 @@ WSL-Switch/
     └── reports/                ← Rapports hebdomadaires (non versionnés)
 ```
 
-**Principe clé :** `wsl-switch.ps1` est le seul point d'entrée. Les modules ne se connaissent pas entre eux — toute orchestration passe par le script principal.
+**Principe clé :** `wisely.ps1` est le seul point d'entrée. Les modules ne se connaissent pas entre eux — toute orchestration passe par le script principal.
 
 ---
 
