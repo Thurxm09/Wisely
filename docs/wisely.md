@@ -1,15 +1,15 @@
-# WSL Switcher
+# Wisely
 
 **Statut :** v2.0.0 stable publiée (GitHub), v2.1 en développement actif.
 
 **Description :** Outil CLI PowerShell qui gère dynamiquement les profils de ressources WSL2 (RAM, CPU) sur Windows, avec monitoring et reporting. Né d'une contrainte matérielle réelle (16GB RAM, workloads WSL2 + VS Code + navigateur en simultané).
 
-**Repo :** `git@github.com:Thurxm09/wsl-switch.git`
+**Repo :** `git@github.com:Thurxm09/Wisely.git`
 
 ## Déjà livré (v2.0 → début v2.1)
 
 - Chronomètre de switch (`[System.Diagnostics.Stopwatch]`)
-- Dashboard `wsl-switch -Status` (barre RAM, profil actif, historique)
+- Dashboard `wisely -Status` (barre RAM, profil actif, historique)
 - Commits GPG signés/vérifiés (WSL2 + Windows)
 - Dotfiles synchronisés (Oh My Posh Tokyo Night, config partagée PS5.1/PS7/Zsh)
 - Bug d'alias PS7 résolu par symlink des fichiers de profil

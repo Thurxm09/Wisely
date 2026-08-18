@@ -1,4 +1,4 @@
-\# Audit de qualité — WSL2 Profile Switcher v2.0
+\# Audit de qualité — Wisely v2.0
 
 &#x20;
 
@@ -70,7 +70,7 @@ Deux nouvelles incohérences mineures ont été détectées lors de cette revue 
 
 &#x20;
 
-\*\*Correction appliquée :\*\* Tous les `exit` dans les modules ont été remplacés par des `throw`. Le script principal `wsl-switch.ps1` attrape ces exceptions avec `try/catch` et appelle `exit 1` en lieu et place — ce qui est correct puisqu'on est dans le script racine, pas dans un module dot-sourcé.
+\*\*Correction appliquée :\*\* Tous les `exit` dans les modules ont été remplacés par des `throw`. Le script principal `wisely.ps1` attrape ces exceptions avec `try/catch` et appelle `exit 1` en lieu et place — ce qui est correct puisqu'on est dans le script racine, pas dans un module dot-sourcé.
 
 &#x20;
 
@@ -374,7 +374,7 @@ if (-not $isAdmin) {
 
 &#x20;
 
-\*\*Fichier :\*\* `wsl-switch.ps1`  
+\*\*Fichier :\*\* `wisely.ps1`  
 
 \*\*Statut :\*\* ✅ Corrigé
 
@@ -460,7 +460,7 @@ $results = Invoke-ScriptAnalyzer -Path . -Recurse -Severity Warning -ExcludeRule
 
 &#x20;
 
-\*\*Fichier :\*\* `wsl-switch.ps1`, `modules/ProfileManager.ps1`  
+\*\*Fichier :\*\* `wisely.ps1`, `modules/ProfileManager.ps1`  
 
 \*\*Statut :\*\* ✅ Corrigé
 
@@ -658,7 +658,7 @@ Pour un projet open-source, l'affichage de la mauvaise licence dans le badge est
 
 &#x20;
 
-\*\*Problème :\*\* Le check admin a été ajouté dans `Start-WslMonitor`, mais `Stop-WslMonitor` appelle `Unregister-ScheduledTask` qui nécessite également des droits élevés. En terminal non-admin, la commande `wsl-switch -Monitor stop` échouera avec une erreur Windows au lieu d'un message explicatif.
+\*\*Problème :\*\* Le check admin a été ajouté dans `Start-WslMonitor`, mais `Stop-WslMonitor` appelle `Unregister-ScheduledTask` qui nécessite également des droits élevés. En terminal non-admin, la commande `wisely -Monitor stop` échouera avec une erreur Windows au lieu d'un message explicatif.
 
 &#x20;
 
@@ -708,7 +708,7 @@ L'architecture du projet présente plusieurs décisions de conception solides qu
 
 &#x20;
 
-\*\*Point d'entrée unique.\*\* `wsl-switch.ps1` est le seul orchestre. Les modules ne se connaissent pas entre eux. Ce couplage zéro entre modules facilite considérablement la maintenabilité et les tests futurs.
+\*\*Point d'entrée unique.\*\* `wisely.ps1` est le seul orchestre. Les modules ne se connaissent pas entre eux. Ce couplage zéro entre modules facilite considérablement la maintenabilité et les tests futurs.
 
 &#x20;
 
@@ -770,11 +770,11 @@ Après les corrections, la gestion des chemins reste légèrement hétérogène 
 
 | I-4 | Encodage ASCII pour rapports FR | WeeklyReport.ps1 | 🟠 Important | ✅ Corrigé |
 
-| I-5 | Parsing `-NewProfile` non sécurisé | wsl-switch.ps1 | 🟠 Important | ✅ Corrigé |
+| I-5 | Parsing `-NewProfile` non sécurisé | wisely.ps1 | 🟠 Important | ✅ Corrigé |
 
 | I-6 | PSScriptAnalyzer trop permissif | ci.yml | 🟠 Important | ✅ Corrigé |
 
-| S-1 | Lecture disque à chaque frame menu | wsl-switch.ps1 | 🟡 Secondaire | ✅ Corrigé |
+| S-1 | Lecture disque à chaque frame menu | wisely.ps1 | 🟡 Secondaire | ✅ Corrigé |
 
 | S-2 | Limite CPU arbitraire à 8 cœurs | ProfileManager.ps1 | 🟡 Secondaire | ✅ Corrigé |
 

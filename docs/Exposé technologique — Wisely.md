@@ -1,4 +1,4 @@
-# Exposé technologique — WSL2 Profile Switcher
+# Exposé technologique — Wisely
 ## Technologies, langages et outils pour faire évoluer le projet
  
 > **Objectif de ce document :** fournir une carte technologique complète et des recommandations concrètes d'intégration, ancrées dans les axes d'évolution de la roadmap v2.1 → v4.0.
@@ -26,7 +26,7 @@
  
 ### 1.1 C# — Le complément naturel
  
-**Pourquoi c'est pertinent pour WSL Switch**
+**Pourquoi c'est pertinent pour Wisely**
  
 PowerShell est bâti sur .NET. C# est le langage natif de .NET. Quand une opération est difficile ou lente en PowerShell, elle devient triviale en C#. Les deux langages partagent exactement les mêmes bibliothèques — zéro friction d'intégration.
  
@@ -70,7 +70,7 @@ $mem = [WslConfigParser]::GetValue("$env:USERPROFILE\.wslconfig", "memory")
  
 ### 1.2 Python — Le couteau suisse du data et de l'automation
  
-**Pourquoi c'est pertinent pour WSL Switch**
+**Pourquoi c'est pertinent pour Wisely**
  
 Tu travailles déjà avec Python (FastAPI, Pandas, Conda) côté WSL. Python peut jouer un rôle complémentaire sur deux fronts : les scripts de build/packaging Windows-side, et les composants qui tournent côté Linux (dans WSL2 lui-même).
  
@@ -113,7 +113,7 @@ Côté PowerShell, on lirait ces métriques via `wsl python3 agent.py` — bien 
  
 ### 1.3 Rust — La performance et la robustesse à long terme
  
-**Pourquoi c'est pertinent pour WSL Switch**
+**Pourquoi c'est pertinent pour Wisely**
  
 Rust produit des binaires natifs, sans runtime, très performants et mémoire-safe. C'est le langage de référence pour les outils CLI système modernes (`ripgrep`, `bat`, `fd`, `exa`, `starship`). Tu utilises déjà `starship` — il est écrit en Rust.
  
@@ -121,7 +121,7 @@ Rust produit des binaires natifs, sans runtime, très performants et mémoire-sa
  
 | Cas d'usage | Détail |
 |---|---|
-| **Binaire CLI cross-platform** | Un exécutable `wsl-switch.exe` qui ne nécessite pas PowerShell du tout |
+| **Binaire CLI cross-platform** | Un exécutable `wisely.exe` qui ne nécessite pas PowerShell du tout |
 | **Parser `.wslconfig` robuste** | Rust + la crate `ini` pour un parsing parfait et typé |
 | **Monitoring haute fréquence** | Rust peut interroger les APIs Windows de performance toutes les secondes sans overhead |
 | **Distribution Winget** | Un `.exe` Rust est plus facile à packager pour Winget qu'un module PowerShell |
@@ -131,7 +131,7 @@ Rust produit des binaires natifs, sans runtime, très performants et mémoire-sa
 Rust est pertinent en **v4.0**, pas avant. Il implique une courbe d'apprentissage significative et un refactoring structurel. Mais si tu vises un outil de référence dans l'écosystème WSL (vision long terme de la roadmap), un binaire natif est la destination naturelle.
  
 ```toml
-# Cargo.toml d'un futur wsl-switch en Rust
+# Cargo.toml d'un futur wisely en Rust
 [dependencies]
 clap = { version = "4", features = ["derive"] }   # CLI parser
 serde = { version = "1", features = ["derive"] }   # JSON
@@ -150,7 +150,7 @@ windows = { version = "0.52", features = [         # APIs Windows natives
  
 ### 1.4 TypeScript / Node.js — L'écosystème VS Code
  
-**Pourquoi c'est pertinent pour WSL Switch**
+**Pourquoi c'est pertinent pour Wisely**
  
 La roadmap v4.0 mentionne une intégration VS Code. Les extensions VS Code sont obligatoirement en TypeScript/JavaScript. C'est le seul langage valable pour ce cas d'usage précis.
  
@@ -172,29 +172,29 @@ import { exec } from 'child_process';
 export function activate(context: vscode.ExtensionContext) {
     const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
     
-    // Lire le profil actif en appelant wsl-switch -Version (ou status futur)
-    exec('powershell -Command "wsl-switch status"', (err, stdout) => {
+    // Lire le profil actif en appelant wisely -Version (ou status futur)
+    exec('powershell -Command "wisely status"', (err, stdout) => {
         statusBar.text = `$(database) WSL: ${stdout.trim()}`;
         statusBar.show();
     });
  
     context.subscriptions.push(
-        vscode.commands.registerCommand('wsl-switch.switch', async () => {
+        vscode.commands.registerCommand('wisely.switch', async () => {
             const profile = await vscode.window.showQuickPick(['web', 'data', 'base']);
-            if (profile) exec(`powershell -Command "wsl-switch ${profile}"`);
+            if (profile) exec(`powershell -Command "wisely ${profile}"`);
         })
     );
 }
 ```
  
 **Niveau d'effort :** moyen.  
-**Recommandation :** À intégrer en v3.x ou v4.0, uniquement si la commande `wsl-switch status` existe (prérequis logique).
+**Recommandation :** À intégrer en v3.x ou v4.0, uniquement si la commande `wisely status` existe (prérequis logique).
  
 ---
  
 ### 1.5 YAML / JSON Schema — Les langages de configuration
  
-**Pourquoi c'est pertinent pour WSL Switch**
+**Pourquoi c'est pertinent pour Wisely**
  
 `profiles.json` est la source de vérité du projet. Mais aujourd'hui, rien ne valide sa structure formellement (en dehors du code PowerShell). Un JSON Schema permet de valider `profiles.json` avec des outils standards, d'avoir l'autocomplétion dans VS Code, et de détecter les erreurs avant même d'exécuter l'outil.
  
@@ -204,7 +204,7 @@ export function activate(context: vscode.ExtensionContext) {
 // profiles.schema.json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "WSL2 Profile Switcher Configuration",
+  "title": "Wisely Configuration",
   "type": "object",
   "required": ["version", "profiles", "settings"],
   "properties": {
@@ -302,7 +302,7 @@ Describe "Set-WslProfile avec DryRun" {
  
 **Fonctionnalités clés de Pester**
  
-| Fonctionnalité | Utilité dans WSL Switch |
+| Fonctionnalité | Utilité dans Wisely |
 |---|---|
 | `Mock -CommandName wsl` | Simuler `wsl --shutdown` sans impacter le système |
 | `$TestDrive` | Dossier temporaire isolé par test — pas de pollution de l'environnement |
@@ -371,7 +371,7 @@ Déjà intégré dans ton CI. Mais son potentiel est sous-exploité. PSScriptAna
 ```powershell
 # 1. Générer la doc depuis le code
 Import-Module platyPS
-New-MarkdownHelp -Module WSLSwitch -OutputFolder ./docs/cmdlets
+New-MarkdownHelp -Module Wisely -OutputFolder ./docs/cmdlets
  
 # 2. Résultat : un fichier Markdown par fonction
 # docs/cmdlets/Set-WslProfile.md
@@ -393,7 +393,7 @@ Le code de `Logger.ps1` a déjà les bons commentaires — `platyPS` les transfo
  
 Oh My Posh est le framework de customisation de prompt que tu utilises probablement avec Starship. Il supporte des segments custom en PowerShell qui peuvent afficher n'importe quelle information.
  
-**Segment Oh My Posh pour WSL Switch**
+**Segment Oh My Posh pour Wisely**
  
 ```json
 // Dans le thème Oh My Posh de l'utilisateur
@@ -403,7 +403,7 @@ Oh My Posh est le framework de customisation de prompt que tu utilises probablem
   "foreground": "#00ff00",
   "background": "#333333",
   "properties": {
-    "command": "wsl-switch status --short 2>$null",
+    "command": "wisely status --short 2>$null",
     "shell": "powershell"
   }
 }
@@ -412,7 +412,7 @@ Oh My Posh est le framework de customisation de prompt que tu utilises probablem
 Résultat dans le prompt : `[WSL:WEB 2GB]` — visible en permanence, aucune commande à taper.
  
 **Niveau d'effort :** très faible (snippet à documenter, pas de code à écrire).  
-**Recommandation :** À documenter en v2.2. Prérequis : la commande `wsl-switch status` doit exister.
+**Recommandation :** À documenter en v2.2. Prérequis : la commande `wisely status` doit exister.
  
 ---
  
@@ -422,7 +422,7 @@ Résultat dans le prompt : `[WSL:WEB 2GB]` — visible en permanence, aucune com
  
 Spectre.Console est une bibliothèque .NET qui permet de créer des interfaces terminal riches : tableaux colorés, barres de progression animées, spinners, prompts interactifs, arbres hiérarchiques. Elle est utilisée par des outils comme `dotnet publish`.
  
-**Cas d'usage dans WSL Switch**
+**Cas d'usage dans Wisely**
  
 ```csharp
 // Exemple conceptuel — menu avec Spectre.Console
@@ -440,7 +440,7 @@ AnsiConsole.Progress()
     });
 ```
  
-C'est une alternative au rendu Unicode manuel actuel de `wsl-switch.ps1` — avec animations, couleurs ANSI complètes, et support de toutes les tailles de terminal.
+C'est une alternative au rendu Unicode manuel actuel de `wisely.ps1` — avec animations, couleurs ANSI complètes, et support de toutes les tailles de terminal.
  
 **Niveau d'effort :** élevé (nécessite de migrer le rendu vers C#).  
 **Recommandation :** À considérer uniquement si une réécriture partielle est envisagée en v3.x ou v4.0.
@@ -467,7 +467,7 @@ Codecov collecte les rapports de couverture de tests et les affiche sur le dép�
     token: ${{ secrets.CODECOV_TOKEN }}
 ```
  
-Badge dans le README : `![Coverage](https://codecov.io/gh/Thurxm09/wsl-switch/badge.svg)`
+Badge dans le README : `![Coverage](https://codecov.io/gh/Thurxm09/Wisely/badge.svg)`
  
 **Niveau d'effort :** très faible (15 minutes de configuration).  
 **Recommandation :** À ajouter dès que les tests Pester sont en place.
@@ -506,14 +506,14 @@ jobs:
 #### PowerShell Gallery — Distribution comme module
  
 **Ce que c'est**  
-La plateforme officielle Microsoft de distribution de modules PowerShell. `Install-Module WSLSwitch -Scope CurrentUser` à la place du clone Git manuel.
+La plateforme officielle Microsoft de distribution de modules PowerShell. `Install-Module Wisely -Scope CurrentUser` à la place du clone Git manuel.
  
 **Structure du module**
  
 ```
-WSLSwitch/
-├── WSLSwitch.psd1        ← Manifest (métadonnées, version, exports)
-├── WSLSwitch.psm1        ← Point d'entrée du module
+Wisely/
+├── Wisely.psd1        ← Manifest (métadonnées, version, exports)
+├── Wisely.psm1        ← Point d'entrée du module
 ├── Public/               ← Fonctions exportées (accessibles à l'utilisateur)
 │   ├── Invoke-WslSwitch.ps1
 │   ├── Get-WslProfile.ps1
@@ -530,7 +530,7 @@ WSLSwitch/
 **Le manifest `.psd1`**
  
 ```powershell
-# WSLSwitch.psd1
+# Wisely.psd1
 @{
     ModuleVersion   = '3.0.0'
     GUID            = 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
@@ -541,8 +541,8 @@ WSLSwitch/
     PrivateData     = @{
         PSData = @{
             Tags       = @('WSL', 'WSL2', 'Windows', 'DevOps', 'RAM', 'Memory')
-            ProjectUri = 'https://github.com/Thurxm09/wsl-switch'
-            LicenseUri = 'https://github.com/Thurxm09/wsl-switch/blob/main/LICENSE'
+            ProjectUri = 'https://github.com/Thurxm09/Wisely'
+            LicenseUri = 'https://github.com/Thurxm09/Wisely/blob/main/LICENSE'
         }
     }
 }
@@ -555,7 +555,7 @@ WSLSwitch/
 - name: Publish to PowerShell Gallery
   shell: pwsh
   run: |
-    Publish-Module -Path ./WSLSwitch -NuGetApiKey ${{ secrets.PSGALLERY_API_KEY }}
+    Publish-Module -Path ./Wisely -NuGetApiKey ${{ secrets.PSGALLERY_API_KEY }}
 ```
  
 **Niveau d'effort :** moyen (refactoring de structure nécessaire).  
@@ -566,21 +566,21 @@ WSLSwitch/
 #### Winget — Distribution Windows native
  
 **Ce que c'est**  
-Le gestionnaire de paquets natif de Windows 11/10. `winget install Thuram.WSLSwitch` — sans aucun Git, aucune PowerShell Gallery.
+Le gestionnaire de paquets natif de Windows 11/10. `winget install Thuram.Wisely` — sans aucun Git, aucune PowerShell Gallery.
  
 **Le manifest Winget**
  
 ```yaml
-# manifests/t/Thuram/WSLSwitch/2.0.0/Thuram.WSLSwitch.yaml
-PackageIdentifier: Thuram.WSLSwitch
+# manifests/t/Thuram/Wisely/2.0.0/Thuram.Wisely.yaml
+PackageIdentifier: Thuram.Wisely
 PackageVersion: "2.0.0"
-PackageName: WSL2 Profile Switcher
+PackageName: Wisely
 Publisher: Thuram
 License: GPL-3.0
 InstallerType: zip
 Installers:
   - Architecture: x64
-    InstallerUrl: https://github.com/Thurxm09/wsl-switch/releases/download/v2.0.0/wsl-switch-v2.0.0.zip
+    InstallerUrl: https://github.com/Thurxm09/Wisely/releases/download/v2.0.0/wisely-v2.0.0.zip
     InstallerSha256: <hash>
 ```
  
@@ -594,7 +594,7 @@ La soumission se fait via une Pull Request sur le dépôt `microsoft/winget-pkgs
 #### Chocolatey — Distribution Windows communautaire
  
 **Ce que c'est**  
-Alternative à Winget, plus ancienne et avec une communauté plus large pour les outils dev. `choco install wsl-switch`.
+Alternative à Winget, plus ancienne et avec une communauté plus large pour les outils dev. `choco install wisely`.
  
 **Niveau d'effort :** faible (similaire à Winget).  
 **Recommandation :** Optionnel, à envisager après Winget si l'adoption le justifie.
@@ -671,14 +671,14 @@ updates:
  
 **Le problème actuel**
  
-Dans les environnements d'entreprise avec la politique `AllSigned`, tout script non signé est refusé. WSL Switch est aujourd'hui inutilisable dans ce contexte.
+Dans les environnements d'entreprise avec la politique `AllSigned`, tout script non signé est refusé. Wisely est aujourd'hui inutilisable dans ce contexte.
  
 **La solution : certificat de code auto-signé**
  
 ```powershell
 # Générer un certificat auto-signé (une fois)
 $cert = New-SelfSignedCertificate `
-    -Subject "CN=WSLSwitch Code Signing" `
+    -Subject "CN=Wisely Code Signing" `
     -CertStoreLocation "Cert:\CurrentUser\My" `
     -KeyUsage DigitalSignature `
     -Type CodeSigningCert
@@ -712,7 +712,7 @@ Pour un projet open-source sérieux, une variante plus robuste utilise un certif
  
 ### 4.2 Validation renforcée des entrées utilisateur
  
-**Ce qui existe déjà :** validation de la clé de profil via regex dans `wsl-switch.ps1`, validation du schéma JSON dans `Import-Profiles`.
+**Ce qui existe déjà :** validation de la clé de profil via regex dans `wisely.ps1`, validation du schéma JSON dans `Import-Profiles`.
  
 **Ce qui manque**
  
@@ -1062,7 +1062,7 @@ Dans `profiles.json`, l'utilisateur peut alors écrire :
  
 **Le projet cible actuellement PowerShell 5.1** (inclus dans Windows). PowerShell 7+ apporte des avantages significatifs :
  
-| Fonctionnalité PS7+ | Utilité dans WSL Switch |
+| Fonctionnalité PS7+ | Utilité dans Wisely |
 |---|---|
 | `?? =` (null-coalescing assignment) | Remplace les `if ($null -eq ...) { ... = default }` |
 | `ForEach-Object -Parallel` | Traitement parallèle pour futures features multi-WSL |
@@ -1083,7 +1083,7 @@ if ($PSVersionTable.PSVersion.Major -ge 7) {
 }
 ```
  
-**`#Requires -Version 7.0`** dans `wsl-switch.ps1` forcerait PS7 — à ne faire que si les gains sont significatifs et si l'impact utilisateur est communiqué clairement.
+**`#Requires -Version 7.0`** dans `wisely.ps1` forcerait PS7 — à ne faire que si les gains sont significatifs et si l'impact utilisateur est communiqué clairement.
  
 **Niveau d'effort :** faible à moyen (audit du code pour compatibilité).  
 **Recommandation :** Tester sur PS7 en v2.x, documenter la compatibilité. Migrer en PS7 uniquement en v3.x si l'adoption le justifie.
@@ -1099,7 +1099,7 @@ if ($PSVersionTable.PSVersion.Major -ge 7) {
 ```json
 {
   "settings": {
-    "profilesSource": "https://raw.githubusercontent.com/Thurxm09/wsl-switch/main/community-profiles/ml-stack.json"
+    "profilesSource": "https://raw.githubusercontent.com/Thurxm09/Wisely/main/community-profiles/ml-stack.json"
   }
 }
 ```
@@ -1153,7 +1153,7 @@ Ces éléments sont **indépendants les uns des autres**, à faible risque, et o
 | 4 | **Publication Winget** | Visibilité et adoption | Faible |
 | 5 | **Publication PowerShell Gallery** | Distribution standard PS | Moyen |
 | 6 | **Migration schéma `profiles.json`** | Pérennité des upgrades | Moyen |
-| 7 | **Commande `wsl-switch status`** | Prérequis Oh My Posh + VS Code | Faible |
+| 7 | **Commande `wisely status`** | Prérequis Oh My Posh + VS Code | Faible |
 | 8 | **Snippet Oh My Posh** | Vecteur de découverte organique | Très faible |
 | 9 | **Codecov** | Signal de confiance pour contributeurs | Très faible |
  
@@ -1212,7 +1212,7 @@ LÉGENDE : Commencer en haut à droite (fort impact, effort trivial/faible)
 **Ce qu'il ne faut pas faire trop tôt**
  
 - Rust (courbe d'apprentissage vs ROI incertain à ce stade)
-- Extension VS Code (dépend de `wsl-switch status` qui n'existe pas encore)
+- Extension VS Code (dépend de `wisely status` qui n'existe pas encore)
 - API REST locale (dépend d'une adoption suffisante pour justifier la complexité)
 **Le principe directeur :** chaque couche technologique ajoutée doit résoudre un problème réel et documenté dans la roadmap, pas être ajoutée pour sa valeur intrinsèque.
  

@@ -32,7 +32,7 @@ $switches = @($history | Where-Object {
 # ---- Construction du rapport ----------------------------------------
 
 $lines = @()
-$lines += "WSL2 Profile Switcher - Rapport hebdomadaire"
+$lines += "Wisely - Rapport hebdomadaire"
 $lines += "Genere le : $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 $lines += "Periode   : $($weekAgo.ToString('yyyy-MM-dd')) -> $(Get-Date -Format 'yyyy-MM-dd')"
 $lines += "=" * 50

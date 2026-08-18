@@ -1,6 +1,6 @@
 ﻿# ============================================================
 #  Logger.ps1 — Historique des switchs de profil
-#  Dot-sourcé depuis wsl-switch.ps1
+#  Dot-sourcé depuis wisely.ps1
 #  Utilise $Global:WSLRoot défini dans le script principal
 # ============================================================
 

@@ -6,7 +6,7 @@
 - [ ] **Validation du chemin du swap file** - v2.1
 - [ ] **Backup versionné avec historique glissant** - v2.1
 - [ ] **Flags -Verbose / -Quiet** - v2.1
-- [ ] **Fix bug visuel de troncature de la barre RAM** - `wsl-switch -Status`, v2.1
+- [ ] **Fix bug visuel de troncature de la barre RAM** - `wisely -Status`, v2.1
 - [ ] **Cache mémoïsé pour Get-ProfileConfig** - via variables `$script:`, invalidation par `Clear-ProfileConfigCache`, v2.1
 
 ## Waiting On
@@ -24,8 +24,8 @@
 
 - [x] ~~v2.0.0 stable publiée sur GitHub, toutes les conclusions d'audit résolues~~
 - [x] ~~Chronomètre de switch via [System.Diagnostics.Stopwatch]~~
-- [x] ~~Dashboard `wsl-switch -Status`~~
+- [x] ~~Dashboard `wisely -Status`~~
 - [x] ~~Commits signés/vérifiés GPG (WSL2 + Windows)~~
 - [x] ~~Dotfiles synchronisés sur repo privé~~
-- [x] ~~Remote SSH configuré pour le repo wsl-switch~~
+- [x] ~~Remote SSH configuré pour le repo wisely~~
 - [x] ~~Bug d'alias PS7 résolu (symlink profils PS5.1/PS7)~~

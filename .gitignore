@@ -8,7 +8,7 @@ data/reports/
 # Bootstraps de deploiement - utiles en local, exclus du repo
 Write-Phase2.ps1
 Write-Phase3.ps1
-Write-WslSwitch.ps1
+Write-Wisely.ps1
 
 # Fichiers systeme
 Thumbs.db

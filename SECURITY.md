@@ -20,9 +20,9 @@ Si vous découvrez une vulnérabilité de sécurité dans ce projet, **merci de 
 ### Procédure
 
 1. **Ouvrez un rapport privé** via l'onglet **Security > Advisories** de ce dépôt GitHub :
-   `https://github.com/Thurxm09/wsl-switch/security/advisories/new`
+   `https://github.com/Thurxm09/Wisely/security/advisories/new`
 2. Décrivez la vulnérabilité avec le plus de détails possible :
-   - Composant concerné (ex. : `wsl-switch.ps1`, `modules/ProfileManager.ps1`)
+   - Composant concerné (ex. : `wisely.ps1`, `modules/ProfileManager.ps1`)
    - Étapes de reproduction
    - Impact potentiel (élévation de privilèges, exécution de code arbitraire, fuite de données, etc.)
    - Version affectée

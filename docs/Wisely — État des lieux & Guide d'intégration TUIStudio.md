@@ -1,7 +1,7 @@
-# WSL Switcher — État des lieux & Guide d'intégration TUI Studio
+# Wisely — État des lieux & Guide d'intégration TUI Studio
 ## Document d'architecture et de stratégie — v1.0
  
-> Analyse réalisée sur la base des sources v2.0.0 : `wsl-switch.ps1`, modules, `AUDIT.md`, `ROADMAP.md`, `wsl-switcher-expose-technologies.md`, workflows CI/CD, `profiles.json`, `README.md`, `CHANGELOG.md`.
+> Analyse réalisée sur la base des sources v2.0.0 : `wisely.ps1`, modules, `AUDIT.md`, `ROADMAP.md`, `wisely-expose-technologies.md`, workflows CI/CD, `profiles.json`, `README.md`, `CHANGELOG.md`.
  
 ---
  
@@ -18,12 +18,12 @@
  
 ### 1.1 Objectif global
  
-WSL Switcher est un outil PowerShell permettant de gérer dynamiquement les ressources allouées à WSL2 (RAM, CPU, swap) via un système de profils JSON, un menu interactif, un monitoring passif en arrière-plan et un reporting hebdomadaire automatisé. Il répond à un problème réel et sous-adressé dans l'écosystème Windows/WSL2 : l'absence d'outil natif de gestion contextuelle des ressources.
+Wisely est un outil PowerShell permettant de gérer dynamiquement les ressources allouées à WSL2 (RAM, CPU, swap) via un système de profils JSON, un menu interactif, un monitoring passif en arrière-plan et un reporting hebdomadaire automatisé. Il répond à un problème réel et sous-adressé dans l'écosystème Windows/WSL2 : l'absence d'outil natif de gestion contextuelle des ressources.
  
 ### 1.2 Architecture actuelle
  
 ```
-wsl-switch.ps1                  ← Point d'entrée unique (orchestrateur)
+wisely.ps1                  ← Point d'entrée unique (orchestrateur)
 modules/
   ProfileManager.ps1            ← CRUD profils, backup, rollback, import/export
   Logger.ps1                    ← Historique JSON, affichage console
@@ -47,8 +47,8 @@ data/
  
 | Fonctionnalité | Module | Statut |
 |---|---|---|
-| Menu interactif (flèches + Entrée) | `wsl-switch.ps1` | ✅ Stable |
-| Switch direct via CLI (`wsl-switch web`) | `wsl-switch.ps1` | ✅ Stable |
+| Menu interactif (flèches + Entrée) | `wisely.ps1` | ✅ Stable |
+| Switch direct via CLI (`wisely web`) | `wisely.ps1` | ✅ Stable |
 | Mode DryRun | `ProfileManager.ps1` | ✅ Stable |
 | Backup automatique avant switch | `ProfileManager.ps1` | ✅ Stable (1 seul backup) |
 | Rollback instantané | `ProfileManager.ps1` | ✅ Stable |
@@ -61,10 +61,10 @@ data/
 | Création de profils personnalisés | `ProfileManager.ps1` | ✅ Stable |
 | Import/Export profils JSON | `ProfileManager.ps1` | ✅ Stable |
 | Validation schéma à l'import | `ProfileManager.ps1` | ✅ Stable |
-| Nettoyage `-Clean` | `wsl-switch.ps1` | ✅ Stable |
+| Nettoyage `-Clean` | `wisely.ps1` | ✅ Stable |
 | CI/CD complet (lint, release, bump) | `.github/workflows/` | ✅ Stable |
 | Alias global PowerShell | `README.md` (manuel) | ⚠️ Manuel |
-| `wsl-switch -Status` | — | ❌ Absent |
+| `wisely -Status` | — | ❌ Absent |
 | Chronométrage du switch | — | ❌ Absent |
 | Backup versionné (N backups) | — | ❌ Absent |
 | Validation chemin `swapFile` | — | ❌ Absent |
@@ -109,7 +109,7 @@ data/
 > Note : en relisant `Monitor.ps1`, le check admin est bien présent dans `Stop-WslMonitor`. N-2 est probablement résolu mais non mis à jour dans `AUDIT.md`.
  
 **Features v2.1 non implémentées**
-- `wsl-switch -Status`
+- `wisely -Status`
 - Chronométrage du switch (`[Stopwatch]`)
 - Validation `swapFile`
 - `-Verbose` / `-Quiet`
@@ -159,7 +159,7 @@ Aucune instabilité identifiée dans la v2.0.0. Les bugs préexistants ont été
 ### 2.4 Fonctionnalités manquantes critiques (v2.1 plannifiées)
  
 Par ordre de priorité :
-1. **`wsl-switch -Status`** — La commande la plus demandée, prérequis à l'intégration Oh My Posh et VS Code.
+1. **`wisely -Status`** — La commande la plus demandée, prérequis à l'intégration Oh My Posh et VS Code.
 2. **Tests Pester** — Dette technique principale. Bloque la contribution externe et la confiance lors des refactorings.
 3. **Chronométrage du switch** — ROI UX immédiat pour 5 lignes de code.
 4. **Backup versionné** — Sécurité utilisateur (rollback multi-générations).
@@ -169,7 +169,7 @@ Par ordre de priorité :
 ```
 URGENCE HAUTE
 ├── Pester (premiers tests sur Get-ProfileConfig + Import-Profiles)
-├── wsl-switch -Status
+├── wisely -Status
 └── Chronométrage switch ([Stopwatch])
  
 URGENCE MOYENNE
@@ -210,7 +210,7 @@ Les projets sont sauvegardés en fichiers `.tui` (JSON portable). L'outil génè
 - Thèmes prêts à l'emploi
 #### Ses limites — et c'est ici que les choses deviennent intéressantes
  
-**Limites critiques pour WSL Switcher :**
+**Limites critiques pour Wisely :**
  
 | Limite | Impact sur le projet |
 |---|---|
@@ -295,7 +295,7 @@ Add-Type -Path "$PSScriptRoot\libs\Terminal.Gui.dll"
 [Terminal.Gui.Application]::Init()
  
 $window = [Terminal.Gui.Window]::new()
-$window.Title = "WSL Switcher v2"
+$window.Title = "Wisely v2"
  
 $listView = [Terminal.Gui.ListView]::new()
 $listView.SetSource([System.Collections.ArrayList]@("WEB (2GB)", "DATA SCIENCE (6GB)", "BASE (1GB)"))
@@ -315,7 +315,7 @@ Voici la spécification des écrans à designer dans TUI Studio, avec les compos
 #### Écran 1 : Menu principal
  
 ```
-┌─ WSL Switcher v2.x ─────────────────────────────────┐
+┌─ Wisely v2.x ─────────────────────────────────┐
 │  RAM  ████████░░  78%  (12.4 / 16.0 GB)             │
 │  Profil actif : WEB (2GB / 3 CPU)                   │
 ├──────────────────────────────────────────────────────┤
@@ -333,10 +333,10 @@ Voici la spécification des écrans à designer dans TUI Studio, avec les compos
  
 **Composants TUI Studio :** `Box` (cadre principal), `ProgressBar` (RAM), `List` (profils), `Text` (infos), `Menu` (actions)
  
-#### Écran 2 : Dashboard Status (`wsl-switch -Status`)
+#### Écran 2 : Dashboard Status (`wisely -Status`)
  
 ```
-┌─ WSL Switcher — Status ─────────────────────────────┐
+┌─ Wisely — Status ─────────────────────────────┐
 │                                                      │
 │  SYSTÈME                                             │
 │  RAM Windows    ████████░░  78%  (12.4 / 16.0 GB)  │
@@ -363,10 +363,10 @@ Voici la spécification des écrans à designer dans TUI Studio, avec les compos
  
 **Composants TUI Studio :** `Box` sections, `ProgressBar` (RAM), `Table` (historique), `Text` coloré par état
  
-#### Écran 3 : Monitoring live (`wsl-switch -Watch` — roadmap v2.3)
+#### Écran 3 : Monitoring live (`wisely -Watch` — roadmap v2.3)
  
 ```
-┌─ WSL Switcher — Live Monitor ──────────── Refresh: 5s ┐
+┌─ Wisely — Live Monitor ──────────── Refresh: 5s ┐
 │                                                        │
 │  RAM Windows  ████████████████░░░░  80%  12.8/16.0 GB │
 │  RAM WSL2     ████████░░░░░░░░░░░░  52%   3.1/6.0 GB  │
@@ -392,7 +392,7 @@ Voici la spécification des écrans à designer dans TUI Studio, avec les compos
 #### Écran 4 : Gestion des profils enrichie
  
 ```
-┌─ WSL Switcher — Profils ────────────────────────────┐
+┌─ Wisely — Profils ────────────────────────────┐
 │                                                      │
 │  ┌──────────┬────────┬─────┬──────┬──────────────┐  │
 │  │ NOM      │ RAM    │ CPU │ SWAP │ DESCRIPTION   │  │
@@ -415,7 +415,7 @@ Voici la spécification des écrans à designer dans TUI Studio, avec les compos
 #### Structure de fichiers recommandée pour TUI Studio
  
 ```
-WSL-Switch/
+Wisely/
 ├── design/                    ← Nouveau dossier (versionné dans Git)
 │   ├── screens/
 │   │   ├── main-menu.tui
@@ -426,8 +426,8 @@ WSL-Switch/
 │   │   ├── ram-bar.tui
 │   │   └── profile-row.tui
 │   └── themes/
-│       └── wsl-switch-theme.tui
-├── wsl-switch.ps1
+│       └── wisely-theme.tui
+├── wisely.ps1
 ├── modules/
 │   ...
 ```
@@ -471,10 +471,10 @@ function Set-WslProfile {
 }
 ```
  
-#### Snippet d'intégration : implémentation de `wsl-switch -Status`
+#### Snippet d'intégration : implémentation de `wisely -Status`
  
 ```powershell
-# Dans wsl-switch.ps1 — ajouter le paramètre -Status
+# Dans wisely.ps1 — ajouter le paramètre -Status
 param(
     # ...params existants...
     [switch]$Status
@@ -486,7 +486,7 @@ if ($Status) {
     exit
 }
  
-# Nouvelle fonction dans wsl-switch.ps1
+# Nouvelle fonction dans wisely.ps1
 function Show-StatusDashboard {
     $config  = Get-ProfileConfig
     $active  = Get-ActiveProfile -Config $config
@@ -506,7 +506,7 @@ function Show-StatusDashboard {
     Clear-Host
     Write-Host ""
     Write-Host $LINE_TOP -ForegroundColor Cyan
-    Write-Host (Make-BoxLine "    " "   WSL2 Profile Switcher  v$($Global:AppVersion) — Status") -ForegroundColor Cyan
+    Write-Host (Make-BoxLine "    " "   Wisely  v$($Global:AppVersion) — Status") -ForegroundColor Cyan
     Write-Host $LINE_MID -ForegroundColor Cyan
     Write-Host (Make-BoxLine "    " "  RAM Windows  $ramBar  $($ram.pct)%  ($($ram.used)/$($ram.total) GB)") -ForegroundColor $ramColor
     Write-Host $LINE_SEP -ForegroundColor DarkGray
@@ -558,13 +558,13 @@ $dll = Get-ChildItem "$libsDir\terminal.gui" -Recurse -Filter "Terminal.Gui.dll"
        Where-Object { $_.FullName -match "netstandard" } | Select-Object -First 1
 Copy-Item $dll.FullName "$libsDir\Terminal.Gui.dll"
  
-# Usage dans wsl-switch.ps1
+# Usage dans wisely.ps1
 Add-Type -Path (Join-Path $PSScriptRoot "libs\Terminal.Gui.dll")
  
 function Show-TuiMenu {
     [Terminal.Gui.Application]::Init()
     
-    $win = [Terminal.Gui.Window]@{ Title = "WSL Switcher v$($Global:AppVersion)" }
+    $win = [Terminal.Gui.Window]@{ Title = "Wisely v$($Global:AppVersion)" }
     
     $items = [System.Collections.ArrayList]::new()
     $config = Get-ProfileConfig
@@ -606,7 +606,7 @@ function Show-TuiMenu {
  
 ### 3.7 Alternatives pertinentes
  
-Si l'objectif final est une interface TUI riche et productive, voici les alternatives à TUI Studio pour WSL Switcher :
+Si l'objectif final est une interface TUI riche et productive, voici les alternatives à TUI Studio pour Wisely :
  
 | Outil | Langage | Maturité | Pertinence |
 |---|---|---|---|
@@ -634,7 +634,7 @@ Si l'objectif final est une interface TUI riche et productive, voici les alterna
 | 2 | Choisir un thème cohérent avec la palette actuelle (Tokyo Night ou Nord) | Triviale | Thème `.tui` |
 | 3 | Designer l'écran Status Dashboard | Faible | `design/screens/status-dashboard.tui` |
 | 4 | Designer l'écran Live Monitor | Faible | `design/screens/live-monitor.tui` |
-| 5 | Implémenter `wsl-switch -Status` en PowerShell depuis le design | Faible | Feature complète |
+| 5 | Implémenter `wisely -Status` en PowerShell depuis le design | Faible | Feature complète |
 | 6 | Implémenter le chronométrage de switch | Triviale | 5 lignes dans Set-WslProfile |
 | 7 | Versionner les fichiers `.tui` dans `design/` | Triviale | Dossier versionné |
  
@@ -679,7 +679,7 @@ Si l'objectif final est une interface TUI riche et productive, voici les alterna
  
 **Immédiatement (v2.1)**
 1. **Installer TUI Studio et designer les écrans manquants** — coût presque nul, bénéfice de clarté UX immédiat.
-2. **Implémenter `wsl-switch -Status`** depuis le design TUI Studio.
+2. **Implémenter `wisely -Status`** depuis le design TUI Studio.
 3. **Implémenter le chronométrage** (5 lignes, ROI immédiat).
 4. **Écrire les premiers tests Pester** — `Get-ProfileConfig` et `Import-Profiles` en priorité.
 5. **Mettre à jour `AUDIT.md`** — N-2 est résolu dans le code, le document ne le reflète pas.
@@ -702,7 +702,7 @@ Si l'objectif final est une interface TUI riche et productive, voici les alterna
 ### Principes directeurs de l'intégration
  
 - **TUI Studio = Figma du terminal** : il sert à concevoir et communiquer, pas à coder.
-- **La valeur de TUI Studio pour WSL Switcher est dans le prototypage, pas dans l'export.**
+- **La valeur de TUI Studio pour Wisely est dans le prototypage, pas dans l'export.**
 - **Le code PowerShell reste la source de vérité d'exécution** — les fichiers `.tui` sont la source de vérité de design.
 - **Toute migration vers Terminal.Gui doit être précédée d'une suite de tests Pester.**
 ---
