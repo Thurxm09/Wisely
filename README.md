@@ -1,4 +1,4 @@
-# Wisely
+# Wisely — WSL2 profile switcher
 
 > Gérez vos ressources WSL2 en un instant — profils mémoire, surveillance RAM en arrière-plan et rapports hebdomadaires, le tout depuis un menu interactif ou une seule commande.
 
@@ -10,7 +10,7 @@
 
 ## Table des matières
 
-- [Wisely](#wisely)
+- [Wisely — WSL2 profile switcher](#wisely--wsl2-profile-switcher)
   - [Table des matières](#table-des-matières)
   - [Pourquoi ce projet ?](#pourquoi-ce-projet-)
   - [Fonctionnalités](#fonctionnalités)
