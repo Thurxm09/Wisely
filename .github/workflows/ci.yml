@@ -52,6 +52,8 @@ jobs:
           # - PSUseApprovedVerbs: Fit-String / Make-BoxLine are internal UI helpers, not exported
           # - PSUseSingularNouns: Import-Profiles / Export-Profiles handle multiple profiles by design
           # - PSUseBOMForUnicodeEncodedFile: files are UTF-8 without BOM by project convention
+          # - PSAvoidOverwritingBuiltInCmdlets: wisely.ps1 intentionally shadows Write-Host to
+          #   implement -Quiet without touching ~90 existing call sites (see wisely.ps1 comment)
           $excludeRules = @(
             'PSAvoidUsingCmdletAliases',
             'PSUseShouldProcessForStateChangingFunctions',
@@ -59,7 +61,8 @@ jobs:
             'PSAvoidGlobalVars',
             'PSUseApprovedVerbs',
             'PSUseSingularNouns',
-            'PSUseBOMForUnicodeEncodedFile'
+            'PSUseBOMForUnicodeEncodedFile',
+            'PSAvoidOverwritingBuiltInCmdlets'
           )
           $results = Invoke-ScriptAnalyzer -Path . -Recurse -Severity Warning -ExcludeRule $excludeRules
           if ($results.Count -gt 0) {
@@ -69,6 +72,25 @@ jobs:
             exit 1
           }
           Write-Host "PSScriptAnalyzer: no warnings or errors found."
+
+      - name: Install Pester
+        shell: pwsh
+        run: Install-Module -Name Pester -MinimumVersion 5.5.0 -Force -Scope CurrentUser -Repository PSGallery -SkipPublisherCheck
+
+      - name: Run Pester tests
+        shell: pwsh
+        run: |
+          Import-Module Pester -MinimumVersion 5.5.0
+          $config = New-PesterConfiguration
+          $config.Run.Path = "tests"
+          $config.Run.PassThru = $true
+          $config.Output.Verbosity = "Detailed"
+          $result = Invoke-Pester -Configuration $config
+          if ($result.FailedCount -gt 0) {
+            Write-Host "::error::$($result.FailedCount) Pester test(s) failed."
+            exit 1
+          }
+          Write-Host "Pester: $($result.PassedCount) test(s) passed, 0 failed."
 
       - name: Validate profiles.json
         shell: pwsh

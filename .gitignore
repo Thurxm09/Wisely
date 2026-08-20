@@ -1,6 +1,6 @@
 # Fichiers runtime - utiles en local, exclus du repo
 data/history.json
-data/wslconfig.backup
+data/backups/
 data/monitor_cooldown.txt
 data/monitor_errors.txt
 data/reports/

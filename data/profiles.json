@@ -36,6 +36,7 @@
     "monitorThreshold": 80,
     "monitorIntervalSeconds": 30,
     "historyMaxEntries": 100,
-    "backupEnabled": true
+    "backupEnabled": true,
+    "backupHistoryMax": 5
   }
 }

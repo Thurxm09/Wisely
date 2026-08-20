@@ -29,8 +29,14 @@ param(
     [switch]$Report,
     [switch]$Clean,
     [switch]$Status,
-    [switch]$Version
+    [switch]$Version,
+    [switch]$Verbose,
+    [switch]$Quiet
 )
+# Note : $Verbose/$Quiet sont des switches "maison", pas le parametre commun
+# -Verbose de [CmdletBinding()]. Ce script reste volontairement une fonction
+# "basic" (aucun [Parameter()] dans ce bloc) : ajouter [CmdletBinding()] ici
+# rendrait -Verbose reserve par PowerShell et casserait cette declaration.
 
 # ---- Bootstrap ------------------------------------------------------
 
@@ -39,6 +45,36 @@ $Global:WSLRoot = $PSScriptRoot
 . (Join-Path $PSScriptRoot "modules\ProfileManager.ps1")
 . (Join-Path $PSScriptRoot "modules\Logger.ps1")
 . (Join-Path $PSScriptRoot "modules\Monitor.ps1")
+
+# ---- Mode silencieux (-Quiet) ----------------------------------------
+# Redefinit Write-Host pour ne laisser passer que les messages d'erreur
+# (convention du projet : -ForegroundColor Red == erreur, verifie sur tous
+# les appels Write-Host existants des 4 fichiers .ps1). Aucune modification
+# des appels Write-Host existants n'est necessaire : ce shadow est defini
+# avant que la moindre fonction dot-sourcee ne s'execute reellement.
+# L'historique JSON (Write-SwitchLog) n'est jamais concerne : il ecrit via
+# Set-Content, pas Write-Host, donc reste trace meme en mode silencieux.
+
+$script:QuietMode = $Quiet.IsPresent
+
+function Write-Host {
+    # Pas de ValueFromPipeline : aucun appel Write-Host du projet n'utilise
+    # le pipeline (verifie), et l'accepter sans bloc process serait de toute
+    # facon incorrect (PSUseProcessBlockForPipelineCommand).
+    param(
+        [Parameter(Position = 0)][object]$Object,
+        [switch]$NoNewline,
+        [System.ConsoleColor]$ForegroundColor,
+        [System.ConsoleColor]$BackgroundColor
+    )
+    if ($script:QuietMode -and $ForegroundColor -ne "Red") { return }
+    $params = @{}
+    if ($PSBoundParameters.ContainsKey('Object'))         { $params.Object = $Object }
+    if ($NoNewline)                                       { $params.NoNewline = $true }
+    if ($PSBoundParameters.ContainsKey('ForegroundColor')) { $params.ForegroundColor = $ForegroundColor }
+    if ($PSBoundParameters.ContainsKey('BackgroundColor')) { $params.BackgroundColor = $BackgroundColor }
+    Microsoft.PowerShell.Utility\Write-Host @params
+}
 
 $dataDir = Join-Path $PSScriptRoot "data"
 if (-not (Test-Path $dataDir)) { New-Item -ItemType Directory -Path $dataDir | Out-Null }
@@ -156,7 +192,17 @@ function Show-StatusDashboard {
     Write-Host $LINE_TOP -ForegroundColor Cyan
     Write-Host (New-BoxLine "    " "   Wisely  v$($Global:AppVersion) -- Status") -ForegroundColor Cyan
     Write-Host $LINE_MID -ForegroundColor Cyan
-    Write-Host (New-BoxLine "    " "  RAM Windows  $ramBar  $($ram.pct)%  ($($ram.used)/$($ram.total) GB)") -ForegroundColor $ramColor
+    # Meme technique que Show-Header : largeur calculee pour le seul
+    # segment de stats plutot qu'un seul string compose puis tronque
+    # aveuglement par Format-String. L'ancien libelle "RAM Windows" ne
+    # laissait pas assez de place (budget 18/43) pour "100%  (16.0/16.0
+    # GB)" (22 caracteres) sur une machine a 100% d'usage - le texte
+    # etait coupe en plein milieu. Aligne sur le libelle court "RAM" et
+    # le format de Show-Header (budget 26/43), deja valide en production.
+    $ramPrefix  = "  RAM  "
+    $ramStats   = " " + $ram.pct + "%  (" + $ram.used + "/" + $ram.total + " GB)"
+    $ramContent = $ramPrefix + $ramBar + (Format-String $ramStats ($CONTENT_W - $ramPrefix.Length - $ramBar.Length))
+    Write-Host (New-BoxLine "    " $ramContent) -ForegroundColor $ramColor
     Write-Host $LINE_SEP -ForegroundColor DarkGray
     Write-Host (New-BoxLine "    " "  Profil actif : $($active.name)") -ForegroundColor White
     Write-Host (New-BoxLine "    " "  RAM allouee  : $($active.memory)") -ForegroundColor Gray
@@ -367,9 +413,16 @@ if ($NewProfile -ne "") {
 }
 
 if ($Profil -ne "") {
-    try   { Set-WslProfile -Key $Profil.ToLower() -DryRun:$DryRun }
+    try   { Set-WslProfile -Key $Profil.ToLower() -DryRun:$DryRun -ShowDiff:$Verbose }
     catch { Write-Host "ERREUR : $_" -ForegroundColor Red; exit 1 }
     exit
+}
+
+if ($script:QuietMode) {
+    # -Quiet sans flag d'action mene au menu interactif : le desactiver
+    # plutot que de rendre le menu inutilisable (rien ne s'afficherait).
+    $script:QuietMode = $false
+    Microsoft.PowerShell.Utility\Write-Host "  '-Quiet' est ignore en mode menu interactif." -ForegroundColor DarkGray
 }
 
 # Mode par defaut : menu interactif
@@ -394,7 +447,7 @@ do {
         default {
             if ($choice -ne "") {
                 try {
-                    Set-WslProfile -Key $choice
+                    Set-WslProfile -Key $choice -ShowDiff:$Verbose
                     Write-Host "  Appuyez sur Entree pour continuer..." -ForegroundColor DarkGray
                     $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
                 }
