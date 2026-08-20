@@ -7,6 +7,45 @@ BeforeAll {
     . "$PSScriptRoot/../modules/ProfileManager.ps1"
     . "$PSScriptRoot/../modules/Logger.ps1"
     . "$PSScriptRoot/TestHelpers.ps1"
+
+    # Definie ici (scope script, pas dans un simple "function" au niveau
+    # racine du fichier) : Pester 6 n'expose pas les fonctions declarees
+    # hors BeforeAll/BeforeEach aux blocs It (phase "run" separee de la
+    # phase "discovery").
+    function script:Get-ValidProfilesConfig {
+        return @{
+            version  = "2.0.0"
+            profiles = @{
+                web = @{
+                    displayName = "WEB"
+                    description = "Profil de test"
+                    color       = "Green"
+                    memory      = "4GB"
+                    processors  = 3
+                    swap        = "2GB"
+                    swapFile    = "/tmp/wisely-test-swap.vhdx"
+                    swappiness  = 10
+                }
+                base = @{
+                    displayName = "BASE"
+                    description = "Mode minimal"
+                    color       = "Cyan"
+                    memory      = "2GB"
+                    processors  = 2
+                    swap        = "2GB"
+                    swapFile    = "/tmp/wisely-test-swap.vhdx"
+                    swappiness  = 20
+                }
+            }
+            settings = @{
+                monitorThreshold        = 80
+                monitorIntervalSeconds  = 30
+                historyMaxEntries       = 100
+                backupEnabled           = $true
+                backupHistoryMax        = 5
+            }
+        }
+    }
 }
 
 # NOTE : $script:ProfileConfigCache est partage par tous les Describe
@@ -17,41 +56,6 @@ BeforeAll {
 # mais Pester 6 le rejette ("Each test setup is not supported in root") :
 # chaque Describe ci-dessous appelle donc Clear-ProfileConfigCache en
 # premiere ligne de son propre BeforeEach.
-
-function Get-ValidProfilesConfig {
-    return @{
-        version  = "2.0.0"
-        profiles = @{
-            web = @{
-                displayName = "WEB"
-                description = "Profil de test"
-                color       = "Green"
-                memory      = "4GB"
-                processors  = 3
-                swap        = "2GB"
-                swapFile    = "/tmp/wisely-test-swap.vhdx"
-                swappiness  = 10
-            }
-            base = @{
-                displayName = "BASE"
-                description = "Mode minimal"
-                color       = "Cyan"
-                memory      = "2GB"
-                processors  = 2
-                swap        = "2GB"
-                swapFile    = "/tmp/wisely-test-swap.vhdx"
-                swappiness  = 20
-            }
-        }
-        settings = @{
-            monitorThreshold        = 80
-            monitorIntervalSeconds  = 30
-            historyMaxEntries       = 100
-            backupEnabled           = $true
-            backupHistoryMax        = 5
-        }
-    }
-}
 
 Describe "Get-ProfileConfig" {
 

@@ -116,11 +116,14 @@ function Backup-WslConfig {
 
     # Migration transparente : recupere l'ancien backup unique s'il existe
     # encore et que le nouvel historique est vide, pour ne pas perdre le
-    # filet de securite deja en place chez un utilisateur existant.
+    # filet de securite deja en place chez un utilisateur existant. Suffixe
+    # "_legacy" (pas juste l'horodatage) : evite toute collision de nom
+    # avec le nouveau backup cree juste apres si les deux tombent dans la
+    # meme seconde (horodatage a la seconde pres).
     $legacy = Get-LegacyBackupPath
     if ((Test-Path $legacy) -and (@(Get-ChildItem $dir -Filter "wslconfig_*.backup" -ErrorAction SilentlyContinue)).Count -eq 0) {
         $legacyStamp = (Get-Item $legacy).LastWriteTime.ToString("yyyyMMdd_HHmmss")
-        Copy-Item $legacy (Join-Path $dir "wslconfig_$legacyStamp.backup") -Force
+        Copy-Item $legacy (Join-Path $dir "wslconfig_${legacyStamp}_legacy.backup") -Force
     }
 
     $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
