@@ -69,5 +69,48 @@ else
   log "skills CLI: already installed, skipping"
 fi
 
+# 5. superpowers (obra/superpowers) - via its own plugin marketplace
+# (the official marketplace isn't pre-registered in this environment).
+if ! claude plugin list 2>/dev/null | grep -q "superpowers@superpowers-marketplace"; then
+  if claude plugin marketplace add obra/superpowers-marketplace >>"$LOG_FILE" 2>&1 \
+      && claude plugin install superpowers@superpowers-marketplace >>"$LOG_FILE" 2>&1; then
+    log "superpowers: installed"
+  else
+    log "superpowers: install failed (network?), skipping"
+  fi
+else
+  log "superpowers: already installed, skipping"
+fi
+
+# 6. explain-diff (Chris-Graffagnino/explain-diff) - manual copy, repo root is the skill.
+if [ ! -f "$HOME/.claude/skills/explain-diff/SKILL.md" ]; then
+  TMP_DIR="$(mktemp -d)"
+  if git clone --depth 1 https://github.com/Chris-Graffagnino/explain-diff "$TMP_DIR/explain-diff" >>"$LOG_FILE" 2>&1; then
+    mkdir -p "$HOME/.claude/skills"
+    if cp -r "$TMP_DIR/explain-diff" "$HOME/.claude/skills/explain-diff" 2>>"$LOG_FILE"; then
+      log "explain-diff: installed"
+    else
+      log "explain-diff: copy failed"
+    fi
+  else
+    log "explain-diff: clone failed (network?), skipping"
+  fi
+  rm -rf "$TMP_DIR"
+else
+  log "explain-diff: already installed, skipping"
+fi
+
+# 7. caveman (JuliusBrussee/caveman) - via its own plugin marketplace.
+if ! claude plugin list 2>/dev/null | grep -q "caveman@caveman"; then
+  if claude plugin marketplace add JuliusBrussee/caveman >>"$LOG_FILE" 2>&1 \
+      && claude plugin install caveman@caveman >>"$LOG_FILE" 2>&1; then
+    log "caveman: installed"
+  else
+    log "caveman: install failed (network?), skipping"
+  fi
+else
+  log "caveman: already installed, skipping"
+fi
+
 log "session-start: skills bootstrap finished"
 exit 0
