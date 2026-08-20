@@ -9,14 +9,14 @@ BeforeAll {
     . "$PSScriptRoot/TestHelpers.ps1"
 }
 
-# Hook global (hors Describe) : s'applique a chaque It de ce fichier.
-# $script:ProfileConfigCache est partage par tous les Describe puisque
-# ProfileManager.ps1 n'est dot-source qu'une seule fois pour tout le
-# fichier (BeforeAll) - sans ce reset, un test peut lire silencieusement
+# NOTE : $script:ProfileConfigCache est partage par tous les Describe
+# puisque ProfileManager.ps1 n'est dot-source qu'une seule fois pour tout
+# le fichier (BeforeAll) - sans reset, un test peut lire silencieusement
 # le profiles.json mis en cache par un test precedent au lieu du sien.
-BeforeEach {
-    Clear-ProfileConfigCache
-}
+# Un BeforeEach global hors Describe serait la solution la plus sure,
+# mais Pester 6 le rejette ("Each test setup is not supported in root") :
+# chaque Describe ci-dessous appelle donc Clear-ProfileConfigCache en
+# premiere ligne de son propre BeforeEach.
 
 function Get-ValidProfilesConfig {
     return @{
@@ -56,6 +56,7 @@ function Get-ValidProfilesConfig {
 Describe "Get-ProfileConfig" {
 
     BeforeEach {
+        Clear-ProfileConfigCache
         $script:testRoot = New-TestWslRoot
     }
 
@@ -120,6 +121,7 @@ Describe "Get-ProfileConfig" {
 Describe "Import-Profiles" {
 
     BeforeEach {
+        Clear-ProfileConfigCache
         $script:testRoot = New-TestWslRoot
         Set-TestUserProfile -Path $script:testRoot
         $script:importSource = Join-Path $script:testRoot "import-source.json"
@@ -204,6 +206,7 @@ Describe "Import-Profiles" {
 Describe "Test-SwapFilePath" {
 
     BeforeEach {
+        Clear-ProfileConfigCache
         $script:testRoot = New-TestWslRoot
     }
 
@@ -226,6 +229,7 @@ Describe "Test-SwapFilePath" {
 Describe "Set-WslProfile - validation du swap file" {
 
     BeforeEach {
+        Clear-ProfileConfigCache
         $script:testRoot = New-TestWslRoot
         Set-TestUserProfile -Path $script:testRoot
         Enable-WslMocks
@@ -267,6 +271,7 @@ Describe "Set-WslProfile - validation du swap file" {
 Describe "Backup-WslConfig" {
 
     BeforeEach {
+        Clear-ProfileConfigCache
         $script:testRoot = New-TestWslRoot
         Set-TestUserProfile -Path $script:testRoot
         New-TestWslConfig | Out-Null
@@ -324,6 +329,7 @@ Describe "Backup-WslConfig" {
 Describe "Invoke-Rollback" {
 
     BeforeEach {
+        Clear-ProfileConfigCache
         $script:testRoot = New-TestWslRoot
         Set-TestUserProfile -Path $script:testRoot
         Enable-WslMocks
@@ -358,6 +364,7 @@ Describe "Invoke-Rollback" {
 Describe "Get-ProfileConfig cache" {
 
     BeforeEach {
+        Clear-ProfileConfigCache
         $script:testRoot = New-TestWslRoot
         Set-TestUserProfile -Path $script:testRoot
         New-TestProfilesJson -Config (Get-ValidProfilesConfig) | Out-Null

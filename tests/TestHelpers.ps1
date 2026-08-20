@@ -4,19 +4,26 @@
 # ============================================================
 #
 #  Piege connu (voir docs/ROADMAP.md paragraphe 7) : les tests tournent
-#  aussi sur un runner Linux en CI (Join-Path ne "descend" pas dans un
-#  sous-dossier avec un separateur backslash sur Linux, et $env:USERPROFILE
-#  est vide par defaut). Ces helpers passent toujours par les vraies
-#  fonctions Get-ProfilesPath / Get-WslConfigPath plutot que de recomposer
-#  un chemin a la main, pour rester valables sur les deux plateformes.
+#  aussi sur un runner Linux en CI. Verifie empiriquement sur ce runner :
+#  Join-Path "$root" "data\profiles.json" normalise bel et bien le
+#  backslash en separateur reel (donne "$root/data/profiles.json"), donc
+#  "data" doit exister comme un vrai sous-dossier - contrairement a
+#  l'hypothese initiale. $env:USERPROFILE est egalement vide par defaut.
+#  Ces helpers passent toujours par les vraies fonctions
+#  Get-ProfilesPath / Get-WslConfigPath / Get-HistoryPath plutot que de
+#  recomposer un chemin a la main, pour rester valables sur les deux
+#  plateformes quel que soit le comportement reel de Join-Path.
 
 function New-TestWslRoot {
     <#
     .SYNOPSIS
-        Cree un dossier temporaire isole et le declare comme $Global:WSLRoot.
+        Cree un dossier temporaire isole (avec son sous-dossier "data",
+        comme le fait wisely.ps1 au demarrage) et le declare comme
+        $Global:WSLRoot.
     #>
     $root = Join-Path ([System.IO.Path]::GetTempPath()) ("wisely-test-" + [guid]::NewGuid().ToString("N"))
     New-Item -ItemType Directory -Path $root -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $root "data") -Force | Out-Null
     $Global:WSLRoot = $root
     return $root
 }
