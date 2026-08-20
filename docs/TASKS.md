@@ -2,13 +2,6 @@
 
 ## Active
 
-- [ ] **Pester tests — Get-ProfileConfig et Import-Profiles** - dette technique prioritaire avant tout autre chantier structurel (v2.1)
-- [ ] **Validation du chemin du swap file** - v2.1
-- [ ] **Backup versionné avec historique glissant** - v2.1
-- [ ] **Flags -Verbose / -Quiet** - v2.1
-- [ ] **Fix bug visuel de troncature de la barre RAM** - `wisely -Status`, v2.1
-- [ ] **Cache mémoïsé pour Get-ProfileConfig** - via variables `$script:`, invalidation par `Clear-ProfileConfigCache`, v2.1
-
 ## Waiting On
 
 ## Someday
@@ -22,6 +15,12 @@
 
 ## Done
 
+- [x] ~~Pester tests — Get-ProfileConfig et Import-Profiles (+ Logger, swap, backup, diff)~~ (v2.1)
+- [x] ~~Validation du chemin du swap file~~ (v2.1)
+- [x] ~~Backup versionné avec historique glissant (`backupHistoryMax`)~~ (v2.1)
+- [x] ~~Flags -Verbose / -Quiet~~ (v2.1)
+- [x] ~~Fix bug visuel de troncature de la barre RAM (`wisely -Status`)~~ (v2.1)
+- [x] ~~Cache mémoïsé pour Get-ProfileConfig (`Clear-ProfileConfigCache`)~~ (v2.1)
 - [x] ~~v2.0.0 stable publiée sur GitHub, toutes les conclusions d'audit résolues~~
 - [x] ~~Chronomètre de switch via [System.Diagnostics.Stopwatch]~~
 - [x] ~~Dashboard `wisely -Status`~~
