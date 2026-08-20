@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release (e.g. v2.1.0). Needed for reruns: a tag pushed with the default GITHUB_TOKEN (e.g. by bump-version.yml) does not auto-trigger this workflow, so it must be relaunched manually for that tag."
+        required: false
+        type: string
 
 jobs:
   release:
@@ -13,8 +19,17 @@ jobs:
       contents: write
 
     steps:
+      - name: Resolve target tag
+        id: tag
+        run: |
+          TAG="${{ github.event.inputs.tag }}"
+          if [ -z "$TAG" ]; then TAG="${{ github.ref_name }}"; fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.tag.outputs.tag }}
 
       - name: Read version
         id: version
@@ -23,7 +38,7 @@ jobs:
       - name: Extract changelog section
         id: changelog
         run: |
-          TAG="${{ github.ref_name }}"
+          TAG="${{ steps.tag.outputs.tag }}"
           NOTES=$(awk "/^## ${TAG} /{found=1; next} found && /^## /{exit} found{print}" CHANGELOG.md)
           if [ -z "$(echo "$NOTES" | tr -d '[:space:]')" ]; then
             NOTES="See [CHANGELOG.md](CHANGELOG.md) for details."
@@ -36,7 +51,7 @@ jobs:
 
       - name: Create release archive
         run: |
-          zip -r "wisely-${{ github.ref_name }}.zip" \
+          zip -r "wisely-${{ steps.tag.outputs.tag }}.zip" \
             wisely.ps1 \
             data/profiles.json \
             modules/ \
@@ -48,7 +63,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${{ github.ref_name }}" \
-            --title "Wisely ${{ github.ref_name }}" \
+          gh release create "${{ steps.tag.outputs.tag }}" \
+            --title "Wisely ${{ steps.tag.outputs.tag }}" \
             --notes "${{ steps.changelog.outputs.notes }}" \
-            "wisely-${{ github.ref_name }}.zip"
+            "wisely-${{ steps.tag.outputs.tag }}.zip"
