@@ -1,5 +1,17 @@
 # Wisely - Changelog
 
+## v2.1.0 - 2026-08-20
+
+### v2.1 - Polish & Fiabilite
+
+- Suite de tests Pester (tests/), integree a la CI - dette technique prioritaire du ROADMAP resolue
+- Validation du chemin du swap file avant ecriture dans .wslconfig
+- Backup versionne avec historique glissant (data/backups/, settings.backupHistoryMax, defaut 5)
+- Cache memoise pour Get-ProfileConfig (Clear-ProfileConfigCache)
+- Flags -Verbose (diff .wslconfig avant/apres switch) et -Quiet
+- Fix du bug de troncature de la barre RAM dans wisely -Status
+
+
 ## v2.0.0 - 2026-03-18
 
 ### Architecture
