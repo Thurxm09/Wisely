@@ -410,6 +410,12 @@ Describe "Get-ProfileConfig cache" {
     }
 
     It "New-CustomProfile invalide le cache de facon transparente" {
+        # Get-CimInstance (module CimCmdlets) n'existe pas sur le runner
+        # Linux de la CI - meme piege que "wsl" (Pester refuse de mocker
+        # une commande totalement introuvable), on la stub d'abord.
+        if (-not (Get-Command Get-CimInstance -ErrorAction SilentlyContinue)) {
+            function script:Get-CimInstance { }
+        }
         Mock Get-CimInstance { [PSCustomObject]@{ NumberOfLogicalProcessors = 8 } }
 
         Get-ProfileConfig | Out-Null
