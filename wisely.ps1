@@ -58,8 +58,11 @@ $Global:WSLRoot = $PSScriptRoot
 $script:QuietMode = $Quiet.IsPresent
 
 function Write-Host {
+    # Pas de ValueFromPipeline : aucun appel Write-Host du projet n'utilise
+    # le pipeline (verifie), et l'accepter sans bloc process serait de toute
+    # facon incorrect (PSUseProcessBlockForPipelineCommand).
     param(
-        [Parameter(Position = 0, ValueFromPipeline)][object]$Object,
+        [Parameter(Position = 0)][object]$Object,
         [switch]$NoNewline,
         [System.ConsoleColor]$ForegroundColor,
         [System.ConsoleColor]$BackgroundColor
