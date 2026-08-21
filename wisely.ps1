@@ -82,7 +82,7 @@ if (-not (Test-Path $dataDir)) { New-Item -ItemType Directory -Path $dataDir | O
 function Get-AppVersion {
     $versionFile = Join-Path $PSScriptRoot "VERSION"
     if (Test-Path $versionFile) { return (Get-Content $versionFile -Raw).Trim() }
-    return "2.0.0"
+    return "2.1.0"
 }
 
 $Global:AppVersion = Get-AppVersion

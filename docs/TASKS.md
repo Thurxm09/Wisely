@@ -4,13 +4,9 @@
 
 - [ ] **CONTRIBUTING.md** - v2.2
 - [ ] **Templates issue/PR** - v2.2
-- [ ] **Résolution long terme de l'alias PS7** - v2.2 (contournement déjà en place via symlink des profils)
 - [ ] **JSON Schema pour profiles.json** - v2.2
-- [ ] **Corriger le badge LICENSE (MIT → GPL v3) dans le README** - v2.2 (reporté de v2.1)
-- [ ] **Check admin dans `Stop-WslMonitor`** - v2.2 (reporté de v2.1)
 - [ ] **Support des variables d'environnement dans `swapFile`** (`%TEMP%`, `%USERPROFILE%`) - v2.2 (reporté de v2.1)
 - [ ] **Commande dédiée `wisely status`** - v2.2 (reporté de v2.1)
-- [ ] **Afficher le temps de switch mesuré** - v2.2 (reporté de v2.1)
 
 ## Waiting On
 
@@ -36,3 +32,6 @@
 - [x] ~~Dotfiles synchronisés sur repo privé~~
 - [x] ~~Remote SSH configuré pour le repo wisely~~
 - [x] ~~Bug d'alias PS7 résolu (symlink profils PS5.1/PS7)~~
+- [x] ~~Corriger le badge LICENSE (MIT → GPL v3) dans le README~~
+- [x] ~~Check admin dans `Stop-WslMonitor`~~
+- [x] ~~Afficher le temps de switch mesuré~~
