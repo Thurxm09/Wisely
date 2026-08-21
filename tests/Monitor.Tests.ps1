@@ -251,3 +251,101 @@ Describe "Get-MonitorStatus" {
         $output | Should -Match "Erreurs toast"
     }
 }
+
+Describe "Get-VmmemStats" {
+
+    BeforeEach {
+        if (-not (Get-Command Get-CimInstance -ErrorAction SilentlyContinue)) {
+            function script:Get-CimInstance { }
+        }
+        Mock Start-Sleep {}
+        Mock Get-CimInstance { [PSCustomObject]@{ NumberOfLogicalProcessors = 4 } }
+    }
+
+    It "retourne `$null si vmmem est absent" {
+        Mock Get-Process { $null }
+
+        Get-VmmemStats | Should -Be $null
+    }
+
+    It "calcule le pourcentage CPU par delta entre deux echantillons" {
+        $script:sampleCount = 0
+        Mock Get-Process {
+            $script:sampleCount++
+            $cpu = if ($script:sampleCount -eq 1) { 10.0 } else { 10.1 }
+            [PSCustomObject]@{ CPU = $cpu; WorkingSet64 = 2GB }
+        }
+
+        $result = Get-VmmemStats -SampleMs 200
+
+        $result.cpuPct | Should -Be 12.5
+        $result.ramGB | Should -Be 2
+    }
+
+    It "plafonne a 0 si le delta est negatif (bruit de mesure)" {
+        $script:sampleCount = 0
+        Mock Get-Process {
+            $script:sampleCount++
+            $cpu = if ($script:sampleCount -eq 1) { 10.5 } else { 10.4 }
+            [PSCustomObject]@{ CPU = $cpu; WorkingSet64 = 1GB }
+        }
+
+        (Get-VmmemStats -SampleMs 200).cpuPct | Should -Be 0
+    }
+
+    It "retourne `$null si la mesure echoue, sans lever d'exception" {
+        Mock Get-Process { throw "erreur" }
+
+        { Get-VmmemStats } | Should -Not -Throw
+        Get-VmmemStats | Should -Be $null
+    }
+}
+
+Describe "Get-WatchSnapshot" {
+
+    BeforeEach {
+        Clear-ProfileConfigCache
+        $script:testRoot = New-TestWslRoot
+        Set-TestUserProfile -Path $script:testRoot
+        if (-not (Get-Command Get-CimInstance -ErrorAction SilentlyContinue)) {
+            function script:Get-CimInstance { }
+        }
+        Mock Start-Sleep {}
+        Mock Get-CimInstance { [PSCustomObject]@{ NumberOfLogicalProcessors = 4 } }
+        New-TestProfilesJson -Config (Get-ValidProfilesConfig) | Out-Null
+        New-TestWslConfig -Content "[wsl2]`nmemory=4GB`nprocessors=3`n"
+    }
+
+    AfterEach {
+        Restore-TestUserProfile
+        Remove-TestWslRoot -Path $script:testRoot
+    }
+
+    It "expose le profil actif, 'Aucune' alerte, et des stats vmmem nulles si vmmem est absent" {
+        Mock Get-Process { $null }
+
+        $snap = Get-WatchSnapshot
+
+        $snap.activeProfile | Should -Be "WEB"
+        $snap.activeMemory | Should -Be "4GB"
+        $snap.lastAlert | Should -Be "Aucune"
+        $snap.vmmemRamGB | Should -Be $null
+        $snap.vmmemCpuPct | Should -Be $null
+    }
+
+    It "inclut la derniere alerte quand le fichier cooldown existe" {
+        Mock Get-Process { $null }
+        Set-Content -Path (Join-Path $Global:WSLRoot "data\monitor_cooldown.txt") -Value "2026-08-21 10:00:00" -Encoding UTF8
+
+        (Get-WatchSnapshot).lastAlert | Should -Be "2026-08-21 10:00:00"
+    }
+
+    It "inclut les stats vmmem quand le process existe" {
+        Mock Get-Process { [PSCustomObject]@{ CPU = 5.0; WorkingSet64 = 3GB } }
+
+        $snap = Get-WatchSnapshot
+
+        $snap.vmmemRamGB | Should -Be 3
+        $snap.vmmemCpuPct | Should -Not -BeNullOrEmpty
+    }
+}
