@@ -533,3 +533,12 @@ Describe "Show-WslConfigDiff" {
         $output | Should -Not -Match "[+-] swap=2GB"
     }
 }
+
+Describe "Format-StatusShort" {
+
+    It "formate le profil actif en une ligne compacte '[WSL:nom memoire]'" {
+        $activeProfile = [PSCustomObject]@{ name = "WEB"; memory = "4GB" }
+
+        Format-StatusShort -ActiveProfile $activeProfile | Should -Be "[WSL:WEB 4GB]"
+    }
+}

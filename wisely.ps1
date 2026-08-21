@@ -29,6 +29,7 @@ param(
     [switch]$Report,
     [switch]$Clean,
     [switch]$Status,
+    [switch]$Short,
     [switch]$Version,
     [switch]$Verbose,
     [switch]$Quiet
@@ -339,7 +340,11 @@ function Show-InteractiveMenu {
 # ---- Point d'entree -------------------------------------------------
 
 if ($Status) {
-    Show-StatusDashboard
+    if ($Short) {
+        Write-Output (Format-StatusShort -ActiveProfile (Get-ActiveProfile))
+    } else {
+        Show-StatusDashboard
+    }
     exit
 }
 

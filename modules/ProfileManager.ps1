@@ -74,6 +74,11 @@ function Get-ActiveProfile {
     }
 }
 
+function Format-StatusShort {
+    param([Parameter(Mandatory)][PSCustomObject]$ActiveProfile)
+    return "[WSL:$($ActiveProfile.name) $($ActiveProfile.memory)]"
+}
+
 # ---- Integrite & backup ---------------------------------------------
 
 function Test-WslConfigIntegrity {
