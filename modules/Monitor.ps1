@@ -1,13 +1,16 @@
 Set-Variable -Name TASK_NAME         -Value "WSL2-RamMonitor"       -Option Constant -Scope Script
 Set-Variable -Name WEEKLY_TASK_NAME  -Value "WSL2-WeeklyReport"     -Option Constant -Scope Script
 
+function Test-IsAdminUser {
+    return ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
+        [Security.Principal.WindowsBuiltinRole]::Administrator)
+}
+
 function Start-WslMonitor {
     param([int]$CooldownMin = 30)
 
     # Verification des droits administrateur
-    $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
-        [Security.Principal.WindowsBuiltinRole]::Administrator)
-    if (-not $isAdmin) {
+    if (-not (Test-IsAdminUser)) {
         Write-Host "  ERREUR : Le demarrage du monitoring requiert des droits administrateur." -ForegroundColor Red
         Write-Host "  Relancez PowerShell en tant qu'Administrateur." -ForegroundColor Gray
         return
@@ -78,9 +81,7 @@ function Start-WslMonitor {
 }
 
 function Stop-WslMonitor {
-    $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
-    [Security.Principal.WindowsBuiltinRole]::Administrator)
-    if (-not $isAdmin) {
+    if (-not (Test-IsAdminUser)) {
         Write-Host "  ERREUR : L'arret du monitoring requiert des droits administrateur." -ForegroundColor Red
         Write-Host "  Relancez PowerShell en tant qu'Administrateur." -ForegroundColor Gray
         return

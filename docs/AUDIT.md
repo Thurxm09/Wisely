@@ -610,7 +610,7 @@ awk -v ver="$NEW\_VERSION" -v date="$DATE" -v entry="$ENTRY" '
 
 \*\*Priorité :\*\* 🟠 Important  
 
-\*\*Statut :\*\* ❌ Non corrigé
+\*\*Statut :\*\* ✅ Corrigé (revérifié v2.3 : `README.md` affiche `License-GPL--v3-blue`)
 
 &#x20;
 
@@ -654,7 +654,7 @@ Pour un projet open-source, l'affichage de la mauvaise licence dans le badge est
 
 \*\*Priorité :\*\* 🟡 Secondaire  
 
-\*\*Statut :\*\* ❌ Non corrigé
+\*\*Statut :\*\* ✅ Corrigé (revérifié v2.3 : `Stop-WslMonitor` a le meme check admin que `Start-WslMonitor`, desormais factorise dans `Test-IsAdminUser`)
 
 &#x20;
 

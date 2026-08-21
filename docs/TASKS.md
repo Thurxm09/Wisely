@@ -2,8 +2,6 @@
 
 ## Active
 
-- [ ] **Tests Pester pour Monitor.ps1, MonitorTask.ps1, WeeklyReport.ps1** (0 couverture actuelle) — prérequis avant le reste de v2.3
-- [ ] **Vérifier/clore le finding N-2 d'AUDIT.md** (check admin dans `Stop-WslMonitor`, statut ambigu)
 - [ ] **Métriques réelles post-switch** (RAM delta, temps de redémarrage WSL2) — v2.3
 - [ ] **Enrichir les rapports hebdomadaires** avec la RAM moyenne par profil — v2.3
 - [ ] **`wisely -Watch`** (dashboard temps réel) — v2.3
@@ -18,6 +16,8 @@
 
 ## Done
 
+- [x] ~~Tests Pester pour Monitor.ps1, MonitorTask.ps1, WeeklyReport.ps1~~ (v2.3, prerequis avant metriques/-Watch)
+- [x] ~~Verifier/clore le finding N-2 d'AUDIT.md~~ (v2.3 - deja corrige dans le code, statut du doc mis a jour)
 - [x] ~~CONTRIBUTING.md~~ (v2.2)
 - [x] ~~Templates issue/PR~~ (v2.2)
 - [x] ~~JSON Schema pour profiles.json~~ (v2.2)
