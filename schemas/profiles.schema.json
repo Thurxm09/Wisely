@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Thurxm09/Wisely/schemas/profiles.schema.json",
+  "title": "Wisely profiles.json",
+  "description": "Schema de validation pour data/profiles.json (profils WSL2 et parametres globaux).",
+  "type": "object",
+  "required": ["version", "profiles"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "profiles": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "$ref": "#/$defs/profile"
+      }
+    },
+    "settings": {
+      "$ref": "#/$defs/settings"
+    }
+  },
+  "$defs": {
+    "profile": {
+      "type": "object",
+      "required": ["displayName", "memory", "processors", "swap"],
+      "additionalProperties": false,
+      "properties": {
+        "displayName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "color": {
+          "type": "string"
+        },
+        "memory": {
+          "type": "string",
+          "pattern": "^\\d+GB$"
+        },
+        "processors": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "swap": {
+          "type": "string",
+          "pattern": "^\\d+GB$"
+        },
+        "swapFile": {
+          "type": "string"
+        },
+        "swappiness": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    },
+    "settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "monitorThreshold": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "monitorIntervalSeconds": {
+          "type": "integer",
+          "exclusiveMinimum": 0
+        },
+        "historyMaxEntries": {
+          "type": "integer",
+          "exclusiveMinimum": 0
+        },
+        "backupEnabled": {
+          "type": "boolean"
+        },
+        "backupHistoryMax": {
+          "type": "integer",
+          "exclusiveMinimum": 0
+        }
+      }
+    }
+  }
+}

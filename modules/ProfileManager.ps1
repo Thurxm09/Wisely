@@ -74,6 +74,11 @@ function Get-ActiveProfile {
     }
 }
 
+function Format-StatusShort {
+    param([Parameter(Mandatory)][PSCustomObject]$ActiveProfile)
+    return "[WSL:$($ActiveProfile.name) $($ActiveProfile.memory)]"
+}
+
 # ---- Integrite & backup ---------------------------------------------
 
 function Test-WslConfigIntegrity {
@@ -101,6 +106,17 @@ function Get-BackupHistoryMax {
     }
 }
 
+function Get-BackupEnabled {
+    $default = $true
+    try {
+        $cfg = Get-ProfileConfig
+        if ($null -ne $cfg.settings.backupEnabled) { return [bool]$cfg.settings.backupEnabled }
+        return $default
+    } catch {
+        return $default
+    }
+}
+
 function Backup-WslConfig {
     <#
     .SYNOPSIS
@@ -110,6 +126,7 @@ function Backup-WslConfig {
     #>
     $src = Get-WslConfigPath
     if (-not (Test-Path $src)) { return }
+    if (-not (Get-BackupEnabled)) { return }
 
     $dir = Get-BackupDir
     if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
@@ -168,6 +185,22 @@ function Invoke-Rollback {
 # Note : swapFile utilise des slashes forward (C:/Temp/...)
 # WSL2 et Windows acceptent les deux formats dans .wslconfig
 # Cela evite le probleme d'echappement du backslash
+
+function Resolve-ProfilePaths {
+    <#
+    .SYNOPSIS
+        Etend les variables d'environnement (%TEMP%, %USERPROFILE%,
+        %LOCALAPPDATA%) dans le swapFile d'un profil et normalise le
+        resultat en forward slashes. Retourne une copie du profil - ne
+        mute jamais l'original, pour ne pas corrompre le cache
+        $script:ProfileConfigCache.
+    #>
+    param([Parameter(Mandatory)][PSCustomObject]$ProfileDef)
+    $copy = $ProfileDef | ConvertTo-Json -Depth 10 | ConvertFrom-Json
+    $expanded = [System.Environment]::ExpandEnvironmentVariables($copy.swapFile)
+    $copy.swapFile = $expanded -replace "\\", "/"
+    return $copy
+}
 
 function Test-SwapFilePath {
     <#
@@ -233,7 +266,7 @@ function Set-WslProfile {
     if ($null -eq $prop) {
         throw "Profil '$Key' introuvable. Profils disponibles : $($config.profiles.PSObject.Properties.Name -join ', ')"
     }
-    $profileDef = $prop.Value
+    $profileDef = Resolve-ProfilePaths -ProfileDef $prop.Value
     try {
         Test-SwapFilePath -SwapFile $profileDef.swapFile
     } catch {
@@ -306,7 +339,7 @@ function New-CustomProfile {
         memory      = $Memory
         processors  = $Processors
         swap        = $Swap
-        swapFile    = "C:/Temp/wsl-swap.vhdx"
+        swapFile    = "%TEMP%/wisely-swap.vhdx"
         swappiness  = $Swappiness
     }
     $config.profiles | Add-Member -MemberType NoteProperty -Name $Key.ToLower() -Value $newProfile -Force
@@ -314,6 +347,35 @@ function New-CustomProfile {
     Clear-ProfileConfigCache
     Write-Host "  OK - Profil '$($Key.ToUpper())' cree ($Memory / $Processors CPU)." -ForegroundColor Green
     Write-SwitchLog -Action "CUSTOM" -ProfileKey $Key.ToLower() -Details "Cree : $Memory, $Processors CPU"
+}
+
+function New-SnapshotProfile {
+    param([int]$ProcessCount = 5)
+    if (-not (Test-Path (Get-WslConfigPath))) {
+        throw "Aucun .wslconfig actif. Impossible de creer un snapshot sans profil actif."
+    }
+    $active    = Get-ActiveProfile
+    $key       = "snapshot-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+    $topProcs  = Get-Process |
+                 Sort-Object -Property WorkingSet64 -Descending |
+                 Select-Object -First $ProcessCount -ExpandProperty ProcessName
+
+    $config     = Get-ProfileConfig
+    $newProfile = [PSCustomObject]@{
+        displayName = $key.ToUpper()
+        description = "Snapshot du $(Get-Date -Format 'yyyy-MM-dd HH:mm') - Top process : $($topProcs -join ', ')"
+        color       = "Magenta"
+        memory      = $active.memory
+        processors  = [int]$active.processors
+        swap        = "2GB"
+        swapFile    = "%TEMP%/wisely-swap.vhdx"
+        swappiness  = 10
+    }
+    $config.profiles | Add-Member -MemberType NoteProperty -Name $key -Value $newProfile -Force
+    $config | ConvertTo-Json -Depth 10 | Set-Content (Get-ProfilesPath) -Encoding UTF8
+    Clear-ProfileConfigCache
+    Write-SwitchLog -Action "CUSTOM" -ProfileKey $key -Details "Snapshot cree : $($active.memory), $($active.processors) CPU"
+    return $key
 }
 
 function Export-Profiles {

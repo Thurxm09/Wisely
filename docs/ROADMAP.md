@@ -196,7 +196,7 @@ Reporté à v2.2 : correction du badge LICENSE (MIT → GPL v3) dans le README, 
  
 **v2.2 — DX & Documentation**
  
-Rédiger `CONTRIBUTING.md`. Ajouter les templates d'issues et PRs GitHub. Enrichir le README avec une galerie de profils par stack. Rédiger le snippet Oh My Posh / Windows Terminal Prompt. Ajouter la commande `wisely -Snapshot` pour capturer le profil courant. Repris de v2.1 : badge LICENSE, check admin dans `Stop-WslMonitor`, variables d'environnement dans `swapFile`, commande `wisely status`, affichage du temps de switch mesuré.
+Rédiger `CONTRIBUTING.md`. Ajouter les templates d'issues et PRs GitHub. Enrichir le README avec une galerie de profils par stack. Rédiger le snippet Oh My Posh / Windows Terminal Prompt. Ajouter la commande `wisely -Snapshot` pour capturer le profil courant. Repris de v2.1 : variables d'environnement dans `swapFile`, commande `wisely status`.
  
 **v2.3 — Observabilité**
  

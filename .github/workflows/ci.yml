@@ -95,7 +95,9 @@ jobs:
       - name: Validate profiles.json
         shell: pwsh
         run: |
-          $json = Get-Content data/profiles.json -Raw | ConvertFrom-Json
-          if ($null -eq $json.profiles) { throw "profiles.json: missing 'profiles' key" }
-          if ($null -eq $json.version)  { throw "profiles.json: missing 'version' key" }
-          Write-Host "profiles.json is valid (version $($json.version), $(@($json.profiles.PSObject.Properties).Count) profile(s))."
+          $json = Get-Content data/profiles.json -Raw
+          if (-not (Test-Json -Json $json -SchemaFile schemas/profiles.schema.json)) {
+            throw "profiles.json does not match schemas/profiles.schema.json"
+          }
+          $parsed = $json | ConvertFrom-Json
+          Write-Host "profiles.json is valid (version $($parsed.version), $(@($parsed.profiles.PSObject.Properties).Count) profile(s))."

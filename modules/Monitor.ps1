@@ -17,11 +17,11 @@ function Start-WslMonitor {
     $config = Get-ProfileConfig
     try {
         $threshold   = if ($config.settings.monitorThreshold)      { [int]$config.settings.monitorThreshold }      else { 80 }
-        $intervalSec = if ($config.settings.monitorIntervalSeconds) { [int]$config.settings.monitorIntervalSeconds } else { 60 }
+        $intervalSec = if ($config.settings.monitorIntervalSeconds) { [int]$config.settings.monitorIntervalSeconds } else { 30 }
     } catch {
         Write-Host "  AVERTISSEMENT : valeur numerique invalide dans settings (monitorThreshold / monitorIntervalSeconds). Valeurs par defaut utilisees." -ForegroundColor DarkYellow
         $threshold   = 80
-        $intervalSec = 60
+        $intervalSec = 30
     }
     $intervalMin = [math]::Max(1, [math]::Ceiling($intervalSec / 60))
 

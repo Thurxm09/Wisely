@@ -782,9 +782,9 @@ Après les corrections, la gestion des chemins reste légèrement hétérogène 
 
 | S-4 | Script CHANGELOG fragile | bump-version.yml | 🟡 Secondaire | ✅ Corrigé |
 
-| N-1 | Badge LICENSE incorrect (MIT vs GPL v3) | README.md | 🟠 Important | ❌ À corriger |
+| N-1 | Badge LICENSE incorrect (MIT vs GPL v3) | README.md | 🟠 Important | ✅ Corrigé |
 
-| N-2 | Pas de check admin pour `Stop-WslMonitor` | Monitor.ps1 | 🟡 Secondaire | ❌ À corriger |
+| N-2 | Pas de check admin pour `Stop-WslMonitor` | Monitor.ps1 | 🟡 Secondaire | ✅ Corrigé |
 
 &#x20;
 

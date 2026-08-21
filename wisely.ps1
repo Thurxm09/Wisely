@@ -29,6 +29,8 @@ param(
     [switch]$Report,
     [switch]$Clean,
     [switch]$Status,
+    [switch]$Short,
+    [switch]$Snapshot,
     [switch]$Version,
     [switch]$Verbose,
     [switch]$Quiet
@@ -82,7 +84,7 @@ if (-not (Test-Path $dataDir)) { New-Item -ItemType Directory -Path $dataDir | O
 function Get-AppVersion {
     $versionFile = Join-Path $PSScriptRoot "VERSION"
     if (Test-Path $versionFile) { return (Get-Content $versionFile -Raw).Trim() }
-    return "2.0.0"
+    return "2.1.0"
 }
 
 $Global:AppVersion = Get-AppVersion
@@ -339,7 +341,23 @@ function Show-InteractiveMenu {
 # ---- Point d'entree -------------------------------------------------
 
 if ($Status) {
-    Show-StatusDashboard
+    if ($Short) {
+        Write-Output (Format-StatusShort -ActiveProfile (Get-ActiveProfile))
+    } else {
+        Show-StatusDashboard
+    }
+    exit
+}
+
+if ($Snapshot) {
+    try {
+        $key = New-SnapshotProfile
+        Write-Host "  OK - Snapshot '$key' cree a partir du profil actif." -ForegroundColor Green
+        Write-Host "  Pour y revenir : .\wisely.ps1 $key" -ForegroundColor DarkGray
+    } catch {
+        Write-Host "ERREUR : $_" -ForegroundColor Red
+        exit 1
+    }
     exit
 }
 

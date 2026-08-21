@@ -207,6 +207,66 @@ Describe "Import-Profiles" {
     }
 }
 
+Describe "Resolve-ProfilePaths" {
+
+    BeforeEach {
+        Clear-ProfileConfigCache
+        $script:originalTemp = $env:TEMP
+        $script:originalUserProfile = $env:USERPROFILE
+        $script:originalLocalAppData = $env:LOCALAPPDATA
+    }
+
+    AfterEach {
+        $env:TEMP = $script:originalTemp
+        $env:USERPROFILE = $script:originalUserProfile
+        $env:LOCALAPPDATA = $script:originalLocalAppData
+    }
+
+    It "etend %TEMP% dans swapFile" {
+        $env:TEMP = "C:/Users/test/AppData/Local/Temp"
+        $original = [PSCustomObject]@{ displayName = "TEST"; swapFile = "%TEMP%/wisely-swap.vhdx" }
+
+        $resolved = Resolve-ProfilePaths -ProfileDef $original
+
+        $resolved.swapFile | Should -Be "C:/Users/test/AppData/Local/Temp/wisely-swap.vhdx"
+    }
+
+    It "etend %USERPROFILE% dans swapFile" {
+        $env:USERPROFILE = "C:/Users/test"
+        $original = [PSCustomObject]@{ displayName = "TEST"; swapFile = "%USERPROFILE%/wisely-swap.vhdx" }
+
+        $resolved = Resolve-ProfilePaths -ProfileDef $original
+
+        $resolved.swapFile | Should -Be "C:/Users/test/wisely-swap.vhdx"
+    }
+
+    It "etend %LOCALAPPDATA% dans swapFile" {
+        $env:LOCALAPPDATA = "C:/Users/test/AppData/Local"
+        $original = [PSCustomObject]@{ displayName = "TEST"; swapFile = "%LOCALAPPDATA%/wisely-swap.vhdx" }
+
+        $resolved = Resolve-ProfilePaths -ProfileDef $original
+
+        $resolved.swapFile | Should -Be "C:/Users/test/AppData/Local/wisely-swap.vhdx"
+    }
+
+    It "laisse un chemin litteral inchange" {
+        $original = [PSCustomObject]@{ displayName = "TEST"; swapFile = "C:/Temp/wsl-swap.vhdx" }
+
+        $resolved = Resolve-ProfilePaths -ProfileDef $original
+
+        $resolved.swapFile | Should -Be "C:/Temp/wsl-swap.vhdx"
+    }
+
+    It "ne mute jamais l'objet original passe en parametre" {
+        $env:TEMP = "C:/Users/test/AppData/Local/Temp"
+        $original = [PSCustomObject]@{ displayName = "TEST"; swapFile = "%TEMP%/wisely-swap.vhdx" }
+
+        Resolve-ProfilePaths -ProfileDef $original | Out-Null
+
+        $original.swapFile | Should -Be "%TEMP%/wisely-swap.vhdx"
+    }
+}
+
 Describe "Test-SwapFilePath" {
 
     BeforeEach {
@@ -270,6 +330,20 @@ Describe "Set-WslProfile - validation du swap file" {
 
         { Set-WslProfile -Key "web" -DryRun } | Should -Not -Throw
     }
+
+    It "accepte et etend un profil dont le swapFile utilise %TEMP%" {
+        $config = Get-ValidProfilesConfig
+        $config.profiles.web.swapFile = "%TEMP%/wisely-swap.vhdx"
+        New-TestProfilesJson -Config $config
+        $originalTemp = $env:TEMP
+        $env:TEMP = $script:testRoot
+
+        try {
+            { Set-WslProfile -Key "web" -DryRun } | Should -Not -Throw
+        } finally {
+            $env:TEMP = $originalTemp
+        }
+    }
 }
 
 Describe "Backup-WslConfig" {
@@ -327,6 +401,19 @@ Describe "Backup-WslConfig" {
 
         $files = @(Get-ChildItem (Get-BackupDir) -Filter "wslconfig_*.backup")
         $files.Count | Should -Be 2
+    }
+
+    Context "backupEnabled = `$false" {
+
+        It "ne cree aucun backup quand backupEnabled est desactive dans profiles.json" {
+            $config = Get-ValidProfilesConfig
+            $config.settings.backupEnabled = $false
+            New-TestProfilesJson -Config $config
+
+            Backup-WslConfig
+
+            Test-Path (Get-BackupDir) | Should -Be $false
+        }
     }
 }
 
@@ -444,5 +531,73 @@ Describe "Show-WslConfigDiff" {
         $output | Should -Match "\+ processors=3"
         # Ligne identique dans old/new : ne doit apparaitre ni en '-' ni en '+'
         $output | Should -Not -Match "[+-] swap=2GB"
+    }
+}
+
+Describe "Format-StatusShort" {
+
+    It "formate le profil actif en une ligne compacte '[WSL:nom memoire]'" {
+        $activeProfile = [PSCustomObject]@{ name = "WEB"; memory = "4GB" }
+
+        Format-StatusShort -ActiveProfile $activeProfile | Should -Be "[WSL:WEB 4GB]"
+    }
+}
+
+Describe "New-SnapshotProfile" {
+
+    BeforeEach {
+        Clear-ProfileConfigCache
+        $script:testRoot = New-TestWslRoot
+        Set-TestUserProfile -Path $script:testRoot
+        New-TestProfilesJson -Config (Get-ValidProfilesConfig) | Out-Null
+    }
+
+    AfterEach {
+        Restore-TestUserProfile
+        Remove-TestWslRoot -Path $script:testRoot
+    }
+
+    It "leve une exception si aucun .wslconfig n'est actif" {
+        { New-SnapshotProfile } | Should -Throw "*Aucun .wslconfig actif*"
+    }
+
+    It "cree un profil snapshot a partir du profil actif, avec le top des process en description" {
+        New-TestWslConfig -Content "[wsl2]`nmemory=4GB`nprocessors=3`n"
+        Mock Get-Process {
+            @(
+                [PSCustomObject]@{ ProcessName = "chrome"; WorkingSet64 = 500MB }
+                [PSCustomObject]@{ ProcessName = "code"; WorkingSet64 = 400MB }
+            )
+        }
+
+        $key = New-SnapshotProfile
+
+        $key | Should -Match "^snapshot-\d{8}-\d{6}$"
+        $config = Get-ProfileConfig
+        $config.profiles.$key.memory | Should -Be "4GB"
+        $config.profiles.$key.processors | Should -Be 3
+        $config.profiles.$key.description | Should -Match "chrome"
+    }
+
+    It "invalide le cache de facon transparente" {
+        New-TestWslConfig -Content "[wsl2]`nmemory=4GB`nprocessors=3`n"
+        Mock Get-Process { @([PSCustomObject]@{ ProcessName = "test"; WorkingSet64 = 100MB }) }
+
+        Get-ProfileConfig | Out-Null
+
+        $key = New-SnapshotProfile
+
+        (Get-ProfileConfig).profiles.$key.memory | Should -Be "4GB"
+    }
+
+    It "enregistre une entree CUSTOM dans l'historique" {
+        New-TestWslConfig -Content "[wsl2]`nmemory=4GB`nprocessors=3`n"
+        Mock Get-Process { @([PSCustomObject]@{ ProcessName = "test"; WorkingSet64 = 100MB }) }
+
+        $key = New-SnapshotProfile
+
+        $history = @(Get-Content (Get-HistoryPath) -Raw | ConvertFrom-Json)
+        $entry = $history | Where-Object { $_.profile -eq $key }
+        $entry.action | Should -Be "CUSTOM"
     }
 }
