@@ -46,7 +46,11 @@ BeforeAll {
         # nom des parametres pour que -ParameterFilter { $Argument -match ... }
         # puisse s'y referer dans les tests de seuil/intervalle ci-dessous.
         if (-not (Get-Command New-ScheduledTaskAction -ErrorAction SilentlyContinue)) {
-            function script:New-ScheduledTaskAction { param($Execute, $Argument) }
+            function script:New-ScheduledTaskAction {
+                param($Execute, $Argument)
+                $null = $Execute
+                $null = $Argument
+            }
         }
         if (-not (Get-Command New-ScheduledTaskTrigger -ErrorAction SilentlyContinue)) { function script:New-ScheduledTaskTrigger { } }
         if (-not (Get-Command New-ScheduledTaskSettingsSet -ErrorAction SilentlyContinue)) { function script:New-ScheduledTaskSettingsSet { } }
