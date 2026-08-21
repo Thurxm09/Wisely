@@ -97,7 +97,7 @@ Describe "Write-SwitchLog - historyMaxEntries configurable" {
     }
 
     It "n'ecrete l'historique qu'au-dela de historyMaxEntries configure dans profiles.json" {
-        New-TestProfilesJson -Config @{ settings = @{ historyMaxEntries = 3 } }
+        New-TestProfilesJson -Config @{ profiles = @{}; settings = @{ historyMaxEntries = 3 } }
 
         1..5 | ForEach-Object { Write-SwitchLog -Action "SWITCH" -ProfileKey "web" -Details "entree $_" }
 
