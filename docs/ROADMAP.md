@@ -194,9 +194,9 @@ Livré : suite de tests **Pester** en CI (`Get-ProfileConfig`, `Import-Profiles`
  
 Reporté à v2.2 : correction du badge LICENSE (MIT → GPL v3) dans le README, check admin dans `Stop-WslMonitor`, support des variables d'environnement dans `swapFile` (`%TEMP%`, `%USERPROFILE%`), commande dédiée `wisely status`, affichage du temps de switch mesuré.
  
-**v2.2 — DX & Documentation**
+**v2.2 — DX & Documentation (livrée)**
  
-Rédiger `CONTRIBUTING.md`. Ajouter les templates d'issues et PRs GitHub. Enrichir le README avec une galerie de profils par stack. Rédiger le snippet Oh My Posh / Windows Terminal Prompt. Ajouter la commande `wisely -Snapshot` pour capturer le profil courant. Repris de v2.1 : variables d'environnement dans `swapFile`, commande `wisely status`.
+Livré : `CONTRIBUTING.md`, templates d'issues et PRs GitHub, galerie de profils par stack dans le README, snippet Oh My Posh / Windows Terminal Prompt, commande `wisely -Snapshot` pour capturer le profil courant, JSON Schema pour `profiles.json`, intégrité des réglages (`historyMaxEntries`, `backupEnabled`, `monitorIntervalSeconds`). Repris de v2.1 : variables d'environnement dans `swapFile` (`%TEMP%`, `%USERPROFILE%`, `%LOCALAPPDATA%`), commande `wisely -Status -Short` (en remplacement de la sous-commande `wisely status` initialement envisagée).
  
 **v2.3 — Observabilité**
  

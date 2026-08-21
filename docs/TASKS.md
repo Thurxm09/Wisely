@@ -2,12 +2,6 @@
 
 ## Active
 
-- [ ] **CONTRIBUTING.md** - v2.2
-- [ ] **Templates issue/PR** - v2.2
-- [ ] **JSON Schema pour profiles.json** - v2.2
-- [ ] **Support des variables d'environnement dans `swapFile`** (`%TEMP%`, `%USERPROFILE%`) - v2.2 (reporté de v2.1)
-- [ ] **Commande dédiée `wisely status`** - v2.2 (reporté de v2.1)
-
 ## Waiting On
 
 ## Someday
@@ -17,6 +11,13 @@
 
 ## Done
 
+- [x] ~~CONTRIBUTING.md~~ (v2.2)
+- [x] ~~Templates issue/PR~~ (v2.2)
+- [x] ~~JSON Schema pour profiles.json~~ (v2.2)
+- [x] ~~Support des variables d'environnement dans `swapFile`~~ (`%TEMP%`, `%USERPROFILE%`, `%LOCALAPPDATA%`) (v2.2, reporté de v2.1)
+- [x] ~~Commande `wisely -Status -Short` (intégration prompt)~~ (v2.2, reporté de v2.1 en tant que `wisely status`)
+- [x] ~~Commande `wisely -Snapshot` (capture du profil courant)~~ (v2.2)
+- [x] ~~README : galerie de profils par stack + snippet Oh My Posh / Windows Terminal~~ (v2.2)
 - [x] ~~Pester tests — Get-ProfileConfig et Import-Profiles (+ Logger, swap, backup, diff)~~ (v2.1)
 - [x] ~~Validation du chemin du swap file~~ (v2.1)
 - [x] ~~Backup versionné avec historique glissant (`backupHistoryMax`)~~ (v2.1)

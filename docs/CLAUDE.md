@@ -8,7 +8,7 @@ Thuram (GitHub: Thurxm09), développeur solo — niveau débutant/intermédiaire
 
 | Nom | Quoi |
 |-----|------|
-| **Wisely** | Outil CLI PowerShell pour gérer dynamiquement des profils de ressources WSL2 (RAM, CPU, monitoring, reporting). Passé d'un script basique à un outil modulaire pro. Actuellement en v2.1.0 stable (tests Pester, validation swap, backup versionné, cache mémoïsé, flags -Verbose/-Quiet, fix barre RAM livrés) ; v2.2 (DX & documentation) à l'étude. |
+| **Wisely** | Outil CLI PowerShell pour gérer dynamiquement des profils de ressources WSL2 (RAM, CPU, monitoring, reporting). Passé d'un script basique à un outil modulaire pro. v2.1.0 (tests Pester, validation swap, backup versionné, cache mémoïsé, flags -Verbose/-Quiet, fix barre RAM) et v2.2 (CONTRIBUTING.md + templates, variables d'environnement dans `swapFile`, intégrité des réglages, JSON Schema `profiles.json`, `wisely -Status -Short`, `wisely -Snapshot`, galerie README + snippet Oh My Posh) livrées ; v2.3 (observabilité) à l'étude. |
 
 ## Termes
 
@@ -32,7 +32,7 @@ Thuram (GitHub: Thurxm09), développeur solo — niveau débutant/intermédiaire
 - `throw`, jamais `exit`, dans les modules dot-sourcés
 - `git pull --rebase` en cas de divergence
 - Scope `$script:` préféré à `$Global:` pour la mémoïsation
-- Priorité tests Pester avant tout chantier structurel : atteinte en v2.1 (suite Pester en CI) — prochaine priorité : DX & documentation (v2.2)
+- Priorité tests Pester avant tout chantier structurel : atteinte en v2.1 (suite Pester en CI) — DX & documentation livrée en v2.2 — prochaine priorité : observabilité (v2.3)
 - Aime comprendre le code en profondeur, pas juste livrer des features
 - Préfère avancer une feature à la fois, bien comprise, avant de passer à la suivante
 - Utilise des scripts bootstrap Python (ASCII-safe, réécriture complète, sortie `[OK]`/`[SKIP]`) comme mécanisme standard de livraison de fichiers générés
