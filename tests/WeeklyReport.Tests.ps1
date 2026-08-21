@@ -24,10 +24,10 @@ BeforeAll {
     }
 
     function script:New-TestHistoryEntry {
-        param([string]$Profile, [datetime]$When, [string]$Details = "test")
+        param([string]$ProfileKey, [datetime]$When, [string]$Details = "test")
         return @{
             action    = "SWITCH"
-            profile   = $Profile
+            profile   = $ProfileKey
             details   = $Details
             timestamp = $When.ToString("yyyy-MM-dd HH:mm:ss")
         }
@@ -94,9 +94,9 @@ Describe "WeeklyReport.ps1 - generation du rapport" {
 
     It "genere un rapport avec repartition par profil et profil dominant" {
         Set-TestHistory -Entries @(
-            (New-TestHistoryEntry -Profile "web"  -When (Get-Date).AddHours(-2))
-            (New-TestHistoryEntry -Profile "web"  -When (Get-Date).AddHours(-1))
-            (New-TestHistoryEntry -Profile "data" -When (Get-Date).AddMinutes(-30))
+            (New-TestHistoryEntry -ProfileKey "web"  -When (Get-Date).AddHours(-2))
+            (New-TestHistoryEntry -ProfileKey "web"  -When (Get-Date).AddHours(-1))
+            (New-TestHistoryEntry -ProfileKey "data" -When (Get-Date).AddMinutes(-30))
         )
 
         Invoke-TestWeeklyReport -Silent
@@ -110,9 +110,9 @@ Describe "WeeklyReport.ps1 - generation du rapport" {
 
     It "ignore les switchs vieux de plus de 7 jours" {
         Set-TestHistory -Entries @(
-            (New-TestHistoryEntry -Profile "web" -When (Get-Date).AddDays(-10))
-            (New-TestHistoryEntry -Profile "web" -When (Get-Date).AddHours(-1))
-            (New-TestHistoryEntry -Profile "web" -When (Get-Date).AddHours(-2))
+            (New-TestHistoryEntry -ProfileKey "web" -When (Get-Date).AddDays(-10))
+            (New-TestHistoryEntry -ProfileKey "web" -When (Get-Date).AddHours(-1))
+            (New-TestHistoryEntry -ProfileKey "web" -When (Get-Date).AddHours(-2))
         )
 
         Invoke-TestWeeklyReport -Silent
@@ -122,7 +122,7 @@ Describe "WeeklyReport.ps1 - generation du rapport" {
     }
 
     It "inclut la derniere alerte RAM et les erreurs toast quand ces fichiers existent" {
-        Set-TestHistory -Entries @((New-TestHistoryEntry -Profile "web" -When (Get-Date).AddHours(-1)))
+        Set-TestHistory -Entries @((New-TestHistoryEntry -ProfileKey "web" -When (Get-Date).AddHours(-1)))
         Set-Content -Path (Join-Path $Global:WSLRoot "data\monitor_cooldown.txt") -Value "2026-08-21 10:00:00" -Encoding UTF8
         Set-Content -Path (Join-Path $Global:WSLRoot "data\monitor_errors.txt") -Value "[2026-08-21 10:00:00] Toast error : test" -Encoding UTF8
 
@@ -140,7 +140,7 @@ Describe "WeeklyReport.ps1 - generation du rapport" {
             $day = "2020-01-{0:D2}" -f $_
             Set-Content -Path (Join-Path $reportsDir "report_$day.txt") -Value "ancien rapport" -Encoding UTF8
         }
-        Set-TestHistory -Entries @((New-TestHistoryEntry -Profile "web" -When (Get-Date).AddHours(-1)))
+        Set-TestHistory -Entries @((New-TestHistoryEntry -ProfileKey "web" -When (Get-Date).AddHours(-1)))
 
         Invoke-TestWeeklyReport -Silent
 
