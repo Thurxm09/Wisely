@@ -1,5 +1,19 @@
 # Wisely - Changelog
 
+## v2.2.0 - 2026-08-21
+
+### v2.2 - DX & Documentation
+
+- Chemins swapFile resolus via variables d'environnement (%TEMP%, %USERPROFILE%, %LOCALAPPDATA%)
+- Integrite des reglages : historyMaxEntries, backupEnabled, fix du fallback monitorIntervalSeconds
+- Validation JSON Schema de profiles.json en CI (schemas/profiles.schema.json)
+- Commande wisely -Status -Short pour l'integration prompt (Oh My Posh, Windows Terminal)
+- Commande wisely -Snapshot pour capturer l'etat courant en nouveau profil
+- CONTRIBUTING.md et templates d'issue/PR
+- README : galerie de profils par usage + snippet Oh My Posh
+- Housekeeping : badge de version, doc a jour
+
+
 ## v2.1.0 - 2026-08-20
 
 ### v2.1 - Polish & Fiabilite
