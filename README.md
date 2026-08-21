@@ -19,6 +19,7 @@
   - [Démarrage rapide](#démarrage-rapide)
   - [Référence des commandes](#référence-des-commandes)
   - [Profils par défaut](#profils-par-défaut)
+  - [Intégration Oh My Posh / Windows Terminal](#intégration-oh-my-posh--windows-terminal)
   - [Profils personnalisés](#profils-personnalisés)
   - [Surveillance RAM](#surveillance-ram)
   - [Rapports hebdomadaires](#rapports-hebdomadaires)
@@ -144,13 +145,82 @@ wisely -Clean                   # Purger les fichiers temporaires et anciens rap
 
 ## Profils par défaut
 
-| Clé    | Nom affiché  | RAM  | CPU | Swap | Usage typique                  |
-| ------ | ------------ | ---- | --- | ---- | ------------------------------ |
-| `base` | BASE         | 1 GB | 2   | 1 GB | Mode minimal, conservation RAM |
-| `web`  | WEB          | 2 GB | 3   | 3 GB | VS Code + Brave + WSL léger    |
-| `data` | DATA SCIENCE | 6 GB | 5   | 2 GB | Jupyter + Pandas + ML          |
+Les trois profils livrés couvrent les usages les plus courants. Ils sont définis dans [`data/profiles.json`](data/profiles.json) et peuvent être modifiés ou étendus librement.
 
-Tous les profils sont définis dans [`data/profiles.json`](data/profiles.json) et peuvent être modifiés ou étendus librement.
+### Développement web — `web`
+
+```powershell
+wisely web
+```
+
+Brave + VS Code + WSL léger. Un compromis RAM/réactivité pensé pour du développement web courant sans conteneurs lourds.
+
+| RAM  | CPU | Swap | Couleur |
+| ---- | --- | ---- | ------- |
+| 4 GB | 3   | 3 GB | Vert    |
+
+### Data Science / ML — `data`
+
+```powershell
+wisely data
+```
+
+Jupyter + Pandas + ML. Le profil le plus généreux en RAM et en CPU, pour les charges de calcul et les notebooks.
+
+| RAM  | CPU | Swap | Couleur |
+| ---- | --- | ---- | ------- |
+| 6 GB | 5   | 2 GB | Jaune   |
+
+### Mode minimal — `base`
+
+```powershell
+wisely base
+```
+
+Empreinte réduite pour conserver un maximum de RAM à l'hôte Windows — utile en visioconférence, sur batterie, ou simplement au repos.
+
+| RAM  | CPU | Swap | Couleur |
+| ---- | --- | ---- | ------- |
+| 2 GB | 2   | 2 GB | Cyan    |
+
+### Exemple de profil personnalisé
+
+Au-delà des trois profils livrés, `profiles.json` accepte n'importe quelle clé supplémentaire suivant le même schéma :
+
+```json
+"gaming": {
+  "displayName": "GAMING",
+  "description": "Mode gaming haute performance",
+  "color": "Magenta",
+  "memory": "12GB",
+  "processors": 6,
+  "swap": "4GB",
+  "swapFile": "%TEMP%/wisely-swap.vhdx",
+  "swappiness": 10
+}
+```
+
+Voir [Profils personnalisés](#profils-personnalisés) pour le créer directement en ligne de commande, sans éditer le JSON à la main.
+
+---
+
+## Intégration Oh My Posh / Windows Terminal
+
+Le switch `wisely -Status -Short` retourne une ligne compacte (`[WSL:WEB 4GB]`) sur la sortie standard, pensée pour être injectée dans un prompt sans jamais bloquer sur `-Quiet`. Ajoutez un segment personnalisé à votre configuration [Oh My Posh](https://ohmyposh.dev/) :
+
+```json
+{
+  "type": "command",
+  "style": "plain",
+  "foreground": "p:cyan",
+  "properties": {
+    "shell": "pwsh",
+    "command": "pwsh -NoProfile -File C:\\Scripts\\Wisely\\wisely.ps1 -Status -Short"
+  }
+}
+```
+
+Adaptez le chemin `C:\Scripts\Wisely\wisely.ps1` à votre installation. Le segment reste vide (aucune erreur affichée) si aucun profil Wisely n'est actif.
 
 ---
 
