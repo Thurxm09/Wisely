@@ -127,6 +127,8 @@ wisely -History                 # Afficher l'historique des opérations
 wisely -Monitor start           # Démarrer la surveillance en arrière-plan
 wisely -Monitor stop            # Arrêter la surveillance
 wisely -Monitor status          # Vérifier l'état du monitoring
+wisely -Watch                   # Dashboard temps réel (RAM/CPU vmmem, profil actif, dernière alerte)
+wisely -Watch -Interval 5       # Rafraîchi toutes les 5s au lieu de 3s par défaut (Ctrl+C pour quitter)
 
 # ── Reporting ───────────────────────────────────────────────────────────
 wisely -Report                  # Générer un rapport d'utilisation maintenant

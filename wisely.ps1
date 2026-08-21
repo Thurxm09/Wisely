@@ -12,6 +12,7 @@
 #  .\wisely.ps1 -NewProfile "perf 8GB 4 Description"
 #  .\wisely.ps1 -Export            -> exporter profils
 #  .\wisely.ps1 -Import path.json  -> importer profils
+#  .\wisely.ps1 -Watch             -> dashboard temps reel (Ctrl+C pour quitter)
 #
 # ============================================================
 
@@ -31,6 +32,8 @@ param(
     [switch]$Status,
     [switch]$Short,
     [switch]$Snapshot,
+    [switch]$Watch,
+    [int]$Interval     = 3,
     [switch]$Version,
     [switch]$Verbose,
     [switch]$Quiet
@@ -226,6 +229,45 @@ function Show-StatusDashboard {
     Write-Host ""
 }
 
+function Show-WslWatch {
+    <#
+    .SYNOPSIS
+        Dashboard temps reel : RAM/CPU vmmem, profil actif, derniere
+        alerte, rafraichi toutes les -Interval secondes jusqu'a Ctrl+C.
+        Axe 6 (Observabilite), v2.3. La collecte des donnees (testable)
+        vit dans Get-WatchSnapshot (modules/Monitor.ps1) ; cette fonction
+        ne fait que boucler et afficher, comme Show-StatusDashboard.
+    #>
+    param([int]$IntervalSeconds = 3)
+
+    while ($true) {
+        $snap = Get-WatchSnapshot
+
+        Clear-Host
+        Write-Host ""
+        Write-Host $LINE_TOP -ForegroundColor Cyan
+        Write-Host (New-BoxLine "    " "   Wisely  v$($Global:AppVersion) -- Watch") -ForegroundColor Cyan
+        Write-Host $LINE_MID -ForegroundColor Cyan
+
+        if ($null -ne $snap.vmmemRamGB) {
+            $vmmemColor = if ($snap.vmmemCpuPct -ge 80) { "Red" } elseif ($snap.vmmemCpuPct -ge 40) { "Yellow" } else { "Green" }
+            Write-Host (New-BoxLine "    " "  RAM vmmem   : $($snap.vmmemRamGB) GB") -ForegroundColor $vmmemColor
+            Write-Host (New-BoxLine "    " "  CPU vmmem   : $($snap.vmmemCpuPct)%") -ForegroundColor $vmmemColor
+        } else {
+            Write-Host (New-BoxLine "    " "  vmmem       : introuvable (WSL2 inactif ?)") -ForegroundColor DarkGray
+        }
+        Write-Host $LINE_SEP -ForegroundColor DarkGray
+        Write-Host (New-BoxLine "    " "  Profil actif : $($snap.activeProfile) ($($snap.activeMemory))") -ForegroundColor White
+        Write-Host $LINE_SEP -ForegroundColor DarkGray
+        Write-Host (New-BoxLine "    " "  Derniere alerte : $($snap.lastAlert)") -ForegroundColor Gray
+        Write-Host $LINE_BOT -ForegroundColor Cyan
+        Write-Host "  Rafraichi toutes les ${IntervalSeconds}s - Ctrl+C pour quitter" -ForegroundColor DarkGray
+        Write-Host ""
+
+        Start-Sleep -Seconds $IntervalSeconds
+    }
+}
+
 function Show-Header {
     param([string]$ActiveName = "?", [string]$ActiveMem = "?")
 
@@ -346,6 +388,11 @@ if ($Status) {
     } else {
         Show-StatusDashboard
     }
+    exit
+}
+
+if ($Watch) {
+    Show-WslWatch -IntervalSeconds $Interval
     exit
 }
 

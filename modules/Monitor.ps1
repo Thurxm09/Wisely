@@ -119,3 +119,69 @@ function Get-MonitorStatus {
     }
     Write-Host ""
 }
+
+function Get-VmmemStats {
+    <#
+    .SYNOPSIS
+        RAM et CPU du process vmmem (proxy de consommation WSL2), pour
+        wisely -Watch - Axe 6 (Observabilite), v2.3. Le CPU est estime par
+        double echantillonnage (delta de temps processeur sur $SampleMs),
+        seul moyen fiable d'obtenir un pourcentage instantane plutot que le
+        temps processeur cumule depuis le demarrage du process. Retourne
+        $null si vmmem est absent ou si la mesure echoue (metrique
+        optionnelle - ne doit jamais faire echouer l'appelant).
+    #>
+    param([int]$SampleMs = 200)
+    try {
+        $proc1 = Get-Process -Name "vmmem" -ErrorAction SilentlyContinue
+        if (-not $proc1) { return $null }
+        $cpu1 = $proc1.CPU
+
+        Start-Sleep -Milliseconds $SampleMs
+
+        $proc2 = Get-Process -Name "vmmem" -ErrorAction SilentlyContinue
+        if (-not $proc2) { return $null }
+        $cpu2 = $proc2.CPU
+
+        $cores      = (Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors
+        $elapsedSec = $SampleMs / 1000
+        $cpuPct     = 0
+        if ($cores -gt 0 -and $elapsedSec -gt 0) {
+            # [math]::Max(0, ...) tronquerait le resultat en Int32 (mauvaise
+            # surcharge .NET resolue avec un litteral 0 non type) - comparaison
+            # explicite pour garder la precision decimale.
+            $rawPct = (($cpu2 - $cpu1) / $elapsedSec / $cores) * 100
+            if ($rawPct -lt 0) { $rawPct = 0 }
+            $cpuPct = [math]::Round($rawPct, 1)
+        }
+
+        return [PSCustomObject]@{
+            ramGB  = [math]::Round($proc2.WorkingSet64 / 1GB, 2)
+            cpuPct = $cpuPct
+        }
+    } catch {
+        return $null
+    }
+}
+
+function Get-WatchSnapshot {
+    <#
+    .SYNOPSIS
+        Etat courant pour wisely -Watch : RAM/CPU vmmem, profil actif,
+        derniere alerte. Fonction pure (aucun affichage) pour rester
+        testable - le rafraichissement en boucle vit dans wisely.ps1
+        (Show-WslWatch), non teste comme le reste de l'UI interactive.
+    #>
+    $vmmem     = Get-VmmemStats
+    $active    = Get-ActiveProfile
+    $cooldown  = Join-Path $Global:WSLRoot "data\monitor_cooldown.txt"
+    $lastAlert = if (Test-Path $cooldown) { (Get-Content $cooldown -Raw).Trim() } else { "Aucune" }
+
+    return [PSCustomObject]@{
+        vmmemRamGB    = if ($vmmem) { $vmmem.ramGB } else { $null }
+        vmmemCpuPct   = if ($vmmem) { $vmmem.cpuPct } else { $null }
+        activeProfile = $active.name
+        activeMemory  = $active.memory
+        lastAlert     = $lastAlert
+    }
+}
