@@ -167,6 +167,8 @@ Complexité : **Moyenne** (interroger WSL2 pour lister les distributions actives
 ---
  
 ### Axe 6 — Observabilité & Monitoring
+
+**Statut : axe retenu pour v2.3** (voir §4) — les trois features ci-dessous forment le scope complet du prochain cycle.
  
 **Métriques réelles post-switch.** Après avoir appliqué un profil et redémarré WSL2, mesurer et logger la RAM effectivement disponible côté Windows, le delta de RAM libérée, et le temps de redémarrage WSL2. Ces métriques permettraient de valider que le switch a eu l'effet escompté — ce qui n'est aujourd'hui pas mesurable.
  
@@ -200,7 +202,15 @@ Livré : `CONTRIBUTING.md`, templates d'issues et PRs GitHub, galerie de profils
  
 **v2.3 — Observabilité**
  
-Implémenter la collecte de métriques post-switch (RAM delta, temps de restart). Enrichir les rapports hebdomadaires avec ces métriques. Implémenter `wisely -Watch` (dashboard temps réel).
+Scope détaillé, à livrer dans cet ordre (Axe 6 complet, voir §3) :
+
+1. **Prérequis — combler la dette de tests.** `Monitor.ps1`, `MonitorTask.ps1` et `WeeklyReport.ps1` n'ont aujourd'hui aucune couverture Pester alors que ce sont exactement les modules que ce cycle va faire évoluer. Écrire `tests/Monitor.Tests.ps1`, `tests/MonitorTask.Tests.ps1` et `tests/WeeklyReport.Tests.ps1` (mocks des cmdlets Windows-only, conventions `TestHelpers.ps1`) avant d'ajouter les nouvelles métriques — cohérent avec la priorité déjà appliquée en v2.1 ("tests avant tout chantier structurel"). Vérifier et clore le finding N-2 de `AUDIT.md` (check admin dans `Stop-WslMonitor`, statut ambigu entre le corps du texte et le tableau récap).
+2. **Métriques réelles post-switch.** Mesurer et logger la RAM Windows disponible avant/après switch (delta) et le temps de redémarrage WSL2, en étendant le chronométrage déjà en place. Stockage dans le JSON existant (`history.json` ou fichier dédié) — pas de nouvelle dépendance externe.
+3. **Rapports hebdomadaires enrichis.** Ajouter la RAM moyenne observée par profil dans `WeeklyReport.ps1` à partir des métriques de l'étape 2 (critère d'acceptation : l'exemple "cette semaine en WEB, 1.4GB en moyenne — 2GB est peut-être surdimensionné" doit être un rapport réel généré par l'outil).
+4. **`wisely -Watch`.** Dashboard temps réel (RAM WSL2, CPU vmmem, profil actif, dernière alerte), rendu terminal natif cohérent avec le style Unicode déjà en place dans `wisely -Status`.
+5. **Audit rafraîchi ciblé.** Repasser un audit léger (format `AUDIT.md`) sur les modules touchés par ce cycle (Monitor, MonitorTask, WeeklyReport + nouveau code de métriques/`-Watch`), en clarifiant l'incohérence N-1/N-2 du dernier audit (daté v2.0).
+
+**Explicitement hors scope de v2.3 :** l'évaluation expérimentale de Terminal.Gui (Phase 2 du guide `Wisely — État des lieux & Guide d'intégration TUIStudio.md`), bien que ce document la situe en v2.3. Elle est sciemment reportée à un axe séparé pour respecter le principe "une feature bien comprise à la fois avant de passer à la suivante" (`docs/CLAUDE.md`) — mélanger un chantier d'observabilité et une exploration d'architecture UI dans le même cycle dilue les deux.
  
 ---
  
