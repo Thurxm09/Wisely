@@ -30,6 +30,7 @@ param(
     [switch]$Clean,
     [switch]$Status,
     [switch]$Short,
+    [switch]$Snapshot,
     [switch]$Version,
     [switch]$Verbose,
     [switch]$Quiet
@@ -344,6 +345,18 @@ if ($Status) {
         Write-Output (Format-StatusShort -ActiveProfile (Get-ActiveProfile))
     } else {
         Show-StatusDashboard
+    }
+    exit
+}
+
+if ($Snapshot) {
+    try {
+        $key = New-SnapshotProfile
+        Write-Host "  OK - Snapshot '$key' cree a partir du profil actif." -ForegroundColor Green
+        Write-Host "  Pour y revenir : .\wisely.ps1 $key" -ForegroundColor DarkGray
+    } catch {
+        Write-Host "ERREUR : $_" -ForegroundColor Red
+        exit 1
     }
     exit
 }

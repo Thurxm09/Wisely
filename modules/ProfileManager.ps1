@@ -349,6 +349,35 @@ function New-CustomProfile {
     Write-SwitchLog -Action "CUSTOM" -ProfileKey $Key.ToLower() -Details "Cree : $Memory, $Processors CPU"
 }
 
+function New-SnapshotProfile {
+    param([int]$ProcessCount = 5)
+    if (-not (Test-Path (Get-WslConfigPath))) {
+        throw "Aucun .wslconfig actif. Impossible de creer un snapshot sans profil actif."
+    }
+    $active    = Get-ActiveProfile
+    $key       = "snapshot-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+    $topProcs  = Get-Process |
+                 Sort-Object -Property WorkingSet64 -Descending |
+                 Select-Object -First $ProcessCount -ExpandProperty ProcessName
+
+    $config     = Get-ProfileConfig
+    $newProfile = [PSCustomObject]@{
+        displayName = $key.ToUpper()
+        description = "Snapshot du $(Get-Date -Format 'yyyy-MM-dd HH:mm') - Top process : $($topProcs -join ', ')"
+        color       = "Magenta"
+        memory      = $active.memory
+        processors  = [int]$active.processors
+        swap        = "2GB"
+        swapFile    = "%TEMP%/wisely-swap.vhdx"
+        swappiness  = 10
+    }
+    $config.profiles | Add-Member -MemberType NoteProperty -Name $key -Value $newProfile -Force
+    $config | ConvertTo-Json -Depth 10 | Set-Content (Get-ProfilesPath) -Encoding UTF8
+    Clear-ProfileConfigCache
+    Write-SwitchLog -Action "CUSTOM" -ProfileKey $key -Details "Snapshot cree : $($active.memory), $($active.processors) CPU"
+    return $key
+}
+
 function Export-Profiles {
     param([string]$Path = ".\wsl-profiles-export.json")
     Copy-Item (Get-ProfilesPath) $Path -Force

@@ -542,3 +542,62 @@ Describe "Format-StatusShort" {
         Format-StatusShort -ActiveProfile $activeProfile | Should -Be "[WSL:WEB 4GB]"
     }
 }
+
+Describe "New-SnapshotProfile" {
+
+    BeforeEach {
+        Clear-ProfileConfigCache
+        $script:testRoot = New-TestWslRoot
+        Set-TestUserProfile -Path $script:testRoot
+        New-TestProfilesJson -Config (Get-ValidProfilesConfig) | Out-Null
+    }
+
+    AfterEach {
+        Restore-TestUserProfile
+        Remove-TestWslRoot -Path $script:testRoot
+    }
+
+    It "leve une exception si aucun .wslconfig n'est actif" {
+        { New-SnapshotProfile } | Should -Throw "*Aucun .wslconfig actif*"
+    }
+
+    It "cree un profil snapshot a partir du profil actif, avec le top des process en description" {
+        New-TestWslConfig -Content "[wsl2]`nmemory=4GB`nprocessors=3`n"
+        Mock Get-Process {
+            @(
+                [PSCustomObject]@{ ProcessName = "chrome"; WorkingSet64 = 500MB }
+                [PSCustomObject]@{ ProcessName = "code"; WorkingSet64 = 400MB }
+            )
+        }
+
+        $key = New-SnapshotProfile
+
+        $key | Should -Match "^snapshot-\d{8}-\d{6}$"
+        $config = Get-ProfileConfig
+        $config.profiles.$key.memory | Should -Be "4GB"
+        $config.profiles.$key.processors | Should -Be 3
+        $config.profiles.$key.description | Should -Match "chrome"
+    }
+
+    It "invalide le cache de facon transparente" {
+        New-TestWslConfig -Content "[wsl2]`nmemory=4GB`nprocessors=3`n"
+        Mock Get-Process { @([PSCustomObject]@{ ProcessName = "test"; WorkingSet64 = 100MB }) }
+
+        Get-ProfileConfig | Out-Null
+
+        $key = New-SnapshotProfile
+
+        (Get-ProfileConfig).profiles.$key.memory | Should -Be "4GB"
+    }
+
+    It "enregistre une entree CUSTOM dans l'historique" {
+        New-TestWslConfig -Content "[wsl2]`nmemory=4GB`nprocessors=3`n"
+        Mock Get-Process { @([PSCustomObject]@{ ProcessName = "test"; WorkingSet64 = 100MB }) }
+
+        $key = New-SnapshotProfile
+
+        $history = @(Get-Content (Get-HistoryPath) -Raw | ConvertFrom-Json)
+        $entry = $history | Where-Object { $_.profile -eq $key }
+        $entry.action | Should -Be "CUSTOM"
+    }
+}
