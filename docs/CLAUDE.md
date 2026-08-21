@@ -8,7 +8,7 @@ Thuram (GitHub: Thurxm09), développeur solo — niveau débutant/intermédiaire
 
 | Nom | Quoi |
 |-----|------|
-| **Wisely** | Outil CLI PowerShell pour gérer dynamiquement des profils de ressources WSL2 (RAM, CPU, monitoring, reporting). Passé d'un script basique à un outil modulaire pro. Actuellement en v2.0.0 stable, v2.1 en dev actif. |
+| **Wisely** | Outil CLI PowerShell pour gérer dynamiquement des profils de ressources WSL2 (RAM, CPU, monitoring, reporting). Passé d'un script basique à un outil modulaire pro. Actuellement en v2.1.0 stable (tests Pester, validation swap, backup versionné, cache mémoïsé, flags -Verbose/-Quiet, fix barre RAM livrés) ; v2.2 (DX & documentation) à l'étude. |
 
 ## Termes
 
@@ -32,11 +32,11 @@ Thuram (GitHub: Thurxm09), développeur solo — niveau débutant/intermédiaire
 - `throw`, jamais `exit`, dans les modules dot-sourcés
 - `git pull --rebase` en cas de divergence
 - Scope `$script:` préféré à `$Global:` pour la mémoïsation
-- Priorité fixée : tests Pester avant tout nouveau chantier structurel
+- Priorité tests Pester avant tout chantier structurel : atteinte en v2.1 (suite Pester en CI) — prochaine priorité : DX & documentation (v2.2)
 - Aime comprendre le code en profondeur, pas juste livrer des features
 - Préfère avancer une feature à la fois, bien comprise, avant de passer à la suivante
 - Utilise des scripts bootstrap Python (ASCII-safe, réécriture complète, sortie `[OK]`/`[SKIP]`) comme mécanisme standard de livraison de fichiers générés
 
 ## Stack
 
-PowerShell 5.1 + 7, WSL2/Ubuntu, VS Code, GitHub CLI, Docker Desktop, conda/miniforge, pyenv, nvm, pnpm. Terminal : Oh My Posh (Tokyo Night), Cascadia Code NF, eza, bat, fd-find, ripgrep, btop, lazygit, zoxide, fzf. Tests : Pester (à venir), PSScriptAnalyzer (CI, en place).
+PowerShell 5.1 + 7, WSL2/Ubuntu, VS Code, GitHub CLI, Docker Desktop, conda/miniforge, pyenv, nvm, pnpm. Terminal : Oh My Posh (Tokyo Night), Cascadia Code NF, eza, bat, fd-find, ripgrep, btop, lazygit, zoxide, fzf. Tests : Pester (CI, en place depuis v2.1), PSScriptAnalyzer (CI, en place).

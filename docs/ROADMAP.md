@@ -188,13 +188,15 @@ Complexité : **Moyenne** (nécessite de stocker des séries temporelles légèr
  
 Ces évolutions sont toutes indépendantes les unes des autres et peuvent être livrées dans n'importe quel ordre sans risque architectural. Elles augmentent immédiatement la valeur perçue et la robustesse.
  
-**v2.1 — Polish & Fiabilité**
+**v2.1 — Polish & Fiabilité (livrée)**
  
-L'objectif est de clore tous les points d'audit restants et d'ajouter les améliorations à coût très faible. Corriger le badge LICENSE (MIT → GPL v3) dans le README. Ajouter le check admin dans `Stop-WslMonitor`. Ajouter le support des variables d'environnement dans `swapFile` (`%TEMP%`, `%USERPROFILE%`). Ajouter la validation du chemin `swapFile` avant l'écriture. Implémenter le backup versionné (N backups glissants). Ajouter la commande `wisely status`. Ajouter les flags `-Verbose` et `-Quiet`. Afficher le temps de switch mesuré.
+Livré : suite de tests **Pester** en CI (`Get-ProfileConfig`, `Import-Profiles`, `Logger`), validation du chemin `swapFile` avant l'écriture, backup versionné avec historique glissant (`backupHistoryMax`), cache mémoïsé pour `Get-ProfileConfig` (`Clear-ProfileConfigCache`), flags `-Verbose` et `-Quiet`, correction du bug de troncature de la barre RAM (`wisely -Status`).
+ 
+Reporté à v2.2 : correction du badge LICENSE (MIT → GPL v3) dans le README, check admin dans `Stop-WslMonitor`, support des variables d'environnement dans `swapFile` (`%TEMP%`, `%USERPROFILE%`), commande dédiée `wisely status`, affichage du temps de switch mesuré.
  
 **v2.2 — DX & Documentation**
  
-Rédiger `CONTRIBUTING.md`. Ajouter les templates d'issues et PRs GitHub. Enrichir le README avec une galerie de profils par stack. Rédiger le snippet Oh My Posh / Windows Terminal Prompt. Ajouter la commande `wisely -Snapshot` pour capturer le profil courant.
+Rédiger `CONTRIBUTING.md`. Ajouter les templates d'issues et PRs GitHub. Enrichir le README avec une galerie de profils par stack. Rédiger le snippet Oh My Posh / Windows Terminal Prompt. Ajouter la commande `wisely -Snapshot` pour capturer le profil courant. Repris de v2.1 : badge LICENSE, check admin dans `Stop-WslMonitor`, variables d'environnement dans `swapFile`, commande `wisely status`, affichage du temps de switch mesuré.
  
 **v2.3 — Observabilité**
  
@@ -208,7 +210,7 @@ La v3.0 est une version majeure qui introduit des changements architecturaux et 
  
 **v3.0 — Distribution & Tests**
  
-Publier l'outil sur **PowerShell Gallery** comme module `Wisely`. Cela permet `Install-Module Wisely` et une mise à jour via `Update-Module` — c'est le changement d'adoption le plus impactant possible. Écrire la suite de tests avec **Pester** (framework de test natif PowerShell) couvrant les fonctions critiques de `ProfileManager.ps1` et `Logger.ps1`. Mettre en place le **mock de `wsl --shutdown`** dans les tests pour éviter de nécessiter WSL2 sur le runner CI. Intégrer la publication automatique sur PowerShell Gallery dans le workflow `release.yml`. Implémenter le système de hooks `pre-switch` / `post-switch`. Implémenter la migration automatique du schéma `profiles.json` entre versions.
+Publier l'outil sur **PowerShell Gallery** comme module `Wisely`. Cela permet `Install-Module Wisely` et une mise à jour via `Update-Module` — c'est le changement d'adoption le plus impactant possible. (La suite de tests **Pester**, avec mocks des appels système type `wsl --shutdown`, a été livrée en avance de calendrier en v2.1 — voir §7.) Intégrer la publication automatique sur PowerShell Gallery dans le workflow `release.yml`. Implémenter le système de hooks `pre-switch` / `post-switch`. Implémenter la migration automatique du schéma `profiles.json` entre versions.
  
 ---
  
@@ -300,9 +302,9 @@ La documentation doit évoluer sur trois niveaux complémentaires. Le **README p
  
 L'absence de tests automatisés est la principale dette technique du projet. Elle n'empêche pas le fonctionnement, mais elle bloque la contribution externe et rend chaque évolution risquée. La stratégie proposée est progressive et pragmatique.
  
-### Phase 1 — Tests unitaires avec Pester
+### Phase 1 — Tests unitaires avec Pester (livrée en v2.1)
  
-**Pester** est le framework de test natif de l'écosystème PowerShell, supporté nativement dans VS Code et intégrable en CI. La priorité des tests doit suivre le criticité des fonctions : `Get-ProfileConfig` en premier (parsing JSON, gestion des cas d'erreur), puis `Import-Profiles` (validation de schéma), puis `New-CustomProfile` (validation des paramètres), puis `ConvertTo-WslConfigContent` (génération du fichier).
+**Pester** est le framework de test natif de l'écosystème PowerShell, supporté nativement dans VS Code et intégrable en CI. `Get-ProfileConfig` et `Import-Profiles` sont couverts en CI depuis la v2.1, ainsi que `Logger.ps1`. Reste à étendre à `New-CustomProfile` (validation des paramètres) et `ConvertTo-WslConfigContent` (génération du fichier), par ordre de criticité.
  
 Les fonctions qui interagissent avec le système (`wsl --shutdown`, `Register-ScheduledTask`, lecture de `.wslconfig`) doivent être testées avec des **mocks Pester** qui simulent ces appels sans effets de bord réels. Cela permet d'exécuter les tests sur n'importe quel runner CI, même sans WSL2 installé.
  
@@ -410,4 +412,5 @@ Ces questions sont structurantes pour affiner la vision produit. Les réponses o
 ---
  
 *Document vivant — à réviser à chaque release majeure ou inflexion stratégique significative.*  
-*Prochain point de revue recommandé : après publication de la v2.1.*
+*Dernière révision : 2026-08-20 (publication de la v2.1.0).*  
+*Prochain point de revue recommandé : après publication de la v2.2.*
