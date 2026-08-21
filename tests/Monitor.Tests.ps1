@@ -41,7 +41,13 @@ BeforeAll {
         if (-not (Get-Command Get-ScheduledTask -ErrorAction SilentlyContinue)) { function script:Get-ScheduledTask { } }
         if (-not (Get-Command Register-ScheduledTask -ErrorAction SilentlyContinue)) { function script:Register-ScheduledTask { } }
         if (-not (Get-Command Unregister-ScheduledTask -ErrorAction SilentlyContinue)) { function script:Unregister-ScheduledTask { } }
-        if (-not (Get-Command New-ScheduledTaskAction -ErrorAction SilentlyContinue)) { function script:New-ScheduledTaskAction { } }
+        # Declare -Execute/-Argument explicitement (contrairement aux autres
+        # stubs sans bloc de parametres) : Pester a besoin de connaitre le
+        # nom des parametres pour que -ParameterFilter { $Argument -match ... }
+        # puisse s'y referer dans les tests de seuil/intervalle ci-dessous.
+        if (-not (Get-Command New-ScheduledTaskAction -ErrorAction SilentlyContinue)) {
+            function script:New-ScheduledTaskAction { param($Execute, $Argument) }
+        }
         if (-not (Get-Command New-ScheduledTaskTrigger -ErrorAction SilentlyContinue)) { function script:New-ScheduledTaskTrigger { } }
         if (-not (Get-Command New-ScheduledTaskSettingsSet -ErrorAction SilentlyContinue)) { function script:New-ScheduledTaskSettingsSet { } }
 
