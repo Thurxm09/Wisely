@@ -24,12 +24,18 @@ BeforeAll {
     }
 
     function script:New-TestHistoryEntry {
-        param([string]$ProfileKey, [datetime]$When, [string]$Details = "test")
+        param(
+            [string]$ProfileKey,
+            [datetime]$When,
+            [string]$Details = "test",
+            [Nullable[double]]$RamDeltaGB = $null
+        )
         return @{
-            action    = "SWITCH"
-            profile   = $ProfileKey
-            details   = $Details
-            timestamp = $When.ToString("yyyy-MM-dd HH:mm:ss")
+            action     = "SWITCH"
+            profile    = $ProfileKey
+            details    = $Details
+            timestamp  = $When.ToString("yyyy-MM-dd HH:mm:ss")
+            ramDeltaGB = $RamDeltaGB
         }
     }
 
@@ -148,5 +154,64 @@ Describe "WeeklyReport.ps1 - generation du rapport" {
         $remaining.Count | Should -Be 12
         Test-Path (Join-Path $reportsDir "report_2020-01-01.txt") | Should -Be $false
         Test-Path (Get-TestReportPath) | Should -Be $true
+    }
+}
+
+Describe "WeeklyReport.ps1 - RAM moyenne par profil (ramDeltaGB, v2.3)" {
+
+    BeforeEach {
+        $script:testRoot = New-TestWslRoot
+    }
+
+    AfterEach {
+        Remove-TestWslRoot -Path $script:testRoot
+    }
+
+    It "affiche la RAM moyenne liberee par profil quand ramDeltaGB est present" {
+        Set-TestHistory -Entries @(
+            (New-TestHistoryEntry -ProfileKey "web" -When (Get-Date).AddHours(-2) -RamDeltaGB 1.2)
+            (New-TestHistoryEntry -ProfileKey "web" -When (Get-Date).AddHours(-1) -RamDeltaGB 1.6)
+        )
+
+        Invoke-TestWeeklyReport -Silent
+
+        $content = Get-Content (Get-TestReportPath) -Raw
+        $content | Should -Match "RAM liberee/consommee en moyenne au switch"
+        $content | Should -Match "web\s+\+1.4GB"
+    }
+
+    It "ne moyenne que les entrees qui portent ramDeltaGB, sans etre polluee par celles qui ne l'ont pas" {
+        Set-TestHistory -Entries @(
+            (New-TestHistoryEntry -ProfileKey "web" -When (Get-Date).AddHours(-3) -RamDeltaGB 2.0)
+            (New-TestHistoryEntry -ProfileKey "web" -When (Get-Date).AddHours(-2))
+            (New-TestHistoryEntry -ProfileKey "web" -When (Get-Date).AddHours(-1))
+        )
+
+        Invoke-TestWeeklyReport -Silent
+
+        $content = Get-Content (Get-TestReportPath) -Raw
+        $content | Should -Match "web\s+\+2GB"
+    }
+
+    It "affiche un signe negatif quand la RAM moyenne est consommee (pas liberee)" {
+        Set-TestHistory -Entries @(
+            (New-TestHistoryEntry -ProfileKey "data" -When (Get-Date).AddHours(-1) -RamDeltaGB -0.8)
+        )
+
+        Invoke-TestWeeklyReport -Silent
+
+        $content = Get-Content (Get-TestReportPath) -Raw
+        $content | Should -Match "data\s+-0.8GB"
+    }
+
+    It "n'affiche pas la section quand aucune entree de la semaine n'a de ramDeltaGB (historique pre-v2.3)" {
+        Set-TestHistory -Entries @(
+            (New-TestHistoryEntry -ProfileKey "web" -When (Get-Date).AddHours(-1))
+        )
+
+        Invoke-TestWeeklyReport -Silent
+
+        $content = Get-Content (Get-TestReportPath) -Raw
+        $content | Should -Not -Match "RAM liberee/consommee en moyenne au switch"
     }
 }
