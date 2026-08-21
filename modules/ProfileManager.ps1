@@ -101,6 +101,17 @@ function Get-BackupHistoryMax {
     }
 }
 
+function Get-BackupEnabled {
+    $default = $true
+    try {
+        $cfg = Get-ProfileConfig
+        if ($null -ne $cfg.settings.backupEnabled) { return [bool]$cfg.settings.backupEnabled }
+        return $default
+    } catch {
+        return $default
+    }
+}
+
 function Backup-WslConfig {
     <#
     .SYNOPSIS
@@ -110,6 +121,7 @@ function Backup-WslConfig {
     #>
     $src = Get-WslConfigPath
     if (-not (Test-Path $src)) { return }
+    if (-not (Get-BackupEnabled)) { return }
 
     $dir = Get-BackupDir
     if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }

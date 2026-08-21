@@ -285,7 +285,8 @@ Le fichier `data/profiles.json` centralise l'ensemble de la configuration :
     "monitorThreshold": 80,
     "monitorIntervalSeconds": 30,
     "historyMaxEntries": 100,
-    "backupEnabled": true
+    "backupEnabled": true,
+    "backupHistoryMax": 5
   }
 }
 ```
@@ -306,6 +307,7 @@ Un chemin littéral (ex. `C:/Temp/wsl-swap.vhdx`) reste bien entendu accepté et
 | `monitorIntervalSeconds` | Intervalle de vérification RAM (secondes)        | `30`   |
 | `historyMaxEntries`      | Nombre maximum d'entrées dans l'historique       | `100`  |
 | `backupEnabled`          | Active la sauvegarde automatique de `.wslconfig` | `true` |
+| `backupHistoryMax`       | Nombre maximum de backups `.wslconfig` conservés | `5`    |
 
 ---
 

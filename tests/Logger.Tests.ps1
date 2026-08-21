@@ -3,6 +3,7 @@
 # ============================================================
 
 BeforeAll {
+    . "$PSScriptRoot/../modules/ProfileManager.ps1"
     . "$PSScriptRoot/../modules/Logger.ps1"
     . "$PSScriptRoot/TestHelpers.ps1"
 }
@@ -74,5 +75,35 @@ Describe "Show-SwitchHistory" {
     It "ne leve pas d'exception avec plusieurs entrees et -Last" {
         1..5 | ForEach-Object { Write-SwitchLog -Action "SWITCH" -ProfileKey "web" -Details "entree $_" }
         { Show-SwitchHistory -Last 3 } | Should -Not -Throw
+    }
+}
+
+Describe "Write-SwitchLog - historyMaxEntries configurable" {
+
+    BeforeEach {
+        Clear-ProfileConfigCache
+        $script:testRoot = New-TestWslRoot
+    }
+
+    AfterEach {
+        Remove-TestWslRoot -Path $script:testRoot
+    }
+
+    It "garde 100 entrees par defaut quand historyMaxEntries n'est pas configure" {
+        1..5 | ForEach-Object { Write-SwitchLog -Action "SWITCH" -ProfileKey "web" -Details "entree $_" }
+
+        $history = @(Get-Content (Get-HistoryPath) -Raw | ConvertFrom-Json)
+        $history.Count | Should -Be 5
+    }
+
+    It "n'ecrete l'historique qu'au-dela de historyMaxEntries configure dans profiles.json" {
+        New-TestProfilesJson -Config @{ settings = @{ historyMaxEntries = 3 } }
+
+        1..5 | ForEach-Object { Write-SwitchLog -Action "SWITCH" -ProfileKey "web" -Details "entree $_" }
+
+        $history = @(Get-Content (Get-HistoryPath) -Raw | ConvertFrom-Json)
+        $history.Count | Should -Be 3
+        $history[0].details | Should -Be "entree 3"
+        $history[-1].details | Should -Be "entree 5"
     }
 }

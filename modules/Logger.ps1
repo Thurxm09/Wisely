@@ -8,6 +8,17 @@ function Get-HistoryPath {
     Join-Path $Global:WSLRoot "data\history.json"
 }
 
+function Get-HistoryMaxEntries {
+    $default = 100
+    try {
+        $cfg = Get-ProfileConfig
+        if ($cfg.settings.historyMaxEntries) { return [int]$cfg.settings.historyMaxEntries }
+        return $default
+    } catch {
+        return $default
+    }
+}
+
 function Write-SwitchLog {
     <#
     .SYNOPSIS
@@ -52,7 +63,7 @@ function Write-SwitchLog {
     $history += $entry
 
     # Écrêtage : on garde les N dernières entrées
-    $maxEntries = 100
+    $maxEntries = Get-HistoryMaxEntries
     if ($history.Count -gt $maxEntries) {
         $history = $history[($history.Count - $maxEntries)..($history.Count - 1)]
     }

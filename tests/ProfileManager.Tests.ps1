@@ -402,6 +402,19 @@ Describe "Backup-WslConfig" {
         $files = @(Get-ChildItem (Get-BackupDir) -Filter "wslconfig_*.backup")
         $files.Count | Should -Be 2
     }
+
+    Context "backupEnabled = `$false" {
+
+        It "ne cree aucun backup quand backupEnabled est desactive dans profiles.json" {
+            $config = Get-ValidProfilesConfig
+            $config.settings.backupEnabled = $false
+            New-TestProfilesJson -Config $config
+
+            Backup-WslConfig
+
+            Test-Path (Get-BackupDir) | Should -Be $false
+        }
+    }
 }
 
 Describe "Invoke-Rollback" {
