@@ -1,6 +1,8 @@
 # Wisely
 
-**Statut :** v2.0.0 stable publiée (GitHub), v2.1 en développement actif.
+> **Note :** ce document est un instantané figé à l'époque de la planification v2.1. Pour l'état et la vision à jour du projet, voir `ROADMAP.md` (stratégie/roadmap) et `CHANGELOG.md` (versions livrées) — v2.2 est livrée et v2.3 est cadrée.
+
+**Statut (historique) :** v2.0.0 stable publiée (GitHub), v2.1 en développement actif.
 
 **Description :** Outil CLI PowerShell qui gère dynamiquement les profils de ressources WSL2 (RAM, CPU) sur Windows, avec monitoring et reporting. Né d'une contrainte matérielle réelle (16GB RAM, workloads WSL2 + VS Code + navigateur en simultané).
 
