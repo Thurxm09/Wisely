@@ -177,7 +177,7 @@ Describe "WeeklyReport.ps1 - RAM moyenne par profil (ramDeltaGB, v2.3)" {
 
         $content = Get-Content (Get-TestReportPath) -Raw
         $content | Should -Match "RAM liberee/consommee en moyenne au switch"
-        $content | Should -Match "web\s*:\s*\+1.4GB"
+        $content | Should -Match "web\s+\+1.4GB"
     }
 
     It "ne moyenne que les entrees qui portent ramDeltaGB, sans etre polluee par celles qui ne l'ont pas" {
@@ -190,7 +190,7 @@ Describe "WeeklyReport.ps1 - RAM moyenne par profil (ramDeltaGB, v2.3)" {
         Invoke-TestWeeklyReport -Silent
 
         $content = Get-Content (Get-TestReportPath) -Raw
-        $content | Should -Match "web\s*:\s*\+2GB"
+        $content | Should -Match "web\s+\+2GB"
     }
 
     It "affiche un signe negatif quand la RAM moyenne est consommee (pas liberee)" {
@@ -201,7 +201,7 @@ Describe "WeeklyReport.ps1 - RAM moyenne par profil (ramDeltaGB, v2.3)" {
         Invoke-TestWeeklyReport -Silent
 
         $content = Get-Content (Get-TestReportPath) -Raw
-        $content | Should -Match "data\s*:\s*-0.8GB"
+        $content | Should -Match "data\s+-0.8GB"
     }
 
     It "n'affiche pas la section quand aucune entree de la semaine n'a de ramDeltaGB (historique pre-v2.3)" {
