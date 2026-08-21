@@ -51,6 +51,22 @@ Describe "Write-SwitchLog" {
         $history.Count | Should -Be 1
         $history[0].details | Should -Be "apres corruption"
     }
+
+    It "enregistre ramDeltaGB et restartSeconds quand fournis (metriques v2.3)" {
+        Write-SwitchLog -Action "SWITCH" -ProfileKey "web" -Details "test" -RamDeltaGB 1.5 -RestartSeconds 2.3
+
+        $history = @(Get-Content (Get-HistoryPath) -Raw | ConvertFrom-Json)
+        $history[0].ramDeltaGB | Should -Be 1.5
+        $history[0].restartSeconds | Should -Be 2.3
+    }
+
+    It "enregistre ramDeltaGB et restartSeconds a `$null quand non fournis (retro-compatible)" {
+        Write-SwitchLog -Action "ROLLBACK" -ProfileKey "web" -Details "test"
+
+        $history = @(Get-Content (Get-HistoryPath) -Raw | ConvertFrom-Json)
+        $history[0].ramDeltaGB | Should -Be $null
+        $history[0].restartSeconds | Should -Be $null
+    }
 }
 
 Describe "Show-SwitchHistory" {

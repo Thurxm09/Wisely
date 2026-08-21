@@ -290,6 +290,28 @@ Describe "Test-SwapFilePath" {
     }
 }
 
+Describe "Get-AvailableRamGB" {
+
+    BeforeEach {
+        if (-not (Get-Command Get-CimInstance -ErrorAction SilentlyContinue)) {
+            function script:Get-CimInstance { }
+        }
+    }
+
+    It "convertit FreePhysicalMemory (KB) en GB arrondi a 2 decimales" {
+        Mock Get-CimInstance { [PSCustomObject]@{ FreePhysicalMemory = 8000000 } }
+
+        Get-AvailableRamGB | Should -Be 7.63
+    }
+
+    It "retourne `$null si la mesure echoue, sans lever d'exception" {
+        Mock Get-CimInstance { throw "WMI indisponible" }
+
+        { Get-AvailableRamGB } | Should -Not -Throw
+        Get-AvailableRamGB | Should -Be $null
+    }
+}
+
 Describe "Set-WslProfile - validation du swap file" {
 
     BeforeEach {
@@ -343,6 +365,68 @@ Describe "Set-WslProfile - validation du swap file" {
         } finally {
             $env:TEMP = $originalTemp
         }
+    }
+}
+
+Describe "Set-WslProfile - switch reussi et metriques (RAM, temps de redemarrage)" {
+
+    BeforeEach {
+        Clear-ProfileConfigCache
+        $script:testRoot = New-TestWslRoot
+        Set-TestUserProfile -Path $script:testRoot
+        Enable-WslMocks
+        if (-not (Get-Command Get-CimInstance -ErrorAction SilentlyContinue)) {
+            function script:Get-CimInstance { }
+        }
+        $config = Get-ValidProfilesConfig
+        $config.profiles.web.swapFile = Join-Path $script:testRoot "wsl-swap.vhdx"
+        New-TestProfilesJson -Config $config
+    }
+
+    AfterEach {
+        Restore-TestUserProfile
+        Remove-TestWslRoot -Path $script:testRoot
+    }
+
+    It "applique le profil, ecrit .wslconfig et journalise un SWITCH" {
+        Mock Get-CimInstance { [PSCustomObject]@{ FreePhysicalMemory = 8000000 } }
+
+        Set-WslProfile -Key "web"
+
+        (Get-Content (Get-WslConfigPath) -Raw) | Should -Match "memory=4GB"
+        $history = @(Get-Content (Get-HistoryPath) -Raw | ConvertFrom-Json)
+        $history[-1].action | Should -Be "SWITCH"
+        $history[-1].profile | Should -Be "web"
+    }
+
+    It "mesure et journalise le delta de RAM disponible (avant/apres)" {
+        $script:ramCallCount = 0
+        Mock Get-CimInstance {
+            $script:ramCallCount++
+            if ($script:ramCallCount -eq 1) {
+                return [PSCustomObject]@{ FreePhysicalMemory = 4000000 }
+            }
+            return [PSCustomObject]@{ FreePhysicalMemory = 6000000 }
+        }
+
+        Set-WslProfile -Key "web"
+
+        $history = @(Get-Content (Get-HistoryPath) -Raw | ConvertFrom-Json)
+        $entry = $history[-1]
+        $entry.ramDeltaGB | Should -Be 1.91
+        $entry.details | Should -Match "RAM \+1.91GB"
+    }
+
+    It "journalise quand meme restartSeconds si la mesure RAM echoue (metrique optionnelle)" {
+        Mock Get-CimInstance { throw "WMI indisponible" }
+
+        { Set-WslProfile -Key "web" } | Should -Not -Throw
+
+        $history = @(Get-Content (Get-HistoryPath) -Raw | ConvertFrom-Json)
+        $entry = $history[-1]
+        $entry.ramDeltaGB | Should -Be $null
+        $entry.restartSeconds | Should -Not -BeNullOrEmpty
+        $entry.details | Should -Not -Match "RAM"
     }
 }
 

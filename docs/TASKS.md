@@ -2,7 +2,6 @@
 
 ## Active
 
-- [ ] **Métriques réelles post-switch** (RAM delta, temps de redémarrage WSL2) — v2.3
 - [ ] **Enrichir les rapports hebdomadaires** avec la RAM moyenne par profil — v2.3
 - [ ] **`wisely -Watch`** (dashboard temps réel) — v2.3
 - [ ] **Audit rafraîchi ciblé** sur les modules touchés par v2.3 — v2.3
@@ -16,6 +15,7 @@
 
 ## Done
 
+- [x] ~~Métriques réelles post-switch (RAM delta, temps de redémarrage WSL2)~~ (v2.3 - `Get-AvailableRamGB`, `Write-SwitchLog -RamDeltaGB/-RestartSeconds`)
 - [x] ~~Tests Pester pour Monitor.ps1, MonitorTask.ps1, WeeklyReport.ps1~~ (v2.3, prerequis avant metriques/-Watch)
 - [x] ~~Verifier/clore le finding N-2 d'AUDIT.md~~ (v2.3 - deja corrige dans le code, statut du doc mis a jour)
 - [x] ~~CONTRIBUTING.md~~ (v2.2)
