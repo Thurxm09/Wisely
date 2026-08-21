@@ -169,6 +169,22 @@ function Invoke-Rollback {
 # WSL2 et Windows acceptent les deux formats dans .wslconfig
 # Cela evite le probleme d'echappement du backslash
 
+function Resolve-ProfilePaths {
+    <#
+    .SYNOPSIS
+        Etend les variables d'environnement (%TEMP%, %USERPROFILE%,
+        %LOCALAPPDATA%) dans le swapFile d'un profil et normalise le
+        resultat en forward slashes. Retourne une copie du profil - ne
+        mute jamais l'original, pour ne pas corrompre le cache
+        $script:ProfileConfigCache.
+    #>
+    param([Parameter(Mandatory)][PSCustomObject]$ProfileDef)
+    $copy = $ProfileDef | ConvertTo-Json -Depth 10 | ConvertFrom-Json
+    $expanded = [System.Environment]::ExpandEnvironmentVariables($copy.swapFile)
+    $copy.swapFile = $expanded -replace "\\", "/"
+    return $copy
+}
+
 function Test-SwapFilePath {
     <#
     .SYNOPSIS
@@ -233,7 +249,7 @@ function Set-WslProfile {
     if ($null -eq $prop) {
         throw "Profil '$Key' introuvable. Profils disponibles : $($config.profiles.PSObject.Properties.Name -join ', ')"
     }
-    $profileDef = $prop.Value
+    $profileDef = Resolve-ProfilePaths -ProfileDef $prop.Value
     try {
         Test-SwapFilePath -SwapFile $profileDef.swapFile
     } catch {
@@ -306,7 +322,7 @@ function New-CustomProfile {
         memory      = $Memory
         processors  = $Processors
         swap        = $Swap
-        swapFile    = "C:/Temp/wsl-swap.vhdx"
+        swapFile    = "%TEMP%/wisely-swap.vhdx"
         swappiness  = $Swappiness
     }
     $config.profiles | Add-Member -MemberType NoteProperty -Name $Key.ToLower() -Value $newProfile -Force

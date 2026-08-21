@@ -207,6 +207,66 @@ Describe "Import-Profiles" {
     }
 }
 
+Describe "Resolve-ProfilePaths" {
+
+    BeforeEach {
+        Clear-ProfileConfigCache
+        $script:originalTemp = $env:TEMP
+        $script:originalUserProfile = $env:USERPROFILE
+        $script:originalLocalAppData = $env:LOCALAPPDATA
+    }
+
+    AfterEach {
+        $env:TEMP = $script:originalTemp
+        $env:USERPROFILE = $script:originalUserProfile
+        $env:LOCALAPPDATA = $script:originalLocalAppData
+    }
+
+    It "etend %TEMP% dans swapFile" {
+        $env:TEMP = "C:/Users/test/AppData/Local/Temp"
+        $original = [PSCustomObject]@{ displayName = "TEST"; swapFile = "%TEMP%/wisely-swap.vhdx" }
+
+        $resolved = Resolve-ProfilePaths -ProfileDef $original
+
+        $resolved.swapFile | Should -Be "C:/Users/test/AppData/Local/Temp/wisely-swap.vhdx"
+    }
+
+    It "etend %USERPROFILE% dans swapFile" {
+        $env:USERPROFILE = "C:/Users/test"
+        $original = [PSCustomObject]@{ displayName = "TEST"; swapFile = "%USERPROFILE%/wisely-swap.vhdx" }
+
+        $resolved = Resolve-ProfilePaths -ProfileDef $original
+
+        $resolved.swapFile | Should -Be "C:/Users/test/wisely-swap.vhdx"
+    }
+
+    It "etend %LOCALAPPDATA% dans swapFile" {
+        $env:LOCALAPPDATA = "C:/Users/test/AppData/Local"
+        $original = [PSCustomObject]@{ displayName = "TEST"; swapFile = "%LOCALAPPDATA%/wisely-swap.vhdx" }
+
+        $resolved = Resolve-ProfilePaths -ProfileDef $original
+
+        $resolved.swapFile | Should -Be "C:/Users/test/AppData/Local/wisely-swap.vhdx"
+    }
+
+    It "laisse un chemin litteral inchange" {
+        $original = [PSCustomObject]@{ displayName = "TEST"; swapFile = "C:/Temp/wsl-swap.vhdx" }
+
+        $resolved = Resolve-ProfilePaths -ProfileDef $original
+
+        $resolved.swapFile | Should -Be "C:/Temp/wsl-swap.vhdx"
+    }
+
+    It "ne mute jamais l'objet original passe en parametre" {
+        $env:TEMP = "C:/Users/test/AppData/Local/Temp"
+        $original = [PSCustomObject]@{ displayName = "TEST"; swapFile = "%TEMP%/wisely-swap.vhdx" }
+
+        Resolve-ProfilePaths -ProfileDef $original | Out-Null
+
+        $original.swapFile | Should -Be "%TEMP%/wisely-swap.vhdx"
+    }
+}
+
 Describe "Test-SwapFilePath" {
 
     BeforeEach {
@@ -269,6 +329,20 @@ Describe "Set-WslProfile - validation du swap file" {
         New-TestProfilesJson -Config $config
 
         { Set-WslProfile -Key "web" -DryRun } | Should -Not -Throw
+    }
+
+    It "accepte et etend un profil dont le swapFile utilise %TEMP%" {
+        $config = Get-ValidProfilesConfig
+        $config.profiles.web.swapFile = "%TEMP%/wisely-swap.vhdx"
+        New-TestProfilesJson -Config $config
+        $originalTemp = $env:TEMP
+        $env:TEMP = $script:testRoot
+
+        try {
+            { Set-WslProfile -Key "web" -DryRun } | Should -Not -Throw
+        } finally {
+            $env:TEMP = $originalTemp
+        }
     }
 }
 

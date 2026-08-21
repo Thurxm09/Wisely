@@ -277,7 +277,7 @@ Le fichier `data/profiles.json` centralise l'ensemble de la configuration :
       "memory": "2GB",
       "processors": 3,
       "swap": "3GB",
-      "swapFile": "C:/Temp/wsl-swap.vhdx",
+      "swapFile": "%TEMP%/wisely-swap.vhdx",
       "swappiness": 10
     }
   },
@@ -289,6 +289,16 @@ Le fichier `data/profiles.json` centralise l'ensemble de la configuration :
   }
 }
 ```
+
+`swapFile` accepte des placeholders de variables d'environnement Windows, étendus automatiquement à chaque application du profil :
+
+| Placeholder       | Résolu vers                                    |
+| ------------------ | ----------------------------------------------- |
+| `%TEMP%`           | Dossier temporaire de l'utilisateur courant     |
+| `%USERPROFILE%`    | Dossier personnel de l'utilisateur (`C:\Users\...`) |
+| `%LOCALAPPDATA%`   | Dossier `AppData\Local` de l'utilisateur        |
+
+Un chemin littéral (ex. `C:/Temp/wsl-swap.vhdx`) reste bien entendu accepté et n'est pas modifié.
 
 | Paramètre `settings`     | Description                                      | Défaut |
 | ------------------------ | ------------------------------------------------ | ------ |
