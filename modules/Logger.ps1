@@ -1,4 +1,4 @@
-﻿# ============================================================
+# ============================================================
 #  Logger.ps1 — Historique des switchs de profil
 #  Dot-sourcé depuis wisely.ps1
 #  Utilise $Global:WSLRoot défini dans le script principal
@@ -29,21 +29,33 @@ function Write-SwitchLog {
         Clé du profil concerné (ex: "web", "data")
     .PARAMETER Details
         Informations complémentaires libres
+    .PARAMETER RamDeltaGB
+        Delta de RAM Windows disponible entre avant et après le switch
+        (positif = RAM libérée, négatif = RAM consommée). $null si non
+        mesurable (ex: Get-CimInstance indisponible). Metrique v2.3
+        (observabilite) - voir docs/ROADMAP.md Axe 6.
+    .PARAMETER RestartSeconds
+        Temps mesuré de l'arrêt WSL2 (wsl --shutdown + délai de
+        stabilisation). $null si non applicable. Metrique v2.3.
     #>
     param(
         [Parameter(Mandatory)][string]$Action,
         [string]$ProfileKey = "N/A",
-        [string]$Details = ""
+        [string]$Details = "",
+        [Nullable[double]]$RamDeltaGB = $null,
+        [Nullable[double]]$RestartSeconds = $null
     )
 
     $historyPath = Get-HistoryPath
 
     $entry = [PSCustomObject]@{
-        timestamp = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
-        action    = $Action
-        profile   = $ProfileKey
-        details   = $Details
-        user      = $env:USERNAME
+        timestamp      = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+        action         = $Action
+        profile        = $ProfileKey
+        details        = $Details
+        user           = $env:USERNAME
+        ramDeltaGB     = $RamDeltaGB
+        restartSeconds = $RestartSeconds
     }
 
     # Charger l'historique existant ou initialiser
