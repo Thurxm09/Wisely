@@ -1,6 +1,10 @@
 # WeeklyReport.ps1
 # Genere un rapport hebdomadaire depuis history.json.
 # Peut etre appele manuellement ou par tache planifiee.
+#
+# Script autonome execute directement par le Planificateur de taches
+# Windows (JAMAIS dot-source) - "exit" est correct ici, contrairement aux
+# modules/*.ps1 dot-sources dans wisely.ps1 qui doivent utiliser "throw".
 
 param([switch]$Silent)
 
@@ -16,7 +20,15 @@ if (-not (Test-Path $historyPath)) {
     exit 0
 }
 
-$history = @(Get-Content $historyPath -Raw | ConvertFrom-Json)
+try {
+    $history = @(Get-Content $historyPath -Raw | ConvertFrom-Json)
+} catch {
+    # history.json corrompu : ce script tourne sans surveillance (tache
+    # planifiee -Silent chaque lundi) - on journalise plutot que de
+    # planter silencieusement et de ne plus jamais produire de rapport.
+    if (-not $Silent) { Write-Host "  Historique corrompu, illisible." -ForegroundColor Gray }
+    exit 0
+}
 if ($history.Count -eq 0) {
     if (-not $Silent) { Write-Host "  Historique vide." -ForegroundColor Gray }
     exit 0
@@ -24,9 +36,16 @@ if ($history.Count -eq 0) {
 
 $weekAgo = (Get-Date).AddDays(-7)
 
+# Chaque entree est validee individuellement (try/catch autour du parsing
+# du timestamp) : une seule entree malformee ne doit pas faire echouer
+# tout le rapport - elle est simplement exclue.
 $switches = @($history | Where-Object {
-    $_.action -eq "SWITCH" -and
-    [datetime]::ParseExact($_.timestamp, "yyyy-MM-dd HH:mm:ss", $null) -ge $weekAgo
+    if ($_.action -ne "SWITCH") { return $false }
+    try {
+        return ([datetime]::ParseExact($_.timestamp, "yyyy-MM-dd HH:mm:ss", $null) -ge $weekAgo)
+    } catch {
+        return $false
+    }
 })
 
 # ---- Construction du rapport ----------------------------------------

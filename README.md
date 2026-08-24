@@ -2,7 +2,7 @@
 
 > Gérez vos ressources WSL2 en un instant — profils mémoire, surveillance RAM en arrière-plan et rapports hebdomadaires, le tout depuis un menu interactif ou une seule commande.
 
-![Version](https://img.shields.io/badge/version-2.1.0-blue)
+![Version](https://img.shields.io/badge/version-2.2.0-blue)
 ![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B-5391FE?logo=powershell&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D4?logo=windows&logoColor=white)
 ![WSL](https://img.shields.io/badge/WSL-2-orange?logo=linux&logoColor=white)
@@ -118,10 +118,17 @@ wisely data -DryRun
 wisely                          # Menu interactif (flèches + Entrée)
 wisely <profil>                 # Switch direct vers un profil
 wisely <profil> -DryRun         # Simulation sans écriture
+wisely <profil> -Verbose        # Switch avec diff .wslconfig avant/après
 
 # ── Récupération ───────────────────────────────────────────────────────
 wisely -Rollback                # Restaurer le backup précédent
 wisely -History                 # Afficher l'historique des opérations
+
+# ── Observation ────────────────────────────────────────────────────────
+wisely -Status                  # Dashboard complet (RAM, profil actif, historique)
+wisely -Status -Short           # Ligne compacte pour prompt (voir intégration Oh My Posh)
+wisely -Snapshot                # Capturer le profil actif courant comme nouveau profil
+wisely -Version                 # Afficher la version installée
 
 # ── Surveillance RAM ────────────────────────────────────────────────────
 wisely -Monitor start           # Démarrer la surveillance en arrière-plan
@@ -141,6 +148,9 @@ wisely -Import chemin.json      # Importer des profils depuis un fichier JSON
 
 # ── Maintenance ─────────────────────────────────────────────────────────
 wisely -Clean                   # Purger les fichiers temporaires et anciens rapports
+
+# ── Sortie ─────────────────────────────────────────────────────────────
+wisely <profil> -Quiet          # Aucune sortie sauf erreurs (scripts/automatisation)
 ```
 
 ---
@@ -283,6 +293,7 @@ wisely -Report
 **Contenu du rapport :**
 
 - Répartition du temps par profil
+- RAM libérée/consommée en moyenne au switch, par profil (delta mesuré au moment du switch — pas un usage soutenu pendant que le profil reste actif)
 - Profil dominant de la semaine
 - Heure de pointe d'utilisation
 - Liste des derniers switchs effectués
@@ -340,13 +351,13 @@ Le fichier `data/profiles.json` centralise l'ensemble de la configuration :
 
 ```json
 {
-  "version": "2.0",
+  "version": "2.0.0",
   "profiles": {
     "web": {
       "displayName": "WEB",
       "description": "Brave + VS Code + WSL léger",
       "color": "Green",
-      "memory": "2GB",
+      "memory": "4GB",
       "processors": 3,
       "swap": "3GB",
       "swapFile": "%TEMP%/wisely-swap.vhdx",

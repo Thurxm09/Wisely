@@ -794,3 +794,256 @@ Après les corrections, la gestion des chemins reste légèrement hétérogène 
 
 \*Audit réalisé sur la version 2.0.0 — Prochain audit recommandé à la prochaine release majeure ou après ajout de fonctionnalités système.\*
 
+---
+
+## Audit v2.3 (Général) — 2026-08-24
+
+> Contrairement à l'audit initial (v2.0) et au suivi ciblé N-1/N-2, cette passe couvre **l'ensemble du dépôt** — pas seulement les modules touchés par v2.3 — via trois agents d'investigation parallèles (résilience aux données corrompues, sécurité/validation, cohérence documentaire). Les IDs de cette section sont préfixés `v2.3-` pour rester distincts de la numérotation C/I/S de l'audit initial ci-dessus.
+
+### 🔴 Critique
+
+---
+
+#### v2.3-C-1 — `Import-Profiles` n'importe aucune validation du contenu des profils importés
+
+**Fichier :** `modules/ProfileManager.ps1`
+**Statut :** ✅ Corrigé
+
+**Problème initial :** `Import-Profiles` ne vérifiait que la présence des clés `profiles`/`version` (C-4 de l'audit initial) — jamais le **contenu** de chaque profil avant de l'écrire dans `profiles.json` et de l'utiliser pour réécrire `.wslconfig`/redémarrer WSL2. Un fichier importé avec `"memory": "n'importe quoi"`, un nombre de CPU hors limites, ou un champ contenant un retour à la ligne (injection dans `.wslconfig`, qui est un fichier `key=value` interprété ligne par ligne) passait intégralement.
+
+**Correction appliquée :** Nouvelle fonction `Test-ProfileDefinition`, factorisée entre `New-CustomProfile` (qui validait déjà partiellement, en ligne) et `Import-Profiles` (qui ne validait pas du tout) — chaque profil qui entre dans le système, créé localement ou importé, passe désormais par la même validation : format mémoire (`^\d+GB$`), plage CPU (`1..NumberOfLogicalProcessors` réels de la machine), et absence de `\r`/`\n` dans les champs interpolés tels quels (`swap`, `swapFile`, `swappiness`, `displayName`, `description`, `color`).
+
+```powershell
+function Test-ProfileDefinition {
+    param([Parameter(Mandatory)][PSCustomObject]$ProfileDef, [string]$Key = "?")
+    if ("$($ProfileDef.memory)" -notmatch "^\d+GB$") {
+        throw "Profil '$Key' : format memoire invalide '$($ProfileDef.memory)'."
+    }
+    $maxCpu = (Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors
+    if ($ProfileDef.processors -lt 1 -or $ProfileDef.processors -gt $maxCpu) {
+        throw "Profil '$Key' : nombre de CPU invalide '$($ProfileDef.processors)'."
+    }
+    foreach ($field in @("swap", "swapFile", "swappiness", "displayName", "description", "color")) {
+        if ("$($ProfileDef.$field)" -match "[`r`n]") {
+            throw "Profil '$Key' : le champ '$field' contient un retour a la ligne, refuse."
+        }
+    }
+}
+```
+
+---
+
+### 🟠 Important
+
+---
+
+#### v2.3-I-1 — `Get-BackupHistoryMax` pouvait rendre la purge des backups destructrice
+
+**Fichier :** `modules/ProfileManager.ps1`
+**Statut :** ✅ Corrigé
+
+**Problème initial :** Rien n'empêchait `backupHistoryMax` d'être 0 ou négatif dans `profiles.json`. `Backup-WslConfig` calcule `$toRemove = [math]::Max(0, $all.Count - $max)` : avec `$max <= 0`, `$toRemove` devient `$all.Count` (ou plus), supprimant **tous** les backups existants, y compris celui qui vient d'être créé — le mécanisme de sécurité de rollback se détruisant lui-même.
+
+**Correction appliquée :** `Get-BackupHistoryMax` retombe sur le défaut (5) si la valeur configurée n'est pas strictement positive, au lieu de faire confiance telle quelle à `profiles.json`.
+
+```powershell
+if ($cfg.settings.backupHistoryMax -and [int]$cfg.settings.backupHistoryMax -gt 0) {
+    return [int]$cfg.settings.backupHistoryMax
+}
+return $default
+```
+
+---
+
+#### v2.3-I-2 — `MonitorTask.ps1` : mesure RAM non protégée, crash silencieux de la tâche planifiée
+
+**Fichier :** `modules/MonitorTask.ps1`
+**Statut :** ✅ Corrigé
+
+**Problème initial :** Le bloc `Get-CimInstance Win32_OperatingSystem` + calcul du pourcentage RAM n'était protégé par aucun `try/catch`. Ce script tourne sans supervision via le Planificateur de tâches Windows (`WSL2-RamMonitor`) — une exception WMI (service arrêté, permissions, etc.) faisait échouer la tâche sans aucune trace exploitable, désactivant silencieusement toute alerte RAM.
+
+**Correction appliquée :** Le bloc de mesure est encadré d'un `try/catch` qui journalise l'échec dans `data/monitor_errors.txt` (nouveau fichier, même répertoire que `monitor_cooldown.txt`) via une fonction `Write-MonitorTaskError`, puis sort proprement (`exit 0`) plutôt que de planter.
+
+---
+
+#### v2.3-I-3 — `MonitorTask.ps1` : un fichier cooldown corrompu bloquait définitivement les alertes
+
+**Fichier :** `modules/MonitorTask.ps1`
+**Statut :** ✅ Corrigé
+
+**Problème initial :** `[datetime]::ParseExact` sur le contenu de `monitor_cooldown.txt` n'était pas protégé. Un fichier corrompu (édition manuelle, écriture partielle suite à une coupure) faisait planter la tâche à **chaque exécution suivante**, sans jamais se réparer tout seul ni journaliser quoi que ce soit — RAM alerting mort silencieusement jusqu'à intervention manuelle.
+
+**Correction appliquée :** Le parsing est encadré d'un `try/catch` : en cas d'échec, l'erreur est journalisée (`Write-MonitorTaskError`) et le script **continue** (n'exit pas) pour déclencher l'alerte du jour, qui réécrit un cooldown valide — auto-réparation au prochain cycle plutôt que blocage permanent.
+
+---
+
+#### v2.3-I-4 — `WeeklyReport.ps1` : `history.json` corrompu faisait échouer la tâche planifiée
+
+**Fichier :** `modules/WeeklyReport.ps1`
+**Statut :** ✅ Corrigé
+
+**Problème initial :** `Get-Content $historyPath -Raw | ConvertFrom-Json` n'était protégé par aucun `try/catch`. Cette tâche tourne chaque lundi via le Planificateur de tâches en mode `-Silent` — un `history.json` corrompu la faisait échouer silencieusement, sans rapport, sans diagnostic, et sans plus jamais en produire tant que le fichier restait corrompu.
+
+**Correction appliquée :** Encadré d'un `try/catch` : message "Historique corrompu, illisible." en mode non-silencieux, sortie propre (`exit 0`) dans tous les cas.
+
+---
+
+#### v2.3-I-5 — `WeeklyReport.ps1` : une seule entrée malformée faisait échouer tout le rapport
+
+**Fichier :** `modules/WeeklyReport.ps1`
+**Statut :** ✅ Corrigé
+
+**Problème initial :** Le filtre `$switches` appelait `[datetime]::ParseExact($_.timestamp, ...)` sans protection pour chaque entrée de l'historique. Une seule entrée au timestamp malformé (édition manuelle, futur bug d'écriture) faisait planter la génération du rapport entier plutôt que d'être simplement exclue.
+
+**Correction appliquée :** Le parsing du timestamp est encadré d'un `try/catch` par entrée à l'intérieur du `Where-Object` — une entrée illisible est exclue silencieusement, le reste du rapport se génère normalement.
+
+---
+
+#### v2.3-I-6 — `Show-SwitchHistory` plantait sur un `history.json` corrompu
+
+**Fichier :** `modules/Logger.ps1`
+**Statut :** ✅ Corrigé
+
+**Problème initial :** Contrairement à `WeeklyReport.ps1` (tâche planifiée sans supervision), `Show-SwitchHistory` est appelée de façon interactive (`wisely -Status`, historique). Elle ne protégeait pas non plus son `ConvertFrom-Json` — un `history.json` corrompu faisait planter la commande en pleine session utilisateur au lieu d'afficher un message clair.
+
+**Correction appliquée :** Même pattern try/catch que `WeeklyReport.ps1` : message "Historique corrompu, illisible." et retour propre.
+
+---
+
+#### v2.3-I-7 — Le workflow de release ne vérifiait pas que `VERSION` correspond au tag publié
+
+**Fichier :** `.github/workflows/release.yml`
+**Statut :** ✅ Corrigé
+
+**Problème initial :** Rien n'empêchait de pousser un tag `vX.Y.Z` alors que le fichier `VERSION` du commit ciblé contenait encore une autre valeur (oubli de bump, rerun sur le mauvais commit) — l'archive de release publiée aurait alors embarqué un `VERSION` désynchronisé du tag GitHub, sans qu'aucune étape ne le détecte.
+
+**Correction appliquée :** Nouvelle étape entre la lecture de `VERSION` et l'extraction du changelog : compare `VERSION` au tag (sans le préfixe `v`) et fait échouer la release avec une annotation `::error::` explicite en cas de désaccord.
+
+---
+
+### 🟡 Secondaire
+
+---
+
+#### v2.3-S-1 — Caractères non-ASCII résiduels dans du code `.ps1`
+
+**Fichiers :** `modules/Logger.ps1`, `modules/ProfileManager.ps1`
+**Statut :** ✅ Corrigé (partiel, volontairement — voir note)
+
+**Problème initial :** Le projet impose l'ASCII pur pour tout `.ps1` (Unicode via `[char]0xXXXX`, convention déjà bien établie pour le dessin de boîtes dans `wisely.ps1`). `Show-SwitchHistory` (`Logger.ps1`) construisait ses lignes de séparation avec un tiret cadratin Unicode littéral (`──────`) au lieu de `([string]$C_DASH * $n)`/`("-" * $n)`, et une exception dans `ProfileManager.ps1` utilisait un tiret cadratin (`—`) au lieu d'un trait d'union ASCII.
+
+**Correction appliquée :** Les séparateurs de `Show-SwitchHistory` remplacés par `("  " + ("-" * 50))` ; le tiret cadratin du message d'exception remplacé par un trait d'union. **Note :** les caractères accentués résiduels dans la prose des commentaires/docstrings (ex. `"événements"`) n'ont délibérément **pas** été touchés — l'incohérence mécanique et à haute confiance (séparateurs de dessin, message utilisateur) est distincte de la dérive résiduelle en prose de commentaire, hors scope d'une correction incidente.
+
+---
+
+#### v2.3-S-2 — `README.md` : exemple `profiles.json` désynchronisé du fichier réel
+
+**Fichier :** `README.md`
+**Statut :** ✅ Corrigé
+
+**Problème initial :** L'exemple de configuration montrait `"version": "2.0"` (le vrai `data/profiles.json` utilise un format sémantique `X.Y.Z`) et `"memory": "2GB"` pour le profil web (la vraie valeur est `4GB`) — un nouveau contributeur copiant l'exemple obtiendrait une configuration qui ne correspond pas au comportement réel de l'outil.
+
+**Correction appliquée :** `"version": "2.0.0"`, `"memory": "4GB"` pour le profil web, vérifiés contre `data/profiles.json` réel.
+
+---
+
+#### v2.3-S-3 — `README.md` : badge de version obsolète
+
+**Fichier :** `README.md`
+**Statut :** ✅ Corrigé
+
+**Problème initial :** Le badge affichait `2.1.0` alors que le projet est en v2.2 livrée (v2.3 en cours à la date de cet audit).
+
+**Correction appliquée :** Badge mis à jour vers `2.2.0`.
+
+---
+
+#### v2.3-S-4 — `README.md` : section "Contenu du rapport" ne mentionne pas la RAM par profil (v2.3)
+
+**Fichier :** `README.md`
+**Statut :** ✅ Corrigé
+
+**Problème initial :** La brique "rapports hebdomadaires enrichis" (v2.3, PR #22) ajoute une section RAM moyenne libérée/consommée par profil au rapport généré, mais la liste à puces du README décrivant le contenu du rapport n'avait pas été mise à jour en conséquence.
+
+**Correction appliquée :** Ajout de la puce documentant la RAM libérée/consommée en moyenne au switch, avec la précision qu'il s'agit d'un delta mesuré au switch et non d'un usage soutenu.
+
+---
+
+#### v2.3-S-5 — `README.md` : référence de commandes incomplète
+
+**Fichier :** `README.md`
+**Statut :** ✅ Corrigé
+
+**Problème initial :** Plusieurs flags/commandes livrés en v2.2/v2.3 n'apparaissaient pas dans la section de référence des commandes : `-Verbose`, `wisely -Status -Short`, `wisely -Snapshot`, `wisely -Version`, `wisely <profil> -Quiet`.
+
+**Correction appliquée :** Ajout d'un bloc `# ── Observation ──` et d'un bloc `# ── Sortie ──` couvrant ces commandes, à l'endroit logique de la référence de commandes existante.
+
+---
+
+#### v2.3-S-6 — `docs/wisely.md` : bannière de statut avec une formulation obsolète
+
+**Fichier :** `docs/wisely.md`
+**Statut :** ✅ Corrigé
+
+**Problème initial :** La bannière en tête de document indiquait "...v2.2 est livrée et v2.3 est cadrée", devenue inexacte au fil de l'avancement de v2.3 (le document est explicitement un instantané figé — la formulation elle-même ne devait pas dépendre du jalon courant).
+
+**Correction appliquée :** Reformulée en "le statut ci-dessous ne sera plus mis à jour", indépendante de tout jalon futur.
+
+---
+
+#### v2.3-S-7 — `docs/glossary.md` : termes v2.3 absents du glossaire
+
+**Fichier :** `docs/glossary.md`
+**Statut :** ✅ Corrigé
+
+**Problème initial :** Les termes introduits par v2.3 (`ramDeltaGB`, `restartSeconds`, `wisely -Watch`, `Get-WatchSnapshot`/`Get-VmmemStats`, `Test-IsAdminUser`) n'étaient pas encore référencés dans le glossaire, alors que les termes v2.1/v2.2 l'étaient tous.
+
+**Correction appliquée :** 5 nouvelles entrées ajoutées, dans le même format que les entrées existantes.
+
+---
+
+### Constats non corrigés dans cette passe
+
+Deux catégories de constats n'ont **pas** donné lieu à une correction de code dans cette passe :
+
+- **Reportés au backlog** (`docs/TASKS.md`, section Someday) car non urgents et hors du périmètre "correction sûre et bon marché" de cet audit : absence de schéma formalisé pour `history.json` (contrairement à `profiles.json` depuis v2.2) ; absence de test couvrant une sortie anticipée en cours d'échantillonnage dans `Get-VmmemStats` ; exclusions PSScriptAnalyzer à revalider/nettoyer ; actions GitHub non épinglées par SHA (durcissement supply-chain) ; absence de tests Pester sur le schéma des `settings` de `profiles.json`.
+- **Signalé sans correction, décision produit à trancher par l'utilisateur** : `CHANGELOG.md`/`VERSION`/`ROADMAP.md` ne reflètent pas encore l'état "v2.3 complet" — c'est un choix de timing de release (à quel moment bump la version et clôturer formellement v2.3), pas un bug, donc volontairement non tranché par cet audit.
+
+### Récapitulatif — Audit v2.3 (Général)
+
+| Priorité | Détectés | Corrigés | Reportés (backlog) | Signalés (décision utilisateur) |
+|----------|----------|----------|---------------------|----------------------------------|
+| 🔴 Critique | 1 | 1 | 0 | 0 |
+| 🟠 Important | 7 | 7 | 0 | 0 |
+| 🟡 Secondaire | 7 | 7 | 0 | 0 |
+| Hors sévérité (dette/doc) | 6 | 0 | 5 | 1 |
+| **Total** | **21** | **15** | **5** | **1** |
+
+| # | Finding | Fichier | Priorité | Statut |
+|---|---------|---------|----------|--------|
+| v2.3-C-1 | `Import-Profiles` sans validation de contenu | ProfileManager.ps1 | 🔴 Critique | ✅ Corrigé |
+| v2.3-I-1 | `Get-BackupHistoryMax` purge destructrice possible | ProfileManager.ps1 | 🟠 Important | ✅ Corrigé |
+| v2.3-I-2 | Mesure RAM non protégée (MonitorTask) | MonitorTask.ps1 | 🟠 Important | ✅ Corrigé |
+| v2.3-I-3 | Cooldown corrompu bloquait les alertes | MonitorTask.ps1 | 🟠 Important | ✅ Corrigé |
+| v2.3-I-4 | `history.json` corrompu faisait échouer le rapport hebdo | WeeklyReport.ps1 | 🟠 Important | ✅ Corrigé |
+| v2.3-I-5 | Entrée malformée faisait échouer tout le rapport | WeeklyReport.ps1 | 🟠 Important | ✅ Corrigé |
+| v2.3-I-6 | `Show-SwitchHistory` plantait sur historique corrompu | Logger.ps1 | 🟠 Important | ✅ Corrigé |
+| v2.3-I-7 | Pas de vérif `VERSION` vs tag en release | release.yml | 🟠 Important | ✅ Corrigé |
+| v2.3-S-1 | Caractères non-ASCII résiduels (séparateurs, throw) | Logger.ps1, ProfileManager.ps1 | 🟡 Secondaire | ✅ Corrigé |
+| v2.3-S-2 | Exemple `profiles.json` désynchronisé | README.md | 🟡 Secondaire | ✅ Corrigé |
+| v2.3-S-3 | Badge de version obsolète | README.md | 🟡 Secondaire | ✅ Corrigé |
+| v2.3-S-4 | RAM par profil absente de "Contenu du rapport" | README.md | 🟡 Secondaire | ✅ Corrigé |
+| v2.3-S-5 | Référence de commandes incomplète | README.md | 🟡 Secondaire | ✅ Corrigé |
+| v2.3-S-6 | Bannière de statut obsolète | docs/wisely.md | 🟡 Secondaire | ✅ Corrigé |
+| v2.3-S-7 | Termes v2.3 absents du glossaire | docs/glossary.md | 🟡 Secondaire | ✅ Corrigé |
+| T-4 | Pas de schéma formalisé pour `history.json` | data/history.json | — | 📋 Backlog (TASKS.md) |
+| T-5 | `Get-VmmemStats` : pas de test sortie anticipée | Monitor.ps1 | — | 📋 Backlog (TASKS.md) |
+| T-7 | Exclusions PSScriptAnalyzer à revalider | ci.yml | — | 📋 Backlog (TASKS.md) |
+| T-9 | Actions GitHub non épinglées par SHA | .github/workflows/*.yml | — | 📋 Backlog (TASKS.md) |
+| T-11 | Pas de tests sur le schéma `settings` | data/profiles.json | — | 📋 Backlog (TASKS.md) |
+| F5 | Timing de bump CHANGELOG/VERSION/ROADMAP pour "v2.3 complet" | CHANGELOG.md, VERSION, ROADMAP.md | — | ❓ Décision utilisateur |
+
+---
+
+*Audit général réalisé sur `main` après le merge de la PR #23 (dashboard `wisely -Watch`, dernière brique v2.3 planifiée). Méthode : trois agents d'investigation parallèles (résilience, sécurité/validation, cohérence documentaire) sur l'ensemble du dépôt, triage manuel, correction directe des constats sûrs et bon marché, report au backlog des constats plus structurants, signalement sans correction des décisions de timing produit.*
+

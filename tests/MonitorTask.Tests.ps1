@@ -22,6 +22,7 @@ BeforeAll {
     }
 
     function script:Get-TestCooldownPath { Join-Path $Global:WSLRoot "data\monitor_cooldown.txt" }
+    function script:Get-TestErrorLogPath { Join-Path $Global:WSLRoot "data\monitor_errors.txt" }
 }
 
 Describe "MonitorTask.ps1" {
@@ -88,5 +89,29 @@ Describe "MonitorTask.ps1" {
         Invoke-TestMonitorTask -ThresholdPct 40 -CooldownMin 30
 
         (Get-Content $cooldownPath -Raw).Trim() | Should -Not -Be $oldAlert
+    }
+
+    It "s'auto-repare quand le fichier cooldown est corrompu (illisible)" {
+        Mock Get-Process { [PSCustomObject]@{ WorkingSet64 = 8000000000 } }
+        $cooldownPath = Get-TestCooldownPath
+        "pas-une-date-valide" | Set-Content -Path $cooldownPath -Encoding ASCII
+
+        { Invoke-TestMonitorTask -ThresholdPct 40 -CooldownMin 30 } | Should -Not -Throw
+
+        $newContent = (Get-Content $cooldownPath -Raw).Trim()
+        {
+            [datetime]::ParseExact($newContent, "yyyy-MM-dd HH:mm:ss", $null)
+        } | Should -Not -Throw
+        (Get-Content (Get-TestErrorLogPath) -Raw) | Should -Match "cooldown"
+    }
+
+    It "n'ecrit pas de cooldown et journalise l'erreur quand la mesure RAM (CIM) echoue" {
+        Mock Get-Process { [PSCustomObject]@{ WorkingSet64 = 8000000000 } }
+        Mock Get-CimInstance { throw "WMI indisponible" }
+
+        { Invoke-TestMonitorTask -ThresholdPct 40 } | Should -Not -Throw
+
+        Test-Path (Get-TestCooldownPath) | Should -Be $false
+        (Get-Content (Get-TestErrorLogPath) -Raw) | Should -Match "Mesure RAM impossible"
     }
 }

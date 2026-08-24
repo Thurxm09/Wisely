@@ -1,6 +1,6 @@
 # Wisely
 
-> **Note :** ce document est un instantané figé à l'époque de la planification v2.1. Pour l'état et la vision à jour du projet, voir `ROADMAP.md` (stratégie/roadmap) et `CHANGELOG.md` (versions livrées) — v2.2 est livrée et v2.3 est cadrée.
+> **Note :** ce document est un instantané figé à l'époque de la planification v2.1. Pour l'état et la vision à jour du projet, voir `ROADMAP.md` (stratégie/roadmap) et `CHANGELOG.md` (versions livrées) — le statut ci-dessous ne sera plus mis à jour.
 
 **Statut (historique) :** v2.0.0 stable publiée (GitHub), v2.1 en développement actif.
 

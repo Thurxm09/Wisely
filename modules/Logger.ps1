@@ -102,7 +102,17 @@ function Show-SwitchHistory {
     }
 
     $raw = Get-Content $historyPath -Raw -Encoding UTF8
-    $history = $raw | ConvertFrom-Json
+    try {
+        $history = $raw | ConvertFrom-Json
+    } catch {
+        # Meme resilience que Write-SwitchLog face a un history.json
+        # corrompu : message explicite plutot qu'une exception non geree
+        # (wisely -History l'appelle sans try/catch autour).
+        Write-Host ""
+        Write-Host "  Historique corrompu, illisible." -ForegroundColor Gray
+        Write-Host ""
+        return
+    }
 
     if ($null -eq $history -or @($history).Count -eq 0) {
         Write-Host ""
@@ -116,9 +126,9 @@ function Show-SwitchHistory {
 
     Write-Host ""
     Write-Host "  Historique — $Last derniers événements" -ForegroundColor Cyan
-    Write-Host "  ──────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host ("  " + ("-" * 50)) -ForegroundColor DarkGray
     Write-Host "  DATE/HEURE            ACTION    PROFIL     DETAILS" -ForegroundColor DarkGray
-    Write-Host "  ──────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host ("  " + ("-" * 50)) -ForegroundColor DarkGray
 
     foreach ($entry in $recent) {
         $profileColor = switch ($entry.profile) {
@@ -140,6 +150,6 @@ function Show-SwitchHistory {
         Write-Host "$($entry.details)" -ForegroundColor DarkGray
     }
 
-    Write-Host "  ──────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host ("  " + ("-" * 50)) -ForegroundColor DarkGray
     Write-Host ""
 }

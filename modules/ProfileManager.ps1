@@ -39,7 +39,7 @@ function Get-ProfileConfig {
         throw "profiles.json est corrompu (JSON invalide). Detail : $_"
     }
     if ($null -eq $parsed.profiles) {
-        throw "profiles.json incomplet — cle manquante : 'profiles'"
+        throw "profiles.json incomplet - cle manquante : 'profiles'"
     }
     $script:ProfileConfigCache = $parsed
     return $script:ProfileConfigCache
@@ -99,7 +99,13 @@ function Get-BackupHistoryMax {
     $default = 5
     try {
         $cfg = Get-ProfileConfig
-        if ($cfg.settings.backupHistoryMax) { return [int]$cfg.settings.backupHistoryMax }
+        # Un $backupHistoryMax negatif ou nul rendrait la purge de
+        # Backup-WslConfig destructrice (elle supprimerait TOUS les
+        # backups, y compris le tout nouveau) - on retombe sur le defaut
+        # plutot que d'accepter une valeur qui casse la reversibilite.
+        if ($cfg.settings.backupHistoryMax -and [int]$cfg.settings.backupHistoryMax -gt 0) {
+            return [int]$cfg.settings.backupHistoryMax
+        }
         return $default
     } catch {
         return $default
@@ -149,7 +155,13 @@ function Backup-WslConfig {
     $max = Get-BackupHistoryMax
     $all = Get-ChildItem $dir -Filter "wslconfig_*.backup" | Sort-Object Name
     if ($all.Count -gt $max) {
-        $all | Select-Object -First ($all.Count - $max) | Remove-Item -Force
+        # [math]::Max en defense en profondeur (au cas ou $max serait
+        # neanmoins negatif un jour) : ne jamais purger plus que ce qui
+        # depasse reellement la limite.
+        $toRemove = [math]::Max(0, $all.Count - $max)
+        if ($toRemove -gt 0) {
+            $all | Select-Object -First $toRemove | Remove-Item -Force
+        }
     }
 }
 
@@ -347,6 +359,38 @@ function Set-WslProfile {
 
 # ---- Profils personnalises ------------------------------------------
 
+function Test-ProfileDefinition {
+    <#
+    .SYNOPSIS
+        Valide un profil (memoire, CPU, absence de retour a la ligne dans
+        les champs interpoles tels quels dans .wslconfig par
+        ConvertTo-WslConfigContent). Factorisee entre New-CustomProfile et
+        Import-Profiles pour que tout profil qui entre dans le systeme -
+        cree localement ou importe depuis un fichier externe - passe par
+        la meme validation (voir AUDIT.md : Import-Profiles ne validait
+        auparavant que la presence des cles 'profiles'/'version', jamais
+        le contenu de chaque profil avant de l'ecrire dans .wslconfig et
+        de redemarrer WSL2 avec).
+    .PARAMETER Key
+        Cle du profil, uniquement pour un message d'erreur explicite.
+    #>
+    param([Parameter(Mandatory)][PSCustomObject]$ProfileDef, [string]$Key = "?")
+
+    if ("$($ProfileDef.memory)" -notmatch "^\d+GB$") {
+        throw "Profil '$Key' : format memoire invalide '$($ProfileDef.memory)'. Attendu : ex. 4GB, 8GB, 12GB"
+    }
+    $maxCpu = (Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors
+    if ($ProfileDef.processors -lt 1 -or $ProfileDef.processors -gt $maxCpu) {
+        throw "Profil '$Key' : nombre de CPU invalide '$($ProfileDef.processors)'. Attendu : entre 1 et $maxCpu (processeurs logiques disponibles)."
+    }
+    foreach ($field in @("swap", "swapFile", "swappiness", "displayName", "description", "color")) {
+        $value = $ProfileDef.$field
+        if (($null -ne $value) -and ("$value" -match "[`r`n]")) {
+            throw "Profil '$Key' : le champ '$field' contient un retour a la ligne, refuse (risque d'injection dans .wslconfig)."
+        }
+    }
+}
+
 function New-CustomProfile {
     param(
         [Parameter(Mandatory)][string]$Key,
@@ -356,14 +400,6 @@ function New-CustomProfile {
         [string]$Swap        = "2GB",
         [int]$Swappiness     = 10
     )
-    if ($Memory -notmatch "^\d+GB$") {
-        throw "Format memoire invalide : '$Memory'. Attendu : ex. 4GB, 8GB, 12GB"
-    }
-    $maxCpu = (Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors
-    if ($Processors -lt 1 -or $Processors -gt $maxCpu) {
-        throw "Nombre de CPU invalide : $Processors. Attendu : entre 1 et $maxCpu (processeurs logiques disponibles)."
-    }
-    $config     = Get-ProfileConfig
     $newProfile = [PSCustomObject]@{
         displayName = $Key.ToUpper()
         description = $Description
@@ -374,6 +410,8 @@ function New-CustomProfile {
         swapFile    = "%TEMP%/wisely-swap.vhdx"
         swappiness  = $Swappiness
     }
+    Test-ProfileDefinition -ProfileDef $newProfile -Key $Key
+    $config = Get-ProfileConfig
     $config.profiles | Add-Member -MemberType NoteProperty -Name $Key.ToLower() -Value $newProfile -Force
     $config | ConvertTo-Json -Depth 10 | Set-Content (Get-ProfilesPath) -Encoding UTF8
     Clear-ProfileConfigCache
@@ -420,13 +458,20 @@ function Export-Profiles {
 function Import-Profiles {
     param([Parameter(Mandatory)][string]$Path)
     if (-not (Test-Path $Path)) { throw "Fichier introuvable : $Path" }
-    $imported = try { Get-Content $Path -Raw | ConvertFrom-Json } catch { throw "JSON invalide dans '$Path' : $_" }
+    $imported = try { Get-Content $Path -Raw -Encoding UTF8 | ConvertFrom-Json } catch { throw "JSON invalide dans '$Path' : $_" }
     if ($null -eq $imported.profiles) { throw "Le fichier importe ne contient pas de cle 'profiles'." }
     if ($null -eq $imported.version)  { throw "Le fichier importe ne contient pas de cle 'version'." }
-    if (@($imported.profiles.PSObject.Properties).Count -eq 0) { throw "Aucun profil defini dans le fichier importe." }
+    $profileProps = @($imported.profiles.PSObject.Properties)
+    if ($profileProps.Count -eq 0) { throw "Aucun profil defini dans le fichier importe." }
+    # Chaque profil importe passe par la meme validation qu'un profil cree
+    # via -NewProfile - un fichier importe est une entree externe au meme
+    # titre (voir AUDIT.md).
+    foreach ($prop in $profileProps) {
+        Test-ProfileDefinition -ProfileDef $prop.Value -Key $prop.Name
+    }
     Backup-WslConfig
     Copy-Item $Path (Get-ProfilesPath) -Force
     Clear-ProfileConfigCache
-    Write-Host "  OK - $(@($imported.profiles.PSObject.Properties).Count) profil(s) importes depuis : $Path" -ForegroundColor Green
+    Write-Host "  OK - $($profileProps.Count) profil(s) importes depuis : $Path" -ForegroundColor Green
     Write-SwitchLog -Action "IMPORT" -Details $Path
 }
