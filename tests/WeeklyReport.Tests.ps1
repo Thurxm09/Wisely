@@ -86,6 +86,26 @@ Describe "WeeklyReport.ps1 - cas vides" {
         { Invoke-TestWeeklyReport } | Should -Not -Throw
         Test-Path (Get-TestReportPath) | Should -Be $false
     }
+
+    It "signale un historique corrompu (JSON invalide) sans lever d'exception" {
+        $historyPath = Join-Path $Global:WSLRoot "data\history.json"
+        Set-Content -Path $historyPath -Value "{ pas du JSON valide" -Encoding UTF8
+
+        $output = Invoke-TestWeeklyReport
+
+        $output | Should -Match "Historique corrompu"
+        Test-Path (Get-TestReportPath) | Should -Be $false
+    }
+
+    It "ne produit aucune sortie en mode -Silent meme quand l'historique est corrompu" {
+        $historyPath = Join-Path $Global:WSLRoot "data\history.json"
+        Set-Content -Path $historyPath -Value "{ pas du JSON valide" -Encoding UTF8
+
+        { Invoke-TestWeeklyReport -Silent } | Should -Not -Throw
+
+        $output = Invoke-TestWeeklyReport -Silent
+        $output | Should -BeNullOrEmpty
+    }
 }
 
 Describe "WeeklyReport.ps1 - generation du rapport" {
@@ -137,6 +157,19 @@ Describe "WeeklyReport.ps1 - generation du rapport" {
         $content = Get-Content (Get-TestReportPath) -Raw
         $content | Should -Match "Derniere alerte RAM"
         $content | Should -Match "Erreurs Toast"
+    }
+
+    It "exclut une entree au timestamp malforme sans faire echouer tout le rapport" {
+        $goodEntry = New-TestHistoryEntry -ProfileKey "web" -When (Get-Date).AddHours(-1)
+        $badEntry  = New-TestHistoryEntry -ProfileKey "web" -When (Get-Date).AddHours(-2)
+        $badEntry.timestamp = "pas-un-timestamp-valide"
+
+        Set-TestHistory -Entries @($goodEntry, $badEntry)
+
+        { Invoke-TestWeeklyReport -Silent } | Should -Not -Throw
+
+        $content = Get-Content (Get-TestReportPath) -Raw
+        $content | Should -Match "Total de switchs\s*:\s*1"
     }
 
     It "conserve au maximum 12 rapports (rotation, plus ancien supprime en premier)" {

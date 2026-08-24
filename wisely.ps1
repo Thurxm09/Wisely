@@ -153,12 +153,19 @@ function New-BoxLine {
 }
 
 function Get-RamInfo {
-    $os    = Get-CimInstance Win32_OperatingSystem
-    $total = [math]::Round($os.TotalVisibleMemorySize / 1MB, 1)
-    $free  = [math]::Round($os.FreePhysicalMemory / 1MB, 1)
-    $used  = [math]::Round($total - $free, 1)
-    $pct   = [math]::Round($used / $total * 100, 0)
-    return [PSCustomObject]@{ total = $total; used = $used; pct = $pct }
+    # Resiliente comme Get-AvailableRamGB/Get-VmmemStats (modules/) : $null
+    # en cas d'echec plutot qu'un crash de tout wisely.ps1 sur le chemin
+    # par defaut (menu interactif) si Get-CimInstance echoue (voir AUDIT.md).
+    try {
+        $os    = Get-CimInstance Win32_OperatingSystem
+        $total = [math]::Round($os.TotalVisibleMemorySize / 1MB, 1)
+        $free  = [math]::Round($os.FreePhysicalMemory / 1MB, 1)
+        $used  = [math]::Round($total - $free, 1)
+        $pct   = [math]::Round($used / $total * 100, 0)
+        return [PSCustomObject]@{ total = $total; used = $used; pct = $pct }
+    } catch {
+        return $null
+    }
 }
 
 function Get-RamBar {
@@ -168,12 +175,31 @@ function Get-RamBar {
     return ([string]$C_FULL * $filled) + ([string]$C_LIGHT * $empty)
 }
 
+function Get-RamLine {
+    <#
+    .SYNOPSIS
+        Construit la ligne RAM (barre + stats, ou message "indisponible")
+        partagee par Show-Header et Show-StatusDashboard - un seul point
+        de calcul de largeur pour ne pas reintroduire le bug de
+        troncature deja corrige une fois (largeur calculee dynamiquement
+        a partir du prefixe/de la barre reels, voir AUDIT.md).
+    #>
+    param([string]$Prefix = "  RAM  ")
+    $ram = Get-RamInfo
+    if ($null -eq $ram) {
+        return [PSCustomObject]@{ content = $Prefix + "indisponible"; color = "DarkGray" }
+    }
+    $bar     = Get-RamBar -Pct $ram.pct
+    $color   = if ($ram.pct -ge 80) { "Red" } elseif ($ram.pct -ge 60) { "Yellow" } else { "Green" }
+    $stats   = " " + $ram.pct + "%  (" + $ram.used + "/" + $ram.total + " GB)"
+    $content = $Prefix + $bar + (Format-String $stats ($CONTENT_W - $Prefix.Length - $bar.Length))
+    return [PSCustomObject]@{ content = $content; color = $color }
+}
+
 function Show-StatusDashboard {
-    $config   = Get-ProfileConfig
-    $active   = Get-ActiveProfile -Config $config
-    $ram      = Get-RamInfo
-    $ramBar   = Get-RamBar -Pct $ram.pct
-    $ramColor = if ($ram.pct -ge 80) { "Red" } elseif ($ram.pct -ge 60) { "Yellow" } else { "Green" }
+    $config  = Get-ProfileConfig
+    $active  = Get-ActiveProfile -Config $config
+    $ramLine = Get-RamLine
 
     # Statut monitoring
     $monTask  = Get-ScheduledTask -TaskName "WSL2-RamMonitor" -ErrorAction SilentlyContinue
@@ -197,17 +223,7 @@ function Show-StatusDashboard {
     Write-Host $LINE_TOP -ForegroundColor Cyan
     Write-Host (New-BoxLine "    " "   Wisely  v$($Global:AppVersion) -- Status") -ForegroundColor Cyan
     Write-Host $LINE_MID -ForegroundColor Cyan
-    # Meme technique que Show-Header : largeur calculee pour le seul
-    # segment de stats plutot qu'un seul string compose puis tronque
-    # aveuglement par Format-String. L'ancien libelle "RAM Windows" ne
-    # laissait pas assez de place (budget 18/43) pour "100%  (16.0/16.0
-    # GB)" (22 caracteres) sur une machine a 100% d'usage - le texte
-    # etait coupe en plein milieu. Aligne sur le libelle court "RAM" et
-    # le format de Show-Header (budget 26/43), deja valide en production.
-    $ramPrefix  = "  RAM  "
-    $ramStats   = " " + $ram.pct + "%  (" + $ram.used + "/" + $ram.total + " GB)"
-    $ramContent = $ramPrefix + $ramBar + (Format-String $ramStats ($CONTENT_W - $ramPrefix.Length - $ramBar.Length))
-    Write-Host (New-BoxLine "    " $ramContent) -ForegroundColor $ramColor
+    Write-Host (New-BoxLine "    " $ramLine.content) -ForegroundColor $ramLine.color
     Write-Host $LINE_SEP -ForegroundColor DarkGray
     Write-Host (New-BoxLine "    " "  Profil actif : $($active.name)") -ForegroundColor White
     Write-Host (New-BoxLine "    " "  RAM allouee  : $($active.memory)") -ForegroundColor Gray
@@ -271,9 +287,7 @@ function Show-WslWatch {
 function Show-Header {
     param([string]$ActiveName = "?", [string]$ActiveMem = "?")
 
-    $ram      = Get-RamInfo
-    $bar      = Get-RamBar -Pct $ram.pct
-    $ramColor = if ($ram.pct -ge 80) { "Red" } elseif ($ram.pct -ge 60) { "Yellow" } else { "Green" }
+    $ramLine = Get-RamLine
 
     Clear-Host
     Write-Host ""
@@ -281,10 +295,7 @@ function Show-Header {
     Write-Host (New-BoxLine "    " "   Wisely  v$($Global:AppVersion)   ") -ForegroundColor Cyan
     Write-Host $LINE_MID -ForegroundColor Cyan
 
-    # Ligne RAM - construite en une seule string, couleur unique par Write-Host
-    $ramStats = " " + $ram.pct + "%  (" + $ram.used + "/" + $ram.total + " GB)"
-    $ramContent = "  RAM  " + $bar + (Format-String $ramStats ($CONTENT_W - 7 - 10))
-    Write-Host (New-BoxLine "    " $ramContent) -ForegroundColor $ramColor
+    Write-Host (New-BoxLine "    " $ramLine.content) -ForegroundColor $ramLine.color
 
     # Ligne profil actif
     $profileStr = "  Profil actif : " + $ActiveName + " (" + $ActiveMem + ")"

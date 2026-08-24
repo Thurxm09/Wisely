@@ -35,6 +35,16 @@ jobs:
         id: version
         run: echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
 
+      - name: Verify VERSION matches the release tag
+        run: |
+          TAG="${{ steps.tag.outputs.tag }}"
+          EXPECTED="${TAG#v}"
+          ACTUAL="${{ steps.version.outputs.version }}"
+          if [ "$EXPECTED" != "$ACTUAL" ]; then
+            echo "::error::VERSION ($ACTUAL) ne correspond pas au tag ($TAG, attendu $EXPECTED) - l'archive publiee contiendrait un VERSION desynchronise."
+            exit 1
+          fi
+
       - name: Extract changelog section
         id: changelog
         run: |

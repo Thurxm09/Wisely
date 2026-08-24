@@ -129,6 +129,13 @@ Describe "Import-Profiles" {
         $script:testRoot = New-TestWslRoot
         Set-TestUserProfile -Path $script:testRoot
         $script:importSource = Join-Path $script:testRoot "import-source.json"
+        # Test-ProfileDefinition (appelee sur chaque profil importe depuis
+        # AUDIT.md C-1) verifie le nombre de CPU via Get-CimInstance -
+        # absente sur le runner Linux de la CI, meme piege que "wsl".
+        if (-not (Get-Command Get-CimInstance -ErrorAction SilentlyContinue)) {
+            function script:Get-CimInstance { }
+        }
+        Mock Get-CimInstance { [PSCustomObject]@{ NumberOfLogicalProcessors = 8 } }
     }
 
     AfterEach {
@@ -203,6 +210,49 @@ Describe "Import-Profiles" {
             $config | ConvertTo-Json -Depth 10 | Set-Content -Path $script:importSource -Encoding UTF8
 
             { Import-Profiles -Path $script:importSource } | Should -Not -Throw
+        }
+    }
+
+    Context "quand un profil du fichier importe est invalide" {
+
+        BeforeEach {
+            New-TestProfilesJson -Config (Get-ValidProfilesConfig) | Out-Null
+        }
+
+        It "leve une exception quand un profil a une memoire mal formee" {
+            $config = Get-ValidProfilesConfig
+            $config.profiles.web.memory = "pasunememoire"
+            $config | ConvertTo-Json -Depth 10 | Set-Content -Path $script:importSource -Encoding UTF8
+
+            { Import-Profiles -Path $script:importSource } | Should -Throw "*memoire invalide*"
+        }
+
+        It "leve une exception quand un profil demande plus de CPU que la machine n'en a" {
+            $config = Get-ValidProfilesConfig
+            $config.profiles.web.processors = 99
+
+            $config | ConvertTo-Json -Depth 10 | Set-Content -Path $script:importSource -Encoding UTF8
+
+            { Import-Profiles -Path $script:importSource } | Should -Throw "*CPU invalide*"
+        }
+
+        It "leve une exception quand un champ contient une injection de nouvelle ligne" {
+            $config = Get-ValidProfilesConfig
+            $config.profiles.web.swappiness = "10`nnestedVirtualization=true"
+            $config | ConvertTo-Json -Depth 10 | Set-Content -Path $script:importSource -Encoding UTF8
+
+            { Import-Profiles -Path $script:importSource } | Should -Throw "*swappiness*"
+        }
+
+        It "ne modifie pas profiles.json quand la validation echoue" {
+            $config = Get-ValidProfilesConfig
+            $config.profiles.web.memory = "pasunememoire"
+            $config | ConvertTo-Json -Depth 10 | Set-Content -Path $script:importSource -Encoding UTF8
+
+            { Import-Profiles -Path $script:importSource } | Should -Throw
+
+            $result = Get-ProfileConfig
+            $result.profiles.web.memory | Should -Not -Be "pasunememoire"
         }
     }
 }
@@ -428,6 +478,19 @@ Describe "Set-WslProfile - switch reussi et metriques (RAM, temps de redemarrage
         $entry.restartSeconds | Should -Not -BeNullOrEmpty
         $entry.details | Should -Not -Match "RAM"
     }
+
+    It "declenche un rollback automatique quand .wslconfig est invalide apres ecriture" {
+        Mock Get-CimInstance { [PSCustomObject]@{ FreePhysicalMemory = 8000000 } }
+        Mock Test-WslConfigIntegrity { $false }
+        $dir = Get-BackupDir
+        New-Item -ItemType Directory -Path $dir -Force | Out-Null
+        Set-Content -Path (Join-Path $dir "wslconfig_20200101_000000.backup") -Value "[wsl2]`nmemory=2GB`n" -Encoding UTF8
+
+        Set-WslProfile -Key "web"
+
+        $history = @(Get-Content (Get-HistoryPath) -Raw | ConvertFrom-Json)
+        $history[-1].action | Should -Be "ROLLBACK"
+    }
 }
 
 Describe "Backup-WslConfig" {
@@ -501,6 +564,82 @@ Describe "Backup-WslConfig" {
     }
 }
 
+Describe "Get-BackupHistoryMax" {
+
+    BeforeEach {
+        Clear-ProfileConfigCache
+        $script:testRoot = New-TestWslRoot
+        Set-TestUserProfile -Path $script:testRoot
+    }
+
+    AfterEach {
+        Restore-TestUserProfile
+        Remove-TestWslRoot -Path $script:testRoot
+    }
+
+    It "retombe sur le defaut (5) quand backupHistoryMax est negatif" {
+        $config = Get-ValidProfilesConfig
+        $config.settings.backupHistoryMax = -1
+        New-TestProfilesJson -Config $config
+
+        Get-BackupHistoryMax | Should -Be 5
+    }
+
+    It "retombe sur le defaut (5) quand backupHistoryMax est nul" {
+        $config = Get-ValidProfilesConfig
+        $config.settings.backupHistoryMax = 0
+        New-TestProfilesJson -Config $config
+
+        Get-BackupHistoryMax | Should -Be 5
+    }
+
+    It "utilise backupHistoryMax tel quel quand il est positif" {
+        $config = Get-ValidProfilesConfig
+        $config.settings.backupHistoryMax = 3
+        New-TestProfilesJson -Config $config
+
+        Get-BackupHistoryMax | Should -Be 3
+    }
+}
+
+Describe "Test-WslConfigIntegrity" {
+
+    BeforeEach {
+        Clear-ProfileConfigCache
+        $script:testRoot = New-TestWslRoot
+        Set-TestUserProfile -Path $script:testRoot
+    }
+
+    AfterEach {
+        Restore-TestUserProfile
+        Remove-TestWslRoot -Path $script:testRoot
+    }
+
+    It "retourne `$false quand .wslconfig est absent" {
+        Test-WslConfigIntegrity | Should -Be $false
+    }
+
+    It "retourne `$false quand la section [wsl2] est absente" {
+        New-TestWslConfig -Content "memory=4GB`nprocessors=3`n"
+        Test-WslConfigIntegrity | Should -Be $false
+    }
+
+    It "retourne `$false quand la cle memory= est absente" {
+        New-TestWslConfig -Content "[wsl2]`nprocessors=3`n"
+        Test-WslConfigIntegrity | Should -Be $false
+    }
+
+    It "retourne `$false quand la cle processors= est absente" {
+        New-TestWslConfig -Content "[wsl2]`nmemory=4GB`n"
+        Test-WslConfigIntegrity | Should -Be $false
+    }
+
+    It "retourne `$true quand les trois cles requises sont presentes" {
+        New-TestWslConfig -Content "[wsl2]`nmemory=4GB`nprocessors=3`n"
+        Test-WslConfigIntegrity | Should -Be $true
+    }
+}
+
 Describe "Invoke-Rollback" {
 
     BeforeEach {
@@ -543,6 +682,13 @@ Describe "Get-ProfileConfig cache" {
         $script:testRoot = New-TestWslRoot
         Set-TestUserProfile -Path $script:testRoot
         New-TestProfilesJson -Config (Get-ValidProfilesConfig) | Out-Null
+        # Import-Profiles et New-CustomProfile (Test-ProfileDefinition,
+        # AUDIT.md C-1) appellent Get-CimInstance - absente sur le runner
+        # Linux de la CI, meme piege que "wsl".
+        if (-not (Get-Command Get-CimInstance -ErrorAction SilentlyContinue)) {
+            function script:Get-CimInstance { }
+        }
+        Mock Get-CimInstance { [PSCustomObject]@{ NumberOfLogicalProcessors = 8 } }
     }
 
     AfterEach {
@@ -683,5 +829,134 @@ Describe "New-SnapshotProfile" {
         $history = @(Get-Content (Get-HistoryPath) -Raw | ConvertFrom-Json)
         $entry = $history | Where-Object { $_.profile -eq $key }
         $entry.action | Should -Be "CUSTOM"
+    }
+}
+
+Describe "Get-ActiveProfile" {
+
+    BeforeEach {
+        Clear-ProfileConfigCache
+        $script:testRoot = New-TestWslRoot
+        Set-TestUserProfile -Path $script:testRoot
+    }
+
+    AfterEach {
+        Restore-TestUserProfile
+        Remove-TestWslRoot -Path $script:testRoot
+    }
+
+    It "retourne 'Non configure' quand .wslconfig est absent" {
+        $result = Get-ActiveProfile
+
+        $result.name | Should -Be "Non configure"
+        $result.key | Should -Be ""
+        $result.memory | Should -Be "N/A"
+    }
+
+    It "reconnait le profil actif quand la memoire correspond a un profil connu" {
+        New-TestWslConfig -Content "[wsl2]`nmemory=4GB`nprocessors=3`n"
+        New-TestProfilesJson -Config (Get-ValidProfilesConfig) | Out-Null
+
+        $result = Get-ActiveProfile
+
+        $result.name | Should -Be "WEB"
+        $result.key | Should -Be "web"
+        $result.processors | Should -Be "3"
+    }
+
+    It "retourne 'Personnalise' quand la memoire ne correspond a aucun profil connu" {
+        New-TestWslConfig -Content "[wsl2]`nmemory=7GB`nprocessors=3`n"
+        New-TestProfilesJson -Config (Get-ValidProfilesConfig) | Out-Null
+
+        $result = Get-ActiveProfile
+
+        $result.name | Should -Be "Personnalise"
+        $result.key | Should -Be "custom"
+    }
+
+    It "retient le premier profil du fichier en cas de memoire identique entre plusieurs profils" {
+        New-TestWslConfig -Content "[wsl2]`nmemory=4GB`nprocessors=3`n"
+        # JSON brut plutot qu'une hashtable : l'ordre des proprietes d'une
+        # hashtable @{} n'est pas garanti, ce test depend explicitement de
+        # l'ordre "alpha avant beta".
+        $json = '{"profiles":{"alpha":{"displayName":"ALPHA","memory":"4GB"},"beta":{"displayName":"BETA","memory":"4GB"}}}'
+        $config = $json | ConvertFrom-Json
+
+        $result = Get-ActiveProfile -Config $config
+
+        $result.key | Should -Be "alpha"
+    }
+}
+
+Describe "Export-Profiles" {
+
+    BeforeEach {
+        Clear-ProfileConfigCache
+        $script:testRoot = New-TestWslRoot
+        Set-TestUserProfile -Path $script:testRoot
+        New-TestProfilesJson -Config (Get-ValidProfilesConfig) | Out-Null
+        $script:exportPath = Join-Path $script:testRoot "export.json"
+    }
+
+    AfterEach {
+        Restore-TestUserProfile
+        Remove-TestWslRoot -Path $script:testRoot
+    }
+
+    It "copie profiles.json vers le chemin cible" {
+        Export-Profiles -Path $script:exportPath
+
+        Test-Path $script:exportPath | Should -Be $true
+        $exported = Get-Content $script:exportPath -Raw | ConvertFrom-Json
+        $exported.profiles.web.memory | Should -Be "4GB"
+    }
+
+    It "journalise une entree EXPORT avec le chemin cible" {
+        Export-Profiles -Path $script:exportPath
+
+        $history = @(Get-Content (Get-HistoryPath) -Raw | ConvertFrom-Json)
+        $history[-1].action | Should -Be "EXPORT"
+        $history[-1].details | Should -Be $script:exportPath
+    }
+}
+
+Describe "New-CustomProfile" {
+
+    BeforeEach {
+        Clear-ProfileConfigCache
+        $script:testRoot = New-TestWslRoot
+        Set-TestUserProfile -Path $script:testRoot
+        New-TestProfilesJson -Config (Get-ValidProfilesConfig) | Out-Null
+        if (-not (Get-Command Get-CimInstance -ErrorAction SilentlyContinue)) {
+            function script:Get-CimInstance { }
+        }
+        Mock Get-CimInstance { [PSCustomObject]@{ NumberOfLogicalProcessors = 8 } }
+    }
+
+    AfterEach {
+        Restore-TestUserProfile
+        Remove-TestWslRoot -Path $script:testRoot
+    }
+
+    It "leve une exception quand la memoire est mal formee" {
+        { New-CustomProfile -Key "gaming" -Memory "pasunememoire" -Processors 2 } | Should -Throw "*memoire invalide*"
+    }
+
+    It "leve une exception quand le nombre de CPU est 0" {
+        { New-CustomProfile -Key "gaming" -Memory "8GB" -Processors 0 } | Should -Throw "*CPU invalide*"
+    }
+
+    It "leve une exception quand le nombre de CPU depasse les CPU logiques disponibles" {
+        { New-CustomProfile -Key "gaming" -Memory "8GB" -Processors 99 } | Should -Throw "*CPU invalide*"
+    }
+
+    It "cree un profil avec la forme attendue quand les parametres sont valides" {
+        New-CustomProfile -Key "gaming" -Memory "8GB" -Processors 4 -Description "Jeux"
+
+        $created = (Get-ProfileConfig).profiles.gaming
+        $created.displayName | Should -Be "GAMING"
+        $created.description | Should -Be "Jeux"
+        $created.memory | Should -Be "8GB"
+        $created.processors | Should -Be 4
     }
 }

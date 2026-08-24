@@ -92,6 +92,12 @@ Describe "Show-SwitchHistory" {
         1..5 | ForEach-Object { Write-SwitchLog -Action "SWITCH" -ProfileKey "web" -Details "entree $_" }
         { Show-SwitchHistory -Last 3 } | Should -Not -Throw
     }
+
+    It "signale un historique corrompu (JSON invalide) sans lever d'exception" {
+        Set-Content -Path (Get-HistoryPath) -Value "{ pas du JSON valide" -Encoding UTF8
+
+        { Show-SwitchHistory } | Should -Not -Throw
+    }
 }
 
 Describe "Write-SwitchLog - historyMaxEntries configurable" {

@@ -2,17 +2,23 @@
 
 ## Active
 
-- [ ] **Audit rafraîchi ciblé** sur les modules touchés par v2.3 — v2.3
-
 ## Waiting On
+
+- [ ] **Décider du timing de bump CHANGELOG/VERSION/ROADMAP pour "v2.3 complet"** — voir AUDIT.md F5 (décision produit, pas un bug)
 
 ## Someday
 
 - [ ] **Upgrade RAM 32GB (2x8GB DDR4-2666 SO-DIMM)** - matériel, à l'étude
 - [ ] **Extension SSD** - slot M.2 confirmé libre, à l'étude
+- [ ] **Schéma formalisé pour `history.json`** (voir AUDIT.md v2.3 T-4) - `profiles.json` a un JSON Schema depuis v2.2, `history.json` non
+- [ ] **Test `Get-VmmemStats` : sortie anticipée en cours d'échantillonnage** (voir AUDIT.md v2.3 T-5)
+- [ ] **Revalider/nettoyer les exclusions PSScriptAnalyzer** (voir AUDIT.md v2.3 T-7)
+- [ ] **Épingler les Actions GitHub par SHA** (durcissement supply-chain, voir AUDIT.md v2.3 T-9)
+- [ ] **Tests Pester sur le schéma des `settings` de `profiles.json`** (voir AUDIT.md v2.3 T-11)
 
 ## Done
 
+- [x] ~~Audit général (whole-repo) v2.3~~ (v2.3 - AUDIT.md, 15 constats corrigés, 5 reportés au backlog, 1 signalé comme décision utilisateur)
 - [x] ~~`wisely -Watch` (dashboard temps réel)~~ (v2.3 - RAM/CPU vmmem, profil actif, derniere alerte, `Get-WatchSnapshot`/`Get-VmmemStats` dans `Monitor.ps1`)
 - [x] ~~Enrichir les rapports hebdomadaires avec la RAM moyenne par profil~~ (v2.3 - section "RAM liberee/consommee en moyenne au switch" dans `WeeklyReport.ps1`, basee sur `ramDeltaGB`)
 - [x] ~~Métriques réelles post-switch (RAM delta, temps de redémarrage WSL2)~~ (v2.3 - `Get-AvailableRamGB`, `Write-SwitchLog -RamDeltaGB/-RestartSeconds`)
