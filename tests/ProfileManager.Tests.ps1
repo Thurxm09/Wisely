@@ -249,7 +249,7 @@ Describe "Import-Profiles" {
             $config.profiles.web.memory = "pasunememoire"
             $config | ConvertTo-Json -Depth 10 | Set-Content -Path $script:importSource -Encoding UTF8
 
-            try { Import-Profiles -Path $script:importSource } catch { }
+            { Import-Profiles -Path $script:importSource } | Should -Throw
 
             $result = Get-ProfileConfig
             $result.profiles.web.memory | Should -Not -Be "pasunememoire"
@@ -953,10 +953,10 @@ Describe "New-CustomProfile" {
     It "cree un profil avec la forme attendue quand les parametres sont valides" {
         New-CustomProfile -Key "gaming" -Memory "8GB" -Processors 4 -Description "Jeux"
 
-        $profile = (Get-ProfileConfig).profiles.gaming
-        $profile.displayName | Should -Be "GAMING"
-        $profile.description | Should -Be "Jeux"
-        $profile.memory | Should -Be "8GB"
-        $profile.processors | Should -Be 4
+        $created = (Get-ProfileConfig).profiles.gaming
+        $created.displayName | Should -Be "GAMING"
+        $created.description | Should -Be "Jeux"
+        $created.memory | Should -Be "8GB"
+        $created.processors | Should -Be 4
     }
 }
