@@ -4,7 +4,7 @@
 
 ## Waiting On
 
-- [ ] **Décider du timing de bump CHANGELOG/VERSION/ROADMAP pour "v2.3 complet"** — voir AUDIT.md F5 (décision produit, pas un bug)
+- [ ] **Décider du timing de bump CHANGELOG/VERSION/ROADMAP pour "v2.3 complet"** — voir AUDIT.md F5 (décision produit, pas un bug) ; bloqué sur l'item Active ci-dessus
 
 ## Someday
 
@@ -18,6 +18,7 @@
 
 ## Done
 
+- [x] ~~Ajouter Semgrep aux checks CI~~ (`.github/workflows/semgrep.yml` — `p/secrets`, `p/github-actions`, `p/security-audit`, sur push/PR + planifie chaque semaine, aucun compte/token requis)
 - [x] ~~Audit général (whole-repo) v2.3~~ (v2.3 - AUDIT.md, 15 constats corrigés, 5 reportés au backlog, 1 signalé comme décision utilisateur)
 - [x] ~~`wisely -Watch` (dashboard temps réel)~~ (v2.3 - RAM/CPU vmmem, profil actif, derniere alerte, `Get-WatchSnapshot`/`Get-VmmemStats` dans `Monitor.ps1`)
 - [x] ~~Enrichir les rapports hebdomadaires avec la RAM moyenne par profil~~ (v2.3 - section "RAM liberee/consommee en moyenne au switch" dans `WeeklyReport.ps1`, basee sur `ramDeltaGB`)

@@ -57,6 +57,11 @@ La CI (`.github/workflows/ci.yml`, runner `ubuntu-latest`) exécute à chaque pu
 3. Suite Pester complète (`tests/`)
 4. Validation de `data/profiles.json` contre `schemas/profiles.schema.json` (`Test-Json`)
 
+En parallèle, deux analyses de sécurité tournent sur des workflows dédiés (push/PR + planifiées chaque semaine) :
+
+- [CodeQL](https://codeql.github.com/) (`.github/workflows/codeql.yml`) — langage `actions`, analyse les workflows GitHub Actions eux-mêmes.
+- [Semgrep](https://semgrep.dev/) (`.github/workflows/semgrep.yml`) — `p/secrets`, `p/github-actions`, `p/security-audit` sur l'ensemble du dépôt (aucun compte/token requis, rulesets publics du registre Semgrep).
+
 Reproduire ces vérifications en local avant de pousser évite des allers-retours CI inutiles.
 
 ## Note sur l'alias PowerShell 7

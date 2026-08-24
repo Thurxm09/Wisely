@@ -1,0 +1,32 @@
+name: Semgrep
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  schedule:
+    - cron: '30 6 * * 1'
+
+jobs:
+  semgrep:
+    name: Security Scan (Semgrep)
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Semgrep
+        run: |
+          semgrep scan \
+            --config=p/secrets \
+            --config=p/github-actions \
+            --config=p/security-audit \
+            --error \
+            --metrics=off \
+            .
