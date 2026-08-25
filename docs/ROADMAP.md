@@ -16,7 +16,7 @@
 7. [Stratégie de test](#7-stratégie-de-test)
 8. [Risques long terme](#8-risques-long-terme)
 9. [Principes directeurs](#9-principes-directeurs)
-10. [Questions ouvertes](#10-questions-ouvertes)
+10. [Décisions stratégiques](#10-décisions-stratégiques)
 ---
  
 ## 1. Analyse du positionnement actuel
