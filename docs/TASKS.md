@@ -2,10 +2,6 @@
 
 ## Active
 
-## Waiting On
-
-- [ ] **Décider du timing de bump CHANGELOG/VERSION/ROADMAP pour "v2.3 complet"** — voir AUDIT.md F5 (décision produit, pas un bug) ; bloqué sur l'item Active ci-dessus
-
 ## Someday
 
 - [ ] **Upgrade RAM 32GB (2x8GB DDR4-2666 SO-DIMM)** - matériel, à l'étude

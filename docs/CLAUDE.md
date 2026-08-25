@@ -8,7 +8,7 @@ Thuram (GitHub: Thurxm09), développeur solo — niveau débutant/intermédiaire
 
 | Nom | Quoi |
 |-----|------|
-| **Wisely** | Outil CLI PowerShell pour gérer dynamiquement des profils de ressources WSL2 (RAM, CPU, monitoring, reporting). Passé d'un script basique à un outil modulaire pro. v2.1.0 (tests Pester, validation swap, backup versionné, cache mémoïsé, flags -Verbose/-Quiet, fix barre RAM) et v2.2 (CONTRIBUTING.md + templates, variables d'environnement dans `swapFile`, intégrité des réglages, JSON Schema `profiles.json`, `wisely -Status -Short`, `wisely -Snapshot`, galerie README + snippet Oh My Posh) livrées ; v2.3 (observabilité) cadrée : tests Pester Monitor/MonitorTask/WeeklyReport, métriques post-switch, rapports enrichis, `wisely -Watch`, audit rafraîchi — évaluation Terminal.Gui volontairement hors scope. |
+| **Wisely** | Outil CLI PowerShell pour gérer dynamiquement des profils de ressources WSL2 (RAM, CPU, monitoring, reporting). Passé d'un script basique à un outil modulaire pro. v2.1.0 (tests Pester, validation swap, backup versionné, cache mémoïsé, flags -Verbose/-Quiet, fix barre RAM), v2.2 (CONTRIBUTING.md + templates, variables d'environnement dans `swapFile`, intégrité des réglages, JSON Schema `profiles.json`, `wisely -Status -Short`, `wisely -Snapshot`, galerie README + snippet Oh My Posh) et v2.3.0 (observabilité : tests Pester Monitor/MonitorTask/WeeklyReport, métriques post-switch, rapports enrichis, `wisely -Watch`, audit rafraîchi, Semgrep en CI — évaluation Terminal.Gui volontairement hors scope) livrées. |
 
 ## Termes
 
