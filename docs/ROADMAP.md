@@ -74,7 +74,7 @@ La trajectoire se décompose en trois niveaux de maturité successifs :
 }
 ```
  
-Complexité : **Moyenne.** La logique d'invocation est simple, mais la gestion des erreurs dans les hooks (timeout, exit code non-zéro) doit être robuste. Impact : **Moyen terme**, différenciant pour les usages avancés.
+Complexité : **Moyenne.** La logique d'invocation est simple, mais la gestion des erreurs dans les hooks (timeout, exit code non-zéro) doit être robuste — **décision confirmée (voir §10)** : le comportement en cas d'échec (`abort`/`continue`) sera configurable par l'utilisateur au niveau de chaque règle, plutôt qu'imposé globalement par l'outil. Impact : **Moyen terme**, différenciant pour les usages avancés.
  
 **Abstraction du backend de configuration.** Actuellement, `ProfileManager.ps1` écrit directement dans `.wslconfig`. Si Microsoft modifie la structure de ce fichier dans une future version de WSL2 (ce qui s'est déjà produit avec l'introduction de `networkingMode`), l'outil devra être modifié en profondeur. Introduire une couche d'abstraction `ConfigWriter` qui centralise la génération du contenu `.wslconfig` faciliterait l'adaptation à ces changements futurs.
  
@@ -220,7 +220,7 @@ La v3.0 est une version majeure qui introduit des changements architecturaux et 
  
 **v3.0 — Distribution & Tests**
  
-Publier l'outil sur **PowerShell Gallery** comme module `Wisely`. Cela permet `Install-Module Wisely` et une mise à jour via `Update-Module` — c'est le changement d'adoption le plus impactant possible. (La suite de tests **Pester**, avec mocks des appels système type `wsl --shutdown`, a été livrée en avance de calendrier en v2.1 — voir §7.) Intégrer la publication automatique sur PowerShell Gallery dans le workflow `release.yml`. Implémenter le système de hooks `pre-switch` / `post-switch`. Implémenter la migration automatique du schéma `profiles.json` entre versions.
+Publier l'outil sur **PowerShell Gallery** comme module `Wisely`, sous l'organisation GitHub **Wisely** à créer (décision confirmée, voir §10). Cela permet `Install-Module Wisely` et une mise à jour via `Update-Module` — c'est le changement d'adoption le plus impactant possible. (La suite de tests **Pester**, avec mocks des appels système type `wsl --shutdown`, a été livrée en avance de calendrier en v2.1 — voir §7.) Intégrer la publication automatique sur PowerShell Gallery dans le workflow `release.yml`. Implémenter le système de hooks `pre-switch` / `post-switch`, avec un comportement en cas d'échec (`abort`/`continue`) configurable par l'utilisateur au niveau de chaque règle (décision confirmée, voir §10). Implémenter la migration automatique du schéma `profiles.json` entre versions. Valider et assurer la compatibilité PowerShell 7+ en parallèle du support PowerShell 5.1 existant (décision confirmée, voir §10) — pas de dépréciation de 5.1.
  
 ---
  
@@ -275,7 +275,7 @@ Pour permettre l'intégration avec VS Code et d'autres outils, une API REST loca
  
 ### PowerShell Gallery (priorité haute)
  
-C'est le vecteur de distribution le plus naturel pour un module PowerShell. La publication requiert la transformation du projet en module structuré (fichier `.psd1` manifest + fichier `.psm1` qui dot-source les modules existants). La structure actuelle est déjà compatible avec cette transformation — c'est un refactoring de surface, pas une réécriture.
+C'est le vecteur de distribution le plus naturel pour un module PowerShell — décision confirmée (voir §10) sous une organisation GitHub **Wisely** à créer. La publication requiert la transformation du projet en module structuré (fichier `.psd1` manifest + fichier `.psm1` qui dot-source les modules existants). La structure actuelle est déjà compatible avec cette transformation — c'est un refactoring de surface, pas une réécriture.
  
 ```
 Wisely/
@@ -377,7 +377,7 @@ Le menu interactif dans `wisely.ps1` est aujourd'hui la partie la plus monolithi
  
 ### Gouvernance solo
  
-Un projet maintenu par une seule personne a un bus factor de 1. Si le mainteneur principal n'est plus disponible pendant plusieurs mois, les PRs et issues s'accumulent, la communauté naissante se décourage, et le projet fork. La mitigation est documentaire d'abord (CONTRIBUTING.md clair, architecture documentée) puis organisationnelle (identifier et onboarder un ou deux co-mainteneurs de confiance dès qu'une communauté commence à se former).
+Un projet maintenu par une seule personne a un bus factor de 1. Si le mainteneur principal n'est plus disponible pendant plusieurs mois, les PRs et issues s'accumulent, la communauté naissante se décourage, et le projet fork. La mitigation est documentaire d'abord (CONTRIBUTING.md clair, architecture documentée) puis organisationnelle (identifier et onboarder un ou deux co-mainteneurs de confiance dès qu'une communauté commence à se former). **Décision confirmée (voir §10) :** le projet passera sous une organisation GitHub **Wisely** (à créer), mutualisée avec la publication PowerShell Gallery, précisément pour préparer cette transition hors gouvernance solo.
  
 ---
  
@@ -401,26 +401,40 @@ Ces principes doivent servir de filtre pour toutes les décisions d'évolution f
  
 ---
  
-## 10. Questions ouvertes
+## 10. Décisions stratégiques
  
-Ces questions sont structurantes pour affiner la vision produit. Les réponses orienteront les priorités de la roadmap et les choix d'architecture.
+Ces questions étaient structurantes pour affiner la vision produit (anciennement « Questions ouvertes »). Elles ont été tranchées avec le mainteneur le 2026-08-25 et orientent désormais les priorités de la roadmap et les choix d'architecture.
  
-**Sur l'audience cible :** L'outil vise-t-il exclusivement les développeurs solo, ou y a-t-il une ambition de support des configurations d'équipe (profils partagés via un dépôt d'entreprise) ? La réponse change fondamentalement la conception du système de distribution des profils.
+**Sur l'audience cible :** L'outil vise-t-il exclusivement les développeurs solo, ou y a-t-il une ambition de support des configurations d'équipe (profils partagés via un dépôt d'entreprise) ?
  
-**Sur la distribution :** La publication sur PowerShell Gallery est-elle envisagée ? Si oui, sous quel nom d'organisation ? Si non, quel est le vecteur d'installation prioritaire que vous souhaitez promouvoir ?
+**Décision :** Non, pas exclusivement solo. Il y a une ambition de support des configurations d'équipe. Cela conforte la trajectoire déjà esquissée au Niveau 3 (§2 — « contextes multi-machines et configurations d'équipe ») et doit être gardé à l'esprit dans la conception du système de distribution de profils (bibliothèque communautaire, §3 Axe 2) : prévoir dès que possible un mode de partage de profils qui ne suppose pas un utilisateur unique.
  
-**Sur les tests :** Existe-t-il un environnement de développement dédié sur lequel les tests d'intégration peuvent tourner (machine Windows avec WSL2) ? Ou faut-il concevoir la stratégie de test pour fonctionner entièrement sans WSL2 (mocks complets) ?
+**Sur la distribution :** La publication sur PowerShell Gallery est-elle envisagée ? Si oui, sous quel nom d'organisation ?
  
-**Sur l'auto-switch contextuel :** Cette feature est-elle dans la vision du projet, ou préférez-vous garder le principe d'un outil manuel, explicite, et sous contrôle total de l'utilisateur ? C'est une question philosophique autant que technique — un outil qui agit de lui-même change fondamentalement le contrat de confiance avec l'utilisateur.
+**Décision :** Oui, confirmée. Publication sous une organisation GitHub **Wisely**, à créer (le mainteneur est actuellement seul, sans organisation existante — la création de cette organisation est donc un prérequis administratif, à planifier avant ou en tout début de v3.0). Cette même organisation sert aussi la gouvernance du projet (voir décision suivante).
  
-**Sur les hooks :** Si le système de hooks `pre-switch` / `post-switch` est implémenté, jusqu'où va la responsabilité de l'outil ? Si un hook échoue (timeout, exception), le switch doit-il être abandonné, poursuivi, ou l'utilisateur doit-il choisir au moment de la définition de la règle ?
+**Sur les tests :** Existe-t-il un environnement de développement dédié pour les tests d'intégration (machine Windows avec WSL2) ? Ou faut-il concevoir la stratégie de test pour fonctionner entièrement sans WSL2 (mocks complets) ?
  
-**Sur la gouvernance :** Y a-t-il une intention de passer le projet sous une organisation GitHub (plutôt qu'un compte personnel) pour faciliter l'ajout de co-mainteneurs ? C'est une décision qui se prend idéalement tôt, avant que le projet ait une inertie importante.
+**Décision :** Une machine perso avec WSL2 est disponible, mais la stratégie de test retenue est conçue pour fonctionner **entièrement sans WSL2** (mocks complets) — cohérent avec l'approche déjà en place en Phase 1/2 (§7), et nécessaire pour que la CI et de futurs contributeurs externes puissent exécuter la suite sans environnement Windows+WSL2 dédié.
  
-**Sur la compatibilité PowerShell 7+ :** Le projet cible aujourd'hui PowerShell 5.1 (inclus dans Windows). PowerShell 7+ apporte des avantages significatifs (performances, syntaxe, gestion des erreurs). Y a-t-il une intention de supporter PS7, ou la compatibilité 5.1 est-elle une contrainte non négociable (par exemple pour des environnements d'entreprise avec des politiques de version strictes) ?
+**Sur l'auto-switch contextuel :** Cette feature est-elle dans la vision du projet, ou préférez-vous garder le principe d'un outil manuel, explicite, et sous contrôle total de l'utilisateur ?
+ 
+**Décision :** Non tranchée pour l'instant, volontairement reportée. L'auto-switch reste dans la vision long terme (v4.0, §3 Axe 2) mais son adoption n'est pas engagée : la décision sera prise plus tard, à l'écoute des retours des utilisateurs, une fois qu'une communauté existe pour se prononcer sur le compromis contrôle manuel vs automatisation.
+ 
+**Sur les hooks :** Si un hook `pre-switch` / `post-switch` échoue (timeout, exception), le switch doit-il être abandonné, poursuivi, ou l'utilisateur doit-il choisir au moment de la définition de la règle ?
+ 
+**Décision :** Le choix est laissé à l'utilisateur, au niveau de la règle elle-même (par exemple une clé `on-failure: abort` / `continue` par hook dans `profiles.json`), plutôt qu'un comportement global imposé par l'outil.
+ 
+**Sur la gouvernance :** Y a-t-il une intention de passer le projet sous une organisation GitHub (plutôt qu'un compte personnel) pour faciliter l'ajout de co-mainteneurs ?
+ 
+**Décision :** Oui. L'organisation GitHub **Wisely** (mutualisée avec la publication PowerShell Gallery, voir ci-dessus) sera créée pour faciliter l'ajout futur de co-mainteneurs et réduire le risque de gouvernance solo identifié en §8.
+ 
+**Sur la compatibilité PowerShell 7+ :** Y a-t-il une intention de supporter PS7, ou la compatibilité 5.1 est-elle une contrainte non négociable ?
+ 
+**Décision :** Support de PowerShell 7+ voulu, **en parallèle** de PowerShell 5.1 — pas de dépréciation de 5.1. Les deux versions doivent rester compatibles simultanément.
  
 ---
  
 *Document vivant — à réviser à chaque release majeure ou inflexion stratégique significative.*  
-*Dernière révision : 2026-08-20 (publication de la v2.1.0).*  
+*Dernière révision : 2026-08-25 (intégration des décisions stratégiques de §10).*  
 *Prochain point de revue recommandé : après publication de la v2.2.*
