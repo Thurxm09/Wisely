@@ -6,13 +6,13 @@
 
 - [ ] **Upgrade RAM 32GB (2x8GB DDR4-2666 SO-DIMM)** - matériel, à l'étude
 - [ ] **Extension SSD** - slot M.2 confirmé libre, à l'étude
-- [ ] **Schéma formalisé pour `history.json`** (voir AUDIT.md v2.3 T-4) - `profiles.json` a un JSON Schema depuis v2.2, `history.json` non
 - [ ] **Test `Get-VmmemStats` : sortie anticipée en cours d'échantillonnage** (voir AUDIT.md v2.3 T-5)
 - [ ] **Revalider/nettoyer les exclusions PSScriptAnalyzer** (voir AUDIT.md v2.3 T-7)
 - [ ] **Tests Pester sur le schéma des `settings` de `profiles.json`** (voir AUDIT.md v2.3 T-11)
 
 ## Done
 
+- [x] ~~Schéma formalisé pour `history.json`~~ (voir AUDIT.md v2.3 T-4 — `schemas/history.schema.json`, valide via Pester sur des entrées réelles produites par `Write-SwitchLog`, corrige au passage `user` non cross-platform sur `$env:USERNAME`)
 - [x] ~~Épingler les Actions GitHub par SHA~~ (voir AUDIT.md v2.3 T-9 — remonte comme vrai constat par le premier scan Semgrep en CI : `actions/checkout`, `github/codeql-action/init`, `github/codeql-action/analyze` dans les 5 workflows)
 - [x] ~~Corriger l'injection de commande via interpolation `github.event.inputs.*`/`github.ref_name` non protegee dans des blocs `run:`~~ (`bump-version.yml`, `release.yml` — deplace en `env:`, autre constat reel remonte par le premier scan Semgrep)
 - [x] ~~Ajouter Semgrep aux checks CI~~ (`.github/workflows/semgrep.yml` — `p/secrets`, `p/github-actions`, `p/security-audit`, sur push/PR + planifie chaque semaine, aucun compte/token requis)

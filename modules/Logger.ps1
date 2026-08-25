@@ -48,12 +48,17 @@ function Write-SwitchLog {
 
     $historyPath = Get-HistoryPath
 
+    # $env:USERNAME est propre a Windows ; $env:USER est l'equivalent sur
+    # WSL2/Linux (ex: Pester en CI sur ubuntu-latest) ou l'un des deux peut
+    # etre absent selon le contexte d'execution.
+    $currentUser = if ($env:USERNAME) { $env:USERNAME } elseif ($env:USER) { $env:USER } else { "unknown" }
+
     $entry = [PSCustomObject]@{
         timestamp      = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
         action         = $Action
         profile        = $ProfileKey
         details        = $Details
-        user           = $env:USERNAME
+        user           = $currentUser
         ramDeltaGB     = $RamDeltaGB
         restartSeconds = $RestartSeconds
     }
