@@ -83,7 +83,19 @@ Complexité : **Faible à moyenne.** Impact : **Long terme**, dette technique pr
 **Support des variables d'environnement dans les profils.** Permettre des chemins dynamiques dans `profiles.json` via des variables système (`%USERPROFILE%`, `%TEMP%`) rendrait les profils portables entre machines sans modification manuelle.
  
 Complexité : **Faible.** Impact : **Court terme**, valeur immédiate pour le partage de profils.
- 
+
+**Couche de résolution en cascade des profils (utilisateur / organisation).** La décision d'ouvrir Wisely aux configurations d'équipe (voir §10) n'a aujourd'hui aucune traduction technique. Le modèle envisagé est une résolution en cascade à quatre niveaux — profil **système** (celui livré avec l'outil) < profil **organisation** (partagé via un dépôt d'entreprise, décrit en §5) < profil **utilisateur** (`$PROFILE`-scope, personnel) < profil **projet** (épinglé dans le répertoire courant, voir Axe 2) — chaque niveau pouvant surcharger tout ou partie des clés du niveau précédent, avec traçabilité de la provenance effective d'un réglage (`wisely -Status` devrait pouvoir répondre à "pourquoi ce profil est actif ?"). C'est un changement de modèle de configuration, pas juste une nouvelle feature : il doit être conçu avant d'être codé.
+
+Complexité : **Élevée.** Impact : **Long terme**, mais structurant — c'est la brique qui manque pour honorer la décision stratégique déjà actée sur le support des équipes.
+
+**Détection et profils conscients du GPU (CUDA/WSL2).** Les profils `data`/ML actuels dimensionnent RAM et CPU mais ignorent totalement le GPU, alors que le passthrough CUDA sous WSL2 (`nvidia-smi` accessible depuis la distribution Linux) est un axe de consommation de ressources à part entière pour ce même public data science. Une clé optionnelle `gpu` dans `profiles.json` (mémoire GPU cible, ou simple flag d'attente de disponibilité avant switch) permettrait à Wisely de couvrir un signal de charge qu'il ne voit pas aujourd'hui.
+
+Complexité : **Moyenne.** Impact : **Moyen terme**, cohérent avec l'élargissement de cible confirmé en §10 ("tous ceux qui utilisent WSL2, quel que soit leur usage, et veulent en monitorer la consommation").
+
+**Signal d'état d'alimentation comme déclencheur optionnel.** Windows expose l'état d'alimentation (secteur / batterie, plan d'alimentation actif) via des API accessibles en PowerShell. Ce n'est volontairement pas pensé comme une fonctionnalité "PC portable" : c'est un signal de charge de plus, au même titre que le GPU ci-dessus, que Wisely pourrait exposer dans `wisely -Status` et, plus tard, utiliser comme déclencheur optionnel de switch automatique (ex. bascule vers un profil `minimal` sur batterie). Sur un poste fixe sans batterie le signal est simplement absent et n'affecte personne : la fonctionnalité étend les cas d'usage couverts sans redéfinir la cible du projet vers les portables.
+
+Complexité : **Faible** pour l'exposition en lecture seule (état d'alimentation dans `-Status`) ; **plus élevée** si utilisée comme déclencheur de switch automatique, ce qui recoupe la question de l'auto-switch délibérément non tranchée à ce stade (voir §10) — raison pour laquelle les deux volets sont à livrer séparément. Impact : **Moyen terme**, complète l'axe des signaux de charge non couverts aujourd'hui (RAM et CPU seuls).
+
 ---
  
 ### Axe 2 — Produit : Features à forte valeur
@@ -103,7 +115,15 @@ Complexité : **Faible côté code** (c'est principalement de la gouvernance de 
 **Multi-profils simultanés (profils composites).** Certains utilisateurs ont des setups complexes où ils souhaiteraient appliquer un profil "mémoire" indépendamment d'un profil "réseau" ou "kernel". La notion de profil composite (couches superposables) est ambitieuse mais cohérente avec la direction de `.wslconfig` elle-même.
  
 Complexité : **Élevée.** Impact : **Long terme**, niche mais puissant pour les power users.
- 
+
+**Profil de projet épinglé (`.wisely-profile`).** À la manière d'un `.nvmrc` ou `.tool-versions`, un fichier texte à la racine d'un dépôt (`web`, `data`, etc.) indiquant le profil attendu pour ce projet. Lancé depuis un répertoire qui en contient un, `wisely` détecte l'écart avec le profil actif et propose le switch (`wisely -Status` signale "profil de projet différent du profil actif : data"). C'est un geste déjà familier pour n'importe quel développeur — donc une friction d'adoption quasi nulle — et c'est aussi le premier niveau concret de la cascade de résolution décrite en Axe 1 (le niveau "projet" prime sur le niveau "utilisateur").
+
+Complexité : **Faible.** Impact : **Court terme**, adoption immédiate, et prérequis naturel avant la cascade utilisateur/organisation de l'Axe 1.
+
+**Récupération d'espace disque WSL2 (compaction du VHDX).** RAM et CPU sont couverts, mais le disque ne l'est pas : le fichier `ext4.vhdx` qui stocke le système de fichiers WSL2 grossit à chaque écriture et ne se réduit jamais automatiquement, même après suppression massive de fichiers côté Linux (`node_modules`, caches Docker, environnements conda). C'est un point de douleur vécu, pas hypothétique. Une commande `wisely -Reclaim` orchestrerait la séquence sûre déjà connue (arrêt de la distribution, `Optimize-VHD -Mode Full` ou séquence `diskpart` équivalente) et rapporterait l'espace effectivement récupéré. C'est un nouvel axe de "consommation WSL2" au même titre que la RAM — cohérent avec l'élargissement de cible confirmé en §10.
+
+Complexité : **Moyenne** (nécessite des droits administrateur et une manipulation prudente du VHDX, garde-fous obligatoires — distribution arrêtée avant compaction, confirmation explicite). Impact : **Moyen terme**, différenciant : aucun outil grand public ne traite aujourd'hui ce problème simplement.
+
 ---
  
 ### Axe 3 — Expérience utilisateur (DX)
@@ -123,7 +143,11 @@ Complexité : **Faible.** Impact : **Court terme**, très utilisé une fois disp
 **Fragment de prompt pour Windows Terminal / Oh My Posh.** Proposer un snippet officiel permettant d'afficher le profil WSL actif dans le prompt terminal. C'est un vecteur de découverte organique du projet : les développeurs qui voient `[WSL:WEB]` dans le prompt de quelqu'un d'autre vont naturellement chercher comment reproduire ça.
  
 Complexité : **Très faible** (c'est de la documentation, pas du code). Impact : **Moyen terme**, viral dans la communauté Windows Terminal.
- 
+
+**Commande de diagnostic (`wisely -Doctor`).** Un point d'entrée unique qui vérifie en une passe : version de WSL2 installée, validité syntaxique de `.wslconfig`, intégrité de `profiles.json` (contre son JSON Schema), présence et état des tâches planifiées de monitoring, droits administrateur, backups orphelins, et — une fois l'Axe 2 livré — taille du VHDX rapportée à un seuil d'alerte. C'est le réflexe "avant d'ouvrir une issue, lance `wisely -Doctor`" qui réduit le bruit de support pour un mainteneur solo, et le point d'entrée naturel pour n'importe quel utilisateur qui veut simplement savoir où en est sa consommation WSL2, quel que soit son usage — exactement la cible élargie confirmée en §10.
+
+Complexité : **Faible à moyenne** (chaque vérification est simple isolément, l'agrégation en rapport lisible demande plus de soin). Impact : **Court terme**, autonomie utilisateur immédiate.
+
 ---
  
 ### Axe 4 — Open-source : Adoption & Contributions
@@ -182,6 +206,10 @@ Complexité : **Moyenne.** Impact : **Moyen terme**, feature visible et attracti
  
 Complexité : **Moyenne** (nécessite de stocker des séries temporelles légères). Impact : **Moyen terme**, valeur analytique forte.
  
+**Suivi de la taille du VHDX dans le temps.** Une fois `wisely -Reclaim` livré (Axe 2), sa valeur reste invisible sans mesure avant/après : étendre `wisely -Watch` et le rapport hebdomadaire avec la taille courante d'`ext4.vhdx` comme métrique de troisième type, aux côtés de la RAM et du CPU déjà suivis. Le rapport pourrait alors chiffrer concrètement ce que `-Reclaim` a récupéré ("VHDX : 42GB → 18GB cette semaine"), et `wisely -Doctor` (Axe 3) pourrait s'appuyer sur cette série pour déclencher une alerte de seuil plutôt qu'une simple lecture instantanée.
+
+Complexité : **Faible** (une fois `-Reclaim` livré, la mesure de taille de fichier est triviale ; l'essentiel du travail est déjà fait par l'axe RAM/CPU existant). Impact : **Moyen terme**, rend mesurable un axe de consommation WSL2 jusque-là invisible.
+ 
 ---
  
 ## 4. Roadmap structurée
@@ -225,13 +253,52 @@ Deux items identifiés dans les axes d'évolution (§3) mais jamais rattachés �
  
 ---
  
-### Moyen terme — v3.0 (Évolutions structurantes, 3 à 9 mois)
+### Court terme — v2.5 (Quick wins ciblés, 1 à 2 mois)
  
-La v3.0 est une version majeure qui introduit des changements architecturaux et ouvre le projet à la contribution externe et à une distribution plus large.
+Deux items indépendants l'un de l'autre, sans risque architectural, qui prolongent la philosophie "quick win" de v2.1-v2.4 tout en préparant le terrain pour les chantiers structurants de v3.x : `.wisely-profile` est le premier niveau concret de la future cascade de résolution (Axe 1), et `wisely -Doctor` est le point d'entrée de diagnostic qui absorbera progressivement les vérifications ajoutées par les versions suivantes.
+ 
+**v2.5 — Profil de projet & Diagnostic**
+ 
+1. **Profil de projet épinglé (`.wisely-profile`).** Détection à la racine du répertoire courant, comparaison avec le profil actif, signalement dans `wisely -Status` (voir Axe 2, §3).
+2. **`wisely -Doctor`.** Vérifications de base livrables sans dépendance aux versions suivantes : version WSL2, validité de `.wslconfig`, intégrité de `profiles.json` contre son JSON Schema, état des tâches planifiées, droits administrateur, backups orphelins (voir Axe 3, §3). Conçu pour accueillir de nouvelles vérifications au fil des versions (taille VHDX en v3.1, etc.) sans changement de structure.
+ 
+---
+ 
+### Moyen terme — v3.0 (Distribution & Tests, 3 à 9 mois)
+ 
+La v3.0 reste la version majeure de distribution et d'outillage déjà actée en §10 — inchangée par l'ajout des features ci-dessous, qui suivent dans des sous-versions dédiées pour ne pas surcharger un cycle déjà structurant.
  
 **v3.0 — Distribution & Tests**
  
 Publier l'outil sur **PowerShell Gallery** comme module `Wisely`, sous l'organisation GitHub **Wisely** à créer (décision confirmée, voir §10). Cela permet `Install-Module Wisely` et une mise à jour via `Update-Module` — c'est le changement d'adoption le plus impactant possible. (La suite de tests **Pester**, avec mocks des appels système type `wsl --shutdown`, a été livrée en avance de calendrier en v2.1 — voir §7.) Intégrer la publication automatique sur PowerShell Gallery dans le workflow `release.yml`. Implémenter le système de hooks `pre-switch` / `post-switch`, avec un comportement en cas d'échec (`abort`/`continue`) configurable par l'utilisateur au niveau de chaque règle (décision confirmée, voir §10). Implémenter la migration automatique du schéma `profiles.json` entre versions. Valider et assurer la compatibilité PowerShell 7+ en parallèle du support PowerShell 5.1 existant (décision confirmée, voir §10) — pas de dépréciation de 5.1.
+ 
+---
+ 
+### Moyen terme — v3.1 (Consommation disque, 3 à 9 mois)
+ 
+Un seul axe cohérent, livré en deux items séquentiels — le second n'a de sens qu'une fois le premier livré.
+ 
+**v3.1 — Récupération d'espace disque**
+ 
+1. **`wisely -Reclaim`.** Compaction du VHDX (`Optimize-VHD -Mode Full` ou équivalent `diskpart`), garde-fous obligatoires (distribution arrêtée avant compaction, confirmation explicite), rapport de l'espace effectivement récupéré (voir Axe 2, §3).
+2. **Suivi de la taille du VHDX dans `-Watch` et le rapport hebdomadaire.** Extension directe de l'observabilité existante (Axe 6, §3) — rend mesurable, semaine après semaine, l'effet de `-Reclaim`.
+ 
+---
+ 
+### Moyen terme — v3.2 (Signaux de charge étendus, 3 à 9 mois)
+ 
+Deux signaux de charge que Wisely ne voit pas aujourd'hui, exposés ici en lecture seule uniquement — leur exploitation comme déclencheurs de switch automatique est volontairement reportée à v4.0, une fois le moteur de règles d'auto-switch livré (l'auto-switch reste délibérément non tranchée à ce stade, voir §10).
+ 
+**v3.2 — GPU & alimentation (lecture seule)**
+ 
+1. **Détection GPU (CUDA/WSL2).** Clé optionnelle `gpu` dans `profiles.json`, remontée dans `wisely -Status` (voir Axe 1, §3).
+2. **État d'alimentation.** Secteur/batterie et plan d'alimentation actif, remontés dans `wisely -Status` (voir Axe 1, §3). Absent et sans effet sur un poste fixe sans batterie.
+ 
+---
+ 
+### Moyen terme — v3.3 (Design de la cascade utilisateur/organisation, 3 à 9 mois)
+ 
+Version volontairement **sans code de production** : la cascade à quatre niveaux (système / organisation / utilisateur / projet, voir Axe 1, §3) est un changement de modèle de configuration, pas une feature isolée — elle doit être conçue avant d'être codée. Livrable : un document de conception (format RFC/ADR) figeant le format de résolution, la syntaxe de traçabilité de provenance (`wisely -Status` doit pouvoir répondre à "pourquoi ce profil est actif ?"), et l'articulation avec le niveau "projet" déjà livré en v2.5. L'implémentation elle-même est planifiée en v4.0, une fois ce design validé.
  
 ---
  
@@ -241,7 +308,7 @@ Ces évolutions supposent une communauté active et une base de code robustement
  
 **v4.0 — Intelligence & Écosystème**
  
-Moteur de règles pour l'auto-switch contextuel. Intégration VS Code (extension ou command palette hook). Intégration Windows Dev Home. Bibliothèque de profils communautaires avec commande `wisely -Browse`. Support des profils composites (couches superposables). Exploration d'une interface graphique légère (Windows Forms ou WPF minimaliste) pour les utilisateurs moins à l'aise avec la CLI.
+Implémentation de la cascade de résolution utilisateur/organisation à partir du design validé en v3.3. Moteur de règles pour l'auto-switch contextuel, incluant en entrée les signaux exposés en lecture seule depuis v3.2 (GPU, alimentation) comme déclencheurs optionnels — au même titre que les autres critères de charge déjà suivis. Intégration VS Code (extension ou command palette hook). Intégration Windows Dev Home. Bibliothèque de profils communautaires avec commande `wisely -Browse`. Support des profils composites (couches superposables). Exploration d'une interface graphique légère (Windows Forms ou WPF minimaliste) pour les utilisateurs moins à l'aise avec la CLI.
  
 ---
  
@@ -266,11 +333,17 @@ C'est la feature qui transforme Wisely de "switcher manuel" en "gestionnaire ada
     "condition": { "time": "22:00-08:00" },
     "profile": "base",
     "priority": 5
+  },
+  {
+    "name": "Sur batterie",
+    "condition": { "powerSource": "battery" },
+    "profile": "minimal",
+    "priority": 8
   }
 ]
 ```
  
-Une tâche planifiée évalue ces règles toutes les N minutes. Si une règle de priorité supérieure change, un switch automatique est déclenché. L'utilisateur peut désactiver temporairement l'auto-switch avec `wisely -AutoSwitch off`. L'historique trace explicitement les switchs automatiques vs manuels.
+Une tâche planifiée évalue ces règles toutes les N minutes. Si une règle de priorité supérieure change, un switch automatique est déclenché. L'utilisateur peut désactiver temporairement l'auto-switch avec `wisely -AutoSwitch off`. L'historique trace explicitement les switchs automatiques vs manuels. Les conditions `powerSource` et `gpu` (attente de disponibilité) réutilisent directement les signaux exposés en lecture seule dès v3.2 (voir Axe 1 et §4) — le moteur de règles est ce qui les rend actionnables plutôt qu'informatifs.
  
 ### Intégration prompt terminal
  
@@ -386,6 +459,10 @@ Cette heuristique est documentée et acceptée, mais elle a des limites. Sur cer
  
 Le menu interactif dans `wisely.ps1` est aujourd'hui la partie la plus monolithique du code — environ 80 lignes de logique de rendu imbriquée. Si le menu gagne de nouvelles entrées (profils composites, règles d'auto-switch, statut des tâches planifiées), cette section deviendra difficile à maintenir. La mitigation est une extraction anticipée vers un module `MenuRenderer.ps1` qui sépare la logique d'affichage de la logique de navigation.
  
+### Manipulation directe du VHDX (`wisely -Reclaim`, v3.1)
+
+C'est la première feature de l'outil qui touche à l'intégrité des données plutôt qu'à leur seule performance : une compaction interrompue ou lancée sur une distribution encore active pourrait corrompre le système de fichiers WSL2 entier, contrairement à un switch de profil RAM/CPU dont l'échec est sans conséquence sur les données. La mitigation n'est pas optionnelle — séquence stricte (arrêt vérifié de la distribution avant toute opération, confirmation explicite de l'utilisateur, échec explicite plutôt que tentative silencieuse en cas d'état inattendu) et tests d'intégration dédiés (voir §7, Phase 2) avant toute publication sur PowerShell Gallery.
+
 ### Gouvernance solo
  
 Un projet maintenu par une seule personne a un bus factor de 1. Si le mainteneur principal n'est plus disponible pendant plusieurs mois, les PRs et issues s'accumulent, la communauté naissante se décourage, et le projet fork. La mitigation est documentaire d'abord (CONTRIBUTING.md clair, architecture documentée) puis organisationnelle (identifier et onboarder un ou deux co-mainteneurs de confiance dès qu'une communauté commence à se former). **Décision confirmée (voir §10) :** le projet passera sous une organisation GitHub **Wisely** (à créer), mutualisée avec la publication PowerShell Gallery, précisément pour préparer cette transition hors gouvernance solo.
