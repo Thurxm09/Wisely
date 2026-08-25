@@ -24,9 +24,9 @@ jobs:
       - name: Run Semgrep
         run: |
           semgrep scan \
+            --config=auto \
             --config=p/secrets \
             --config=p/github-actions \
-            --config=p/security-audit \
             --error \
             --metrics=off \
             .
