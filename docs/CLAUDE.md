@@ -32,7 +32,7 @@ Thuram (GitHub: Thurxm09), développeur solo — niveau débutant/intermédiaire
 - `throw`, jamais `exit`, dans les modules dot-sourcés
 - `git pull --rebase` en cas de divergence
 - Scope `$script:` préféré à `$Global:` pour la mémoïsation
-- Priorité tests Pester avant tout chantier structurel : atteinte en v2.1 (suite Pester en CI) — DX & documentation livrée en v2.2 — prochaine priorité : observabilité (v2.3)
+- Priorité tests Pester avant tout chantier structurel : atteinte en v2.1 (suite Pester en CI) — DX & documentation livrée en v2.2 — observabilité livrée en v2.3 — prochaine priorité : v2.4 (spike Terminal.Gui + garde-fou shutdown WSL2)
 - Aime comprendre le code en profondeur, pas juste livrer des features
 - Préfère avancer une feature à la fois, bien comprise, avant de passer à la suivante
 - Utilise des scripts bootstrap Python (ASCII-safe, réécriture complète, sortie `[OK]`/`[SKIP]`) comme mécanisme standard de livraison de fichiers générés
