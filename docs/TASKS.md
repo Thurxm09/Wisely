@@ -4,7 +4,7 @@
 
 ## Waiting On
 
-- [ ] **Décider du timing de bump CHANGELOG/VERSION/ROADMAP pour "v2.3 complet"** — voir AUDIT.md F5 (décision produit, pas un bug)
+- [ ] **Décider du timing de bump CHANGELOG/VERSION/ROADMAP pour "v2.3 complet"** — voir AUDIT.md F5 (décision produit, pas un bug) ; bloqué sur l'item Active ci-dessus
 
 ## Someday
 
@@ -13,11 +13,13 @@
 - [ ] **Schéma formalisé pour `history.json`** (voir AUDIT.md v2.3 T-4) - `profiles.json` a un JSON Schema depuis v2.2, `history.json` non
 - [ ] **Test `Get-VmmemStats` : sortie anticipée en cours d'échantillonnage** (voir AUDIT.md v2.3 T-5)
 - [ ] **Revalider/nettoyer les exclusions PSScriptAnalyzer** (voir AUDIT.md v2.3 T-7)
-- [ ] **Épingler les Actions GitHub par SHA** (durcissement supply-chain, voir AUDIT.md v2.3 T-9)
 - [ ] **Tests Pester sur le schéma des `settings` de `profiles.json`** (voir AUDIT.md v2.3 T-11)
 
 ## Done
 
+- [x] ~~Épingler les Actions GitHub par SHA~~ (voir AUDIT.md v2.3 T-9 — remonte comme vrai constat par le premier scan Semgrep en CI : `actions/checkout`, `github/codeql-action/init`, `github/codeql-action/analyze` dans les 5 workflows)
+- [x] ~~Corriger l'injection de commande via interpolation `github.event.inputs.*`/`github.ref_name` non protegee dans des blocs `run:`~~ (`bump-version.yml`, `release.yml` — deplace en `env:`, autre constat reel remonte par le premier scan Semgrep)
+- [x] ~~Ajouter Semgrep aux checks CI~~ (`.github/workflows/semgrep.yml` — `p/secrets`, `p/github-actions`, `p/security-audit`, sur push/PR + planifie chaque semaine, aucun compte/token requis)
 - [x] ~~Audit général (whole-repo) v2.3~~ (v2.3 - AUDIT.md, 15 constats corrigés, 5 reportés au backlog, 1 signalé comme décision utilisateur)
 - [x] ~~`wisely -Watch` (dashboard temps réel)~~ (v2.3 - RAM/CPU vmmem, profil actif, derniere alerte, `Get-WatchSnapshot`/`Get-VmmemStats` dans `Monitor.ps1`)
 - [x] ~~Enrichir les rapports hebdomadaires avec la RAM moyenne par profil~~ (v2.3 - section "RAM liberee/consommee en moyenne au switch" dans `WeeklyReport.ps1`, basee sur `ramDeltaGB`)

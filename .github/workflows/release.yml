@@ -21,13 +21,16 @@ jobs:
     steps:
       - name: Resolve target tag
         id: tag
+        env:
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
-          TAG="${{ github.event.inputs.tag }}"
-          if [ -z "$TAG" ]; then TAG="${{ github.ref_name }}"; fi
+          TAG="$INPUT_TAG"
+          if [ -z "$TAG" ]; then TAG="$REF_NAME"; fi
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ steps.tag.outputs.tag }}
 
