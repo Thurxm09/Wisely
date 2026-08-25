@@ -113,15 +113,15 @@ function Enable-WslMocks {
         Vide par defaut (aucune session WSL2 active), pour preserver le
         comportement des tests existants qui n'en ont pas besoin.
     .NOTES
-        Le scriptblock du mock capture $RunningDistros via GetNewClosure()
-        plutot que de lire une variable $script: au moment de l'appel.
-        Pester invoque ce scriptblock depuis un contexte d'appel profond
-        (Set-WslProfile -> Confirm-WslShutdown -> Get-WslActiveSessions),
-        et une reference $script: a l'interieur d'un scriptblock defini
-        dans une fonction helper ne resout pas de facon fiable vers le
-        scope ou cette fonction a ete appelee. GetNewClosure() fige la
-        valeur dans une variable locale au moment de la creation, ce qui
-        rend le mock independant du scope d'invocation ulterieur.
+        Get-WslActiveSessions verifie $LASTEXITCODE apres l'appel a "wsl"
+        pour decider si la commande a reussi. Mocker "wsl" remplace l'appel
+        natif par une fonction PowerShell - or une fonction n'ecrit jamais
+        $LASTEXITCODE (seuls les executables natifs le font). Sans reset
+        explicite ici, $LASTEXITCODE garde la valeur laissee par le dernier
+        appel natif execute ailleurs dans le processus de test (potentiellement
+        non-zero), et Get-WslActiveSessions prend alors systematiquement la
+        branche "echec" (fail open, retourne @()) sans tenir compte de la
+        sortie du mock. D'ou le reset a 0 a chaque invocation du mock.
     #>
     param([string[]]$RunningDistros = @())
 
@@ -131,6 +131,7 @@ function Enable-WslMocks {
         function script:wsl { }
     }
     $mockBody = {
+        $global:LASTEXITCODE = 0
         if ($args -contains '--list') {
             return $runningDistrosSnapshot
         }
