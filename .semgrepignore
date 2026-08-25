@@ -1,0 +1,11 @@
+# Semgrep - exclusions specifiques au moteur de scan (voir aussi .gitignore
+# pour ce qui est exclu du depot lui-meme).
+#
+# .claude/ : infrastructure de skills Claude Code vendorisee (voir
+# docs/TASKS.md - "Skills Claude Code persistants vendorisés"), pas du code
+# du projet Wisely lui-meme. Semgrep y a trouve des constats reels (SSRF/
+# path traversal potentiels dans des scripts de dev local d'un skill,
+# helper.js/server.cjs) mais ce ne sont ni des fichiers ecrits pour ce
+# depot, ni maintenus par ce depot - les signaler bloquerait la CI sur du
+# code qu'on ne peut pas corriger ici sans forker le skill en amont.
+.claude/
