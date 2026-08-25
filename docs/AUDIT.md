@@ -1036,7 +1036,7 @@ Deux catégories de constats n'ont **pas** donné lieu à une correction de code
 | v2.3-S-5 | Référence de commandes incomplète | README.md | 🟡 Secondaire | ✅ Corrigé |
 | v2.3-S-6 | Bannière de statut obsolète | docs/wisely.md | 🟡 Secondaire | ✅ Corrigé |
 | v2.3-S-7 | Termes v2.3 absents du glossaire | docs/glossary.md | 🟡 Secondaire | ✅ Corrigé |
-| T-4 | Pas de schéma formalisé pour `history.json` | data/history.json | — | 📋 Backlog (TASKS.md) |
+| T-4 | Pas de schéma formalisé pour `history.json` | data/history.json | — | ✅ Corrigé |
 | T-5 | `Get-VmmemStats` : pas de test sortie anticipée | Monitor.ps1 | — | 📋 Backlog (TASKS.md) |
 | T-7 | Exclusions PSScriptAnalyzer à revalider | ci.yml | — | 📋 Backlog (TASKS.md) |
 | T-9 | Actions GitHub non épinglées par SHA | .github/workflows/*.yml | — | 📋 Backlog (TASKS.md) |

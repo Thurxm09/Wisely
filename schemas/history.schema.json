@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Thurxm09/Wisely/schemas/history.schema.json",
+  "title": "Wisely history.json",
+  "description": "Schema de validation pour data/history.json (historique des switchs de profil, ecrit par Write-SwitchLog dans modules/Logger.ps1).",
+  "type": "array",
+  "items": {
+    "$ref": "#/$defs/entry"
+  },
+  "$defs": {
+    "entry": {
+      "type": "object",
+      "required": ["timestamp", "action", "profile", "details", "user"],
+      "additionalProperties": false,
+      "properties": {
+        "timestamp": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$"
+        },
+        "action": {
+          "type": "string",
+          "enum": ["SWITCH", "ROLLBACK", "CUSTOM", "IMPORT", "EXPORT"]
+        },
+        "profile": {
+          "type": "string"
+        },
+        "details": {
+          "type": "string"
+        },
+        "user": {
+          "type": "string"
+        },
+        "ramDeltaGB": {
+          "type": ["number", "null"]
+        },
+        "restartSeconds": {
+          "type": ["number", "null"]
+        }
+      }
+    }
+  }
+}
