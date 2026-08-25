@@ -1,5 +1,18 @@
 # Wisely - Changelog
 
+## v2.3.0 - 2026-08-25
+
+### v2.3 - Observabilite
+
+- Suite de tests Pester pour Monitor.ps1, MonitorTask.ps1, WeeklyReport.ps1 (dette technique prealable)
+- Metriques reelles post-switch : RAM liberee/consommee (Get-AvailableRamGB) et temps de redemarrage WSL2
+- Rapports hebdomadaires enrichis avec la RAM moyenne liberee/consommee par profil au switch
+- wisely -Watch : dashboard temps reel (RAM/CPU vmmem, profil actif, derniere alerte)
+- Audit general (whole-repo) : 15 constats corriges, 5 reportes au backlog
+- Semgrep integre a la CI (scan --config=auto + p/secrets + p/github-actions, sur push/PR et hebdomadaire) en complement de CodeQL
+- Actions GitHub epinglees par SHA, injections shell corrigees dans les workflows
+
+
 ## v2.2.0 - 2026-08-21
 
 ### v2.2 - DX & Documentation
