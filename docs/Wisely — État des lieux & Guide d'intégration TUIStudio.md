@@ -1,6 +1,13 @@
 # Wisely — État des lieux & Guide d'intégration TUI Studio
 ## Document d'architecture et de stratégie — v1.0
  
+> **⚠️ Document historique — périmé.** Cette analyse a été réalisée sur la
+> base de l'état v2.0.0 du projet (§1-2 "État des lieux"). Le projet a
+> depuis évolué jusqu'en v2.3 (tests Pester, observabilité, audit
+> re-vérifié — voir `AUDIT.md`/`ROADMAP.md` à jour). Seule la proposition
+> Terminal.Gui (§3-4) reste d'actualité et a été reprise dans le cycle
+> v2.4 de `ROADMAP.md`.
+ 
 > Analyse réalisée sur la base des sources v2.0.0 : `wisely.ps1`, modules, `AUDIT.md`, `ROADMAP.md`, `wisely-expose-technologies.md`, workflows CI/CD, `profiles.json`, `README.md`, `CHANGELOG.md`.
  
 ---

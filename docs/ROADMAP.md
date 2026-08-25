@@ -214,6 +214,17 @@ Scope détaillé, à livrer dans cet ordre (Axe 6 complet, voir §3) :
  
 ---
  
+### Court terme — v2.4 (Items non calés, 1 à 2 mois)
+ 
+Deux items identifiés dans les axes d'évolution (§3) mais jamais rattachés à une version : le spike expérimental Terminal.Gui, explicitement exclu de v2.3 ci-dessus, et le garde-fou de sécurité avant `wsl --shutdown` (Axe 5). Indépendants l'un de l'autre — livrables dans n'importe quel ordre, aucune dépendance architecturale entre les deux.
+ 
+**v2.4 — Spike Terminal.Gui & garde-fou shutdown**
+ 
+1. **Spike Terminal.Gui (expérimental).** Reprendre le plan de la Phase 2 du guide `Wisely — État des lieux & Guide d'intégration TUIStudio.md` : script `Install-TerminalGui.ps1` (téléchargement du DLL NuGet Terminal.Gui), prototype feature-flaggé du menu principal dans un nouveau module `modules/TuiRenderer.ps1`, évaluation UX / performance / complexité de maintenance, conclusion sous forme d'ADR Go/No-go documentant si le "chemin B" (migration complète) est poursuivi en v3.0 ou abandonné. Prérequis (suite Pester) déjà satisfait depuis v2.1.
+2. **Garde-fou avant shutdown WSL2.** Reprendre le pattern de l'Exposé technologique §5.2 : `Get-WslActiveSessions` (interroge `wsl --list --running --quiet`) et `Confirm-WslShutdown` (avertit et demande confirmation si des distributions actives sont détectées avant `wsl --shutdown`), avec un flag `-Force` pour bypasser en usage scripté/automatisé, intégré dans `Set-WslProfile` (`modules/ProfileManager.ps1`, juste avant l'appel `wsl --shutdown` actuel).
+ 
+---
+ 
 ### Moyen terme — v3.0 (Évolutions structurantes, 3 à 9 mois)
  
 La v3.0 est une version majeure qui introduit des changements architecturaux et ouvre le projet à la contribution externe et à une distribution plus large.
@@ -437,4 +448,4 @@ Ces questions étaient structurantes pour affiner la vision produit (anciennemen
  
 *Document vivant — à réviser à chaque release majeure ou inflexion stratégique significative.*  
 *Dernière révision : 2026-08-25 (intégration des décisions stratégiques de §10).*  
-*Prochain point de revue recommandé : après publication de la v2.2.*
+*Prochain point de revue recommandé : après publication de la v2.4.*
