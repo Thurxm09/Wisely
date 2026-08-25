@@ -200,7 +200,7 @@ Reporté à v2.2 : correction du badge LICENSE (MIT → GPL v3) dans le README, 
  
 Livré : `CONTRIBUTING.md`, templates d'issues et PRs GitHub, galerie de profils par stack dans le README, snippet Oh My Posh / Windows Terminal Prompt, commande `wisely -Snapshot` pour capturer le profil courant, JSON Schema pour `profiles.json`, intégrité des réglages (`historyMaxEntries`, `backupEnabled`, `monitorIntervalSeconds`). Repris de v2.1 : variables d'environnement dans `swapFile` (`%TEMP%`, `%USERPROFILE%`, `%LOCALAPPDATA%`), commande `wisely -Status -Short` (en remplacement de la sous-commande `wisely status` initialement envisagée).
  
-**v2.3 — Observabilité**
+**v2.3 — Observabilité (livrée)**
  
 Scope détaillé, à livrer dans cet ordre (Axe 6 complet, voir §3) :
 
