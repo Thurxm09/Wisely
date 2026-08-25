@@ -23,10 +23,15 @@ jobs:
 
       - name: Run Semgrep
         run: |
+          # --config=auto exige les metriques (anonymes - stats d'usage
+          # des regles, jamais le code source) : Semgrep refuse de
+          # resoudre la config auto si --metrics=off. Reste "on" ici
+          # uniquement pour ce step, --metrics=off n'est pas une option
+          # viable avec auto (echec constate en CI : "Cannot create auto
+          # config when metrics are off").
           semgrep scan \
             --config=auto \
             --config=p/secrets \
             --config=p/github-actions \
             --error \
-            --metrics=off \
             .
