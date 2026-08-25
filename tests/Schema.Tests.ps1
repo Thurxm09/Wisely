@@ -65,6 +65,96 @@ Describe "profiles.schema.json" {
     }
 }
 
+Describe "profiles.schema.json - settings" {
+
+    BeforeAll {
+        function script:New-TestDoc {
+            param([hashtable]$Settings)
+            $doc = @{
+                version  = "2.1.0"
+                profiles = @{
+                    web = @{
+                        displayName = "WEB"
+                        memory      = "4GB"
+                        processors  = 3
+                        swap        = "3GB"
+                    }
+                }
+            }
+            if ($null -ne $Settings) {
+                $doc.settings = $Settings
+            }
+            return $doc | ConvertTo-Json -Depth 10
+        }
+    }
+
+    It "valide un document sans la cle 'settings' (optionnelle)" {
+        $json = script:New-TestDoc -Settings $null
+        Test-AgainstSchema -Json $json | Should -Be $true
+    }
+
+    It "valide un objet 'settings' complet avec des valeurs correctes" {
+        $json = script:New-TestDoc -Settings @{
+            monitorThreshold       = 80
+            monitorIntervalSeconds = 30
+            historyMaxEntries      = 100
+            backupEnabled          = $true
+            backupHistoryMax       = 5
+        }
+        Test-AgainstSchema -Json $json | Should -Be $true
+    }
+
+    It "valide un objet 'settings' partiel (sous-ensemble des cles)" {
+        $json = script:New-TestDoc -Settings @{ monitorThreshold = 90 }
+        Test-AgainstSchema -Json $json | Should -Be $true
+    }
+
+    It "valide un objet 'settings' vide" {
+        $json = script:New-TestDoc -Settings @{}
+        Test-AgainstSchema -Json $json | Should -Be $true
+    }
+
+    It "rejette monitorThreshold au-dessus de 100" {
+        $json = script:New-TestDoc -Settings @{ monitorThreshold = 101 }
+        Test-AgainstSchema -Json $json -ErrorAction SilentlyContinue | Should -Be $false
+    }
+
+    It "rejette monitorThreshold negatif" {
+        $json = script:New-TestDoc -Settings @{ monitorThreshold = -1 }
+        Test-AgainstSchema -Json $json -ErrorAction SilentlyContinue | Should -Be $false
+    }
+
+    It "rejette monitorIntervalSeconds a zero (exclusiveMinimum)" {
+        $json = script:New-TestDoc -Settings @{ monitorIntervalSeconds = 0 }
+        Test-AgainstSchema -Json $json -ErrorAction SilentlyContinue | Should -Be $false
+    }
+
+    It "rejette historyMaxEntries a zero (exclusiveMinimum)" {
+        $json = script:New-TestDoc -Settings @{ historyMaxEntries = 0 }
+        Test-AgainstSchema -Json $json -ErrorAction SilentlyContinue | Should -Be $false
+    }
+
+    It "rejette backupHistoryMax negatif" {
+        $json = script:New-TestDoc -Settings @{ backupHistoryMax = -5 }
+        Test-AgainstSchema -Json $json -ErrorAction SilentlyContinue | Should -Be $false
+    }
+
+    It "rejette backupEnabled d'un type invalide (chaine)" {
+        $json = script:New-TestDoc -Settings @{ backupEnabled = "oui" }
+        Test-AgainstSchema -Json $json -ErrorAction SilentlyContinue | Should -Be $false
+    }
+
+    It "rejette monitorThreshold d'un type invalide (chaine)" {
+        $json = script:New-TestDoc -Settings @{ monitorThreshold = "80" }
+        Test-AgainstSchema -Json $json -ErrorAction SilentlyContinue | Should -Be $false
+    }
+
+    It "rejette une propriete inconnue au niveau de 'settings'" {
+        $json = script:New-TestDoc -Settings @{ unknownSetting = "oops" }
+        Test-AgainstSchema -Json $json -ErrorAction SilentlyContinue | Should -Be $false
+    }
+}
+
 Describe "history.schema.json" {
 
     BeforeAll {

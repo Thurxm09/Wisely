@@ -6,10 +6,10 @@
 
 - [ ] **Upgrade RAM 32GB (2x8GB DDR4-2666 SO-DIMM)** - matériel, à l'étude
 - [ ] **Extension SSD** - slot M.2 confirmé libre, à l'étude
-- [ ] **Tests Pester sur le schéma des `settings` de `profiles.json`** (voir AUDIT.md v2.3 T-11)
 
 ## Done
 
+- [x] ~~Tests Pester sur le schéma des `settings` de `profiles.json`~~ (voir AUDIT.md v2.3 T-11 — nouveau Describe "profiles.schema.json - settings" dans `tests/Schema.Tests.ps1` : 12 cas couvrant absence/presence partielle/vide de `settings`, bornes `exclusiveMinimum`/`maximum`, types invalides et propriete inconnue, chaque cas revalide manuellement via `Test-Json` faute d'acces a PSGallery dans le sandbox)
 - [x] ~~Revalider/nettoyer les exclusions PSScriptAnalyzer~~ (voir AUDIT.md v2.3 T-7 — `PSAvoidUsingCmdletAliases` et `PSUseApprovedVerbs` retirées de `ci.yml` : aucun alias detecte via parsing AST, et les fonctions citees dans le commentaire (`Fit-String`/`Make-BoxLine`) n'existent plus, remplacees par `Format-String`/`New-BoxLine` avec verbes approuves ; les 6 autres exclusions revalidees comme toujours necessaires)
 - [x] ~~Test `Get-VmmemStats` : sortie anticipée en cours d'échantillonnage~~ (voir AUDIT.md v2.3 T-5 — nouveau test Pester dans `tests/Monitor.Tests.ps1` couvrant la disparition de `vmmem` entre les deux échantillons, distinct du cas déjà couvert d'absence totale de `vmmem`)
 - [x] ~~Schéma formalisé pour `history.json`~~ (voir AUDIT.md v2.3 T-4 — `schemas/history.schema.json`, valide via Pester sur des entrées réelles produites par `Write-SwitchLog`, corrige au passage `user` non cross-platform sur `$env:USERNAME`)
