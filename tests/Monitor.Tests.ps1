@@ -299,6 +299,21 @@ Describe "Get-VmmemStats" {
         { Get-VmmemStats } | Should -Not -Throw
         Get-VmmemStats | Should -Be $null
     }
+
+    It "retourne `$null si vmmem disparait entre les deux echantillons" {
+        $script:sampleCount = 0
+        Mock Get-Process {
+            $script:sampleCount++
+            if ($script:sampleCount -eq 1) {
+                [PSCustomObject]@{ CPU = 10.0; WorkingSet64 = 2GB }
+            } else {
+                $null
+            }
+        }
+
+        { Get-VmmemStats } | Should -Not -Throw
+        Get-VmmemStats | Should -Be $null
+    }
 }
 
 Describe "Get-WatchSnapshot" {
