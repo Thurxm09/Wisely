@@ -112,18 +112,29 @@ function Enable-WslMocks {
         Distributions a renvoyer pour "wsl --list --running --quiet".
         Vide par defaut (aucune session WSL2 active), pour preserver le
         comportement des tests existants qui n'en ont pas besoin.
+    .NOTES
+        Le scriptblock du mock capture $RunningDistros via GetNewClosure()
+        plutot que de lire une variable $script: au moment de l'appel.
+        Pester invoque ce scriptblock depuis un contexte d'appel profond
+        (Set-WslProfile -> Confirm-WslShutdown -> Get-WslActiveSessions),
+        et une reference $script: a l'interieur d'un scriptblock defini
+        dans une fonction helper ne resout pas de facon fiable vers le
+        scope ou cette fonction a ete appelee. GetNewClosure() fige la
+        valeur dans une variable locale au moment de la creation, ce qui
+        rend le mock independant du scope d'invocation ulterieur.
     #>
     param([string[]]$RunningDistros = @())
 
-    $script:WiselyTestRunningDistros = $RunningDistros
+    $runningDistrosSnapshot = $RunningDistros
 
     if (-not (Get-Command wsl -ErrorAction SilentlyContinue)) {
         function script:wsl { }
     }
-    Mock wsl {
+    $mockBody = {
         if ($args -contains '--list') {
-            return $script:WiselyTestRunningDistros
+            return $runningDistrosSnapshot
         }
-    }
+    }.GetNewClosure()
+    Mock wsl $mockBody
     Mock Start-Sleep {}
 }

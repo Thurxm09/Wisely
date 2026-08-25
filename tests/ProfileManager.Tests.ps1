@@ -623,6 +623,7 @@ Describe "Set-WslProfile - garde-fou session WSL2 active" {
 
     It "n'affiche pas de demande de confirmation quand aucune session n'est active (comportement inchange)" {
         Enable-WslMocks
+        Mock Read-Host { "o" }
 
         { Set-WslProfile -Key "web" } | Should -Not -Throw
 
