@@ -1038,7 +1038,7 @@ Deux catégories de constats n'ont **pas** donné lieu à une correction de code
 | v2.3-S-7 | Termes v2.3 absents du glossaire | docs/glossary.md | 🟡 Secondaire | ✅ Corrigé |
 | T-4 | Pas de schéma formalisé pour `history.json` | data/history.json | — | ✅ Corrigé |
 | T-5 | `Get-VmmemStats` : pas de test sortie anticipée | Monitor.ps1 | — | ✅ Corrigé |
-| T-7 | Exclusions PSScriptAnalyzer à revalider | ci.yml | — | 📋 Backlog (TASKS.md) |
+| T-7 | Exclusions PSScriptAnalyzer à revalider | ci.yml | — | ✅ Corrigé |
 | T-9 | Actions GitHub non épinglées par SHA | .github/workflows/*.yml | — | 📋 Backlog (TASKS.md) |
 | T-11 | Pas de tests sur le schéma `settings` | data/profiles.json | — | 📋 Backlog (TASKS.md) |
 | F5 | Timing de bump CHANGELOG/VERSION/ROADMAP pour "v2.3 complet" | CHANGELOG.md, VERSION, ROADMAP.md | — | ❓ Décision utilisateur |

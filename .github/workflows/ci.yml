@@ -45,21 +45,17 @@ jobs:
         shell: pwsh
         run: |
           # Exclude rules that are deliberately acceptable in this project:
-          # - PSAvoidUsingCmdletAliases: short aliases used intentionally in non-library scripts
           # - PSUseShouldProcessForStateChangingFunctions: cmdlet convention not required here
           # - PSAvoidUsingWriteHost: Write-Host is intentional for interactive terminal UI
           # - PSAvoidGlobalVars: $Global:WSLRoot is the documented cross-module contract
-          # - PSUseApprovedVerbs: Fit-String / Make-BoxLine are internal UI helpers, not exported
           # - PSUseSingularNouns: Import-Profiles / Export-Profiles handle multiple profiles by design
           # - PSUseBOMForUnicodeEncodedFile: files are UTF-8 without BOM by project convention
           # - PSAvoidOverwritingBuiltInCmdlets: wisely.ps1 intentionally shadows Write-Host to
           #   implement -Quiet without touching ~90 existing call sites (see wisely.ps1 comment)
           $excludeRules = @(
-            'PSAvoidUsingCmdletAliases',
             'PSUseShouldProcessForStateChangingFunctions',
             'PSAvoidUsingWriteHost',
             'PSAvoidGlobalVars',
-            'PSUseApprovedVerbs',
             'PSUseSingularNouns',
             'PSUseBOMForUnicodeEncodedFile',
             'PSAvoidOverwritingBuiltInCmdlets'
