@@ -1039,7 +1039,7 @@ Deux catégories de constats n'ont **pas** donné lieu à une correction de code
 | T-4 | Pas de schéma formalisé pour `history.json` | data/history.json | — | ✅ Corrigé |
 | T-5 | `Get-VmmemStats` : pas de test sortie anticipée | Monitor.ps1 | — | ✅ Corrigé |
 | T-7 | Exclusions PSScriptAnalyzer à revalider | ci.yml | — | ✅ Corrigé |
-| T-9 | Actions GitHub non épinglées par SHA | .github/workflows/*.yml | — | 📋 Backlog (TASKS.md) |
+| T-9 | Actions GitHub non épinglées par SHA | .github/workflows/*.yml | — | ✅ Corrigé |
 | T-11 | Pas de tests sur le schéma `settings` | data/profiles.json | — | ✅ Corrigé |
 | F5 | Timing de bump CHANGELOG/VERSION/ROADMAP pour "v2.3 complet" | CHANGELOG.md, VERSION, ROADMAP.md | — | ❓ Décision utilisateur |
 
