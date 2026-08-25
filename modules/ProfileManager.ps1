@@ -284,11 +284,82 @@ function Get-AvailableRamGB {
     }
 }
 
+# ---- Garde-fou WSL2 actif avant shutdown -----------------------------
+
+function Test-WiselyNonInteractive {
+    <#
+    .SYNOPSIS
+        Indique si la session courante n'a pas d'entree utilisateur
+        disponible (ex. tache planifiee, pipeline CI, entree redirigee).
+        Isole le check .NET statique dans une fonction nommee pour que
+        les tests Pester puissent la mocker.
+    #>
+    return [Console]::IsInputRedirected
+}
+
+function Get-WslActiveSessions {
+    <#
+    .SYNOPSIS
+        Liste les distributions WSL2 actuellement en cours d'execution.
+        Fail open : ne leve jamais d'exception, retourne @() si "wsl" est
+        introuvable ou si la commande echoue, pour ne pas regresser le
+        switch existant si la detection echoue.
+    #>
+    if (-not (Get-Command wsl -ErrorAction SilentlyContinue)) {
+        return @()
+    }
+    try {
+        $rawOutput = wsl --list --running --quiet 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Write-Verbose "wsl --list --running a retourne un code d'erreur ($LASTEXITCODE)."
+            return @()
+        }
+        $distros = $rawOutput |
+                   ForEach-Object { ($_ -replace "`0", "").Trim() } |
+                   Where-Object { $_ -ne "" }
+        return @($distros)
+    } catch {
+        Write-Verbose "Get-WslActiveSessions a echoue : $_"
+        return @()
+    }
+}
+
+function Confirm-WslShutdown {
+    <#
+    .SYNOPSIS
+        Verifie qu'aucune distribution WSL2 active ne sera interrompue
+        sans confirmation avant un "wsl --shutdown". Retourne $true si le
+        shutdown peut se poursuivre, $false sinon.
+    #>
+    $activeSessions = Get-WslActiveSessions
+    if ($activeSessions.Count -eq 0) {
+        return $true
+    }
+
+    Write-Host ""
+    Write-Host "  ATTENTION - Distribution(s) WSL2 active(s) :" -ForegroundColor Yellow
+    foreach ($distro in $activeSessions) {
+        Write-Host "    - $distro" -ForegroundColor Yellow
+    }
+    Write-Host "  Un arret force peut interrompre des process en cours et corrompre des fichiers non sauvegardes." -ForegroundColor Yellow
+
+    if (Test-WiselyNonInteractive) {
+        Write-Host "  Session non-interactive detectee - relancez avec -Force pour continuer malgre tout." -ForegroundColor Red
+        Write-Host ""
+        return $false
+    }
+
+    $answer = Read-Host "  Continuer ? (o/n)"
+    Write-Host ""
+    return ($answer -eq "o")
+}
+
 function Set-WslProfile {
     param(
         [Parameter(Mandatory)][string]$Key,
         [switch]$DryRun,
-        [switch]$ShowDiff
+        [switch]$ShowDiff,
+        [switch]$Force
     )
     $config = Get-ProfileConfig
     $prop   = $config.profiles.PSObject.Properties | Where-Object { $_.Name -eq $Key }
@@ -312,6 +383,15 @@ function Set-WslProfile {
         Write-Host ""
         Write-Host "  Contenu .wslconfig simule :" -ForegroundColor DarkGray
         $content -split "`n" | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkGray }
+        Write-Host ""
+        return
+    }
+
+    $forcedActiveSessions = @()
+    if ($Force) {
+        $forcedActiveSessions = Get-WslActiveSessions
+    } elseif (-not (Confirm-WslShutdown)) {
+        Write-Host "  Switch de profil annule (session(s) WSL2 active(s), confirmation refusee)." -ForegroundColor Yellow
         Write-Host ""
         return
     }
@@ -354,6 +434,9 @@ function Set-WslProfile {
 
     $details = "$($profileDef.memory), $($profileDef.processors) CPU, ${elapsed}s"
     if ($null -ne $ramDelta) { $details += ", RAM ${ramSign}${ramDelta}GB" }
+    if ($forcedActiveSessions.Count -gt 0) {
+        $details += ", Force (sessions actives ignorees : $($forcedActiveSessions -join ', '))"
+    }
     Write-SwitchLog -Action "SWITCH" -ProfileKey $Key -Details $details -RamDeltaGB $ramDelta -RestartSeconds $restartSeconds
 }
 

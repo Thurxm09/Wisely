@@ -104,13 +104,38 @@ function Enable-WslMocks {
     <#
     .SYNOPSIS
         Empeche les tests de toucher au systeme reel : mock la commande
-        externe "wsl" (wsl --shutdown) et Start-Sleep. "wsl" n'existe pas
-        du tout sur le runner Linux de la CI - Pester refuse de mocker
-        une commande introuvable, donc on la stub d'abord si necessaire.
+        externe "wsl" (wsl --shutdown, wsl --list --running --quiet) et
+        Start-Sleep. "wsl" n'existe pas du tout sur le runner Linux de la
+        CI - Pester refuse de mocker une commande introuvable, donc on la
+        stub d'abord si necessaire.
+    .PARAMETER RunningDistros
+        Distributions a renvoyer pour "wsl --list --running --quiet".
+        Vide par defaut (aucune session WSL2 active), pour preserver le
+        comportement des tests existants qui n'en ont pas besoin.
+    .NOTES
+        Get-WslActiveSessions verifie $LASTEXITCODE apres l'appel a "wsl"
+        pour decider si la commande a reussi. Mocker "wsl" remplace l'appel
+        natif par une fonction PowerShell - or une fonction n'ecrit jamais
+        $LASTEXITCODE (seuls les executables natifs le font). Sans reset
+        explicite ici, $LASTEXITCODE garde la valeur laissee par le dernier
+        appel natif execute ailleurs dans le processus de test (potentiellement
+        non-zero), et Get-WslActiveSessions prend alors systematiquement la
+        branche "echec" (fail open, retourne @()) sans tenir compte de la
+        sortie du mock. D'ou le reset a 0 a chaque invocation du mock.
     #>
+    param([string[]]$RunningDistros = @())
+
+    $runningDistrosSnapshot = $RunningDistros
+
     if (-not (Get-Command wsl -ErrorAction SilentlyContinue)) {
         function script:wsl { }
     }
-    Mock wsl {}
+    $mockBody = {
+        $global:LASTEXITCODE = 0
+        if ($args -contains '--list') {
+            return $runningDistrosSnapshot
+        }
+    }.GetNewClosure()
+    Mock wsl $mockBody
     Mock Start-Sleep {}
 }
