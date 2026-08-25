@@ -7,6 +7,7 @@
 #  .\wisely.ps1                    -> menu interactif
 #  .\wisely.ps1 web                -> switch direct
 #  .\wisely.ps1 data -DryRun       -> simulation sans ecriture
+#  .\wisely.ps1 data -Force        -> switch sans confirmation (sessions WSL2 actives ignorees)
 #  .\wisely.ps1 -Rollback          -> restauration backup
 #  .\wisely.ps1 -History           -> voir l'historique
 #  .\wisely.ps1 -NewProfile "perf 8GB 4 Description"
@@ -21,6 +22,7 @@
 param(
     [string]$Profil     = "",
     [switch]$DryRun,
+    [switch]$Force,
     [switch]$Rollback,
     [switch]$History,
     [switch]$Export,
@@ -300,8 +302,8 @@ function Show-Header {
     # Ligne profil actif
     $profileStr = "  Profil actif : " + $ActiveName + " (" + $ActiveMem + ")"
     Write-Host (New-BoxLine "    " $profileStr) -ForegroundColor White
- 
-    Write-Host $LINE_MID -ForegroundColor Cyan 
+
+    Write-Host $LINE_MID -ForegroundColor Cyan
 }
 
 # ---- Menu interactif ------------------------------------------------
@@ -489,7 +491,7 @@ if ($NewProfile -ne "") {
 }
 
 if ($Profil -ne "") {
-    try   { Set-WslProfile -Key $Profil.ToLower() -DryRun:$DryRun -ShowDiff:$Verbose }
+    try   { Set-WslProfile -Key $Profil.ToLower() -DryRun:$DryRun -ShowDiff:$Verbose -Force:$Force }
     catch { Write-Host "ERREUR : $_" -ForegroundColor Red; exit 1 }
     exit
 }
@@ -523,7 +525,7 @@ do {
         default {
             if ($choice -ne "") {
                 try {
-                    Set-WslProfile -Key $choice -ShowDiff:$Verbose
+                    Set-WslProfile -Key $choice -ShowDiff:$Verbose -Force:$Force
                     Write-Host "  Appuyez sur Entree pour continuer..." -ForegroundColor DarkGray
                     $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
                 }
@@ -539,10 +541,3 @@ do {
     }
 
 } while ($true)
-
-
-
-
-
-
-

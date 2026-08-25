@@ -362,6 +362,94 @@ Describe "Get-AvailableRamGB" {
     }
 }
 
+Describe "Get-WslActiveSessions" {
+
+    BeforeEach {
+        if (-not (Get-Command wsl -ErrorAction SilentlyContinue)) {
+            function script:wsl { }
+        }
+    }
+
+    It "retourne un tableau vide quand aucune distribution n'est active" {
+        Mock wsl { $global:LASTEXITCODE = 0; return @() }
+
+        @(Get-WslActiveSessions).Count | Should -Be 0
+    }
+
+    It "retourne une seule distribution active" {
+        Mock wsl { $global:LASTEXITCODE = 0; return @("Ubuntu") }
+
+        $result = @(Get-WslActiveSessions)
+        $result.Count | Should -Be 1
+        $result[0] | Should -Be "Ubuntu"
+    }
+
+    It "retourne plusieurs distributions actives" {
+        Mock wsl { $global:LASTEXITCODE = 0; return @("Ubuntu", "Debian") }
+
+        $result = @(Get-WslActiveSessions)
+        $result.Count | Should -Be 2
+        $result | Should -Contain "Ubuntu"
+        $result | Should -Contain "Debian"
+    }
+
+    It "nettoie les octets NUL presents dans la sortie de wsl --list" {
+        Mock wsl { $global:LASTEXITCODE = 0; return @("Ubuntu`0`0") }
+
+        $result = @(Get-WslActiveSessions)
+        $result[0] | Should -Be "Ubuntu"
+    }
+
+    It "retourne un tableau vide quand la commande wsl est introuvable" {
+        Mock Get-Command { $null } -ParameterFilter { $Name -eq "wsl" }
+
+        @(Get-WslActiveSessions).Count | Should -Be 0
+    }
+
+    It "fail open (tableau vide, pas d'exception) quand wsl --list retourne un code d'erreur" {
+        Mock wsl { $global:LASTEXITCODE = 1; return "erreur sur stderr" }
+
+        { Get-WslActiveSessions } | Should -Not -Throw
+        @(Get-WslActiveSessions).Count | Should -Be 0
+    }
+}
+
+Describe "Confirm-WslShutdown" {
+
+    It "retourne `$true sans demander de confirmation quand aucune session n'est active" {
+        Mock Get-WslActiveSessions { @() }
+        Mock Read-Host { "o" }
+
+        Confirm-WslShutdown | Should -Be $true
+        Should -Invoke -CommandName Read-Host -Times 0 -Exactly
+    }
+
+    It "retourne `$true quand une session est active, en contexte interactif, et que l'utilisateur repond 'o'" {
+        Mock Get-WslActiveSessions { @("Ubuntu") }
+        Mock Test-WiselyNonInteractive { $false }
+        Mock Read-Host { "o" }
+
+        Confirm-WslShutdown | Should -Be $true
+    }
+
+    It "retourne `$false quand une session est active, en contexte interactif, et que l'utilisateur repond autre chose que 'o'" {
+        Mock Get-WslActiveSessions { @("Ubuntu") }
+        Mock Test-WiselyNonInteractive { $false }
+        Mock Read-Host { "n" }
+
+        Confirm-WslShutdown | Should -Be $false
+    }
+
+    It "retourne `$false sans appeler Read-Host quand une session est active en contexte non-interactif" {
+        Mock Get-WslActiveSessions { @("Ubuntu") }
+        Mock Test-WiselyNonInteractive { $true }
+        Mock Read-Host { "o" }
+
+        Confirm-WslShutdown | Should -Be $false
+        Should -Invoke -CommandName Read-Host -Times 0 -Exactly
+    }
+}
+
 Describe "Set-WslProfile - validation du swap file" {
 
     BeforeEach {
@@ -490,6 +578,56 @@ Describe "Set-WslProfile - switch reussi et metriques (RAM, temps de redemarrage
 
         $history = @(Get-Content (Get-HistoryPath) -Raw | ConvertFrom-Json)
         $history[-1].action | Should -Be "ROLLBACK"
+    }
+}
+
+Describe "Set-WslProfile - garde-fou session WSL2 active" {
+
+    BeforeEach {
+        Clear-ProfileConfigCache
+        $script:testRoot = New-TestWslRoot
+        Set-TestUserProfile -Path $script:testRoot
+        Enable-WslMocks -RunningDistros @("Ubuntu")
+        if (-not (Get-Command Get-CimInstance -ErrorAction SilentlyContinue)) {
+            function script:Get-CimInstance { }
+        }
+        Mock Get-CimInstance { [PSCustomObject]@{ FreePhysicalMemory = 8000000 } }
+        $config = Get-ValidProfilesConfig
+        $config.profiles.web.swapFile = Join-Path $script:testRoot "wsl-swap.vhdx"
+        New-TestProfilesJson -Config $config
+    }
+
+    AfterEach {
+        Restore-TestUserProfile
+        Remove-TestWslRoot -Path $script:testRoot
+    }
+
+    It "n'appelle jamais wsl --shutdown et laisse profiles.json intact quand la confirmation est refusee" {
+        Mock Test-WiselyNonInteractive { $false }
+        Mock Read-Host { "n" }
+
+        { Set-WslProfile -Key "web" } | Should -Not -Throw
+
+        Should -Invoke -CommandName wsl -ParameterFilter { $args -contains "--shutdown" } -Times 0 -Exactly
+        Test-Path (Get-BackupDir) | Should -Be $false
+    }
+
+    It "ignore les sessions actives et journalise la mention Force avec -Force" {
+        Set-WslProfile -Key "web" -Force
+
+        Should -Invoke -CommandName wsl -ParameterFilter { $args -contains "--shutdown" } -Times 1 -Exactly
+        $history = @(Get-Content (Get-HistoryPath) -Raw | ConvertFrom-Json)
+        $history[-1].details | Should -Match "Force"
+        $history[-1].details | Should -Match "Ubuntu"
+    }
+
+    It "n'affiche pas de demande de confirmation quand aucune session n'est active (comportement inchange)" {
+        Enable-WslMocks
+
+        { Set-WslProfile -Key "web" } | Should -Not -Throw
+
+        Should -Invoke -CommandName wsl -ParameterFilter { $args -contains "--shutdown" } -Times 1 -Exactly
+        Should -Invoke -CommandName Read-Host -Times 0 -Exactly
     }
 }
 

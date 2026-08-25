@@ -3,7 +3,7 @@
 ## Active
 
 - [ ] **Spike Terminal.Gui (expérimental)** - v2.4, `Install-TerminalGui.ps1` + `modules/TuiRenderer.ps1`, ADR Go/No-go
-- [ ] **Garde-fou WSL2 actif avant shutdown** - v2.4, `Get-WslActiveSessions`/`Confirm-WslShutdown` dans `ProfileManager.ps1`, flag `-Force`
+- [x] **Garde-fou WSL2 actif avant shutdown** - v2.4, `Get-WslActiveSessions`/`Confirm-WslShutdown` dans `ProfileManager.ps1`, flag `-Force`
 
 ## Someday
 

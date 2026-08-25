@@ -104,13 +104,26 @@ function Enable-WslMocks {
     <#
     .SYNOPSIS
         Empeche les tests de toucher au systeme reel : mock la commande
-        externe "wsl" (wsl --shutdown) et Start-Sleep. "wsl" n'existe pas
-        du tout sur le runner Linux de la CI - Pester refuse de mocker
-        une commande introuvable, donc on la stub d'abord si necessaire.
+        externe "wsl" (wsl --shutdown, wsl --list --running --quiet) et
+        Start-Sleep. "wsl" n'existe pas du tout sur le runner Linux de la
+        CI - Pester refuse de mocker une commande introuvable, donc on la
+        stub d'abord si necessaire.
+    .PARAMETER RunningDistros
+        Distributions a renvoyer pour "wsl --list --running --quiet".
+        Vide par defaut (aucune session WSL2 active), pour preserver le
+        comportement des tests existants qui n'en ont pas besoin.
     #>
+    param([string[]]$RunningDistros = @())
+
+    $script:WiselyTestRunningDistros = $RunningDistros
+
     if (-not (Get-Command wsl -ErrorAction SilentlyContinue)) {
         function script:wsl { }
     }
-    Mock wsl {}
+    Mock wsl {
+        if ($args -contains '--list') {
+            return $script:WiselyTestRunningDistros
+        }
+    }
     Mock Start-Sleep {}
 }
