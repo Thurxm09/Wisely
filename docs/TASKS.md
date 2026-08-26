@@ -1,17 +1,41 @@
 # Tasks
 
-## Active
+> Ordre de priorite et motifs : `ROADMAP.md`. Decisions de retrait : `decisions/`.
 
-- [ ] **Spike Terminal.Gui (expérimental)** - v2.4, `Install-TerminalGui.ps1` + `modules/TuiRenderer.ps1`, ADR Go/No-go
-- [x] **Garde-fou WSL2 actif avant shutdown** - v2.4, `Get-WslActiveSessions`/`Confirm-WslShutdown` dans `ProfileManager.ps1`, flag `-Force`
+## Active — v2.5 "Verite"
+
+Corriger les mesures fausses **avant** toute nouvelle fonctionnalite. Regle
+d'ordonnancement : on ne construit ni diagnostic ni recommandation sur une mesure
+qui ment.
+
+- [ ] **Detection du processus WSL2** - `Get-Process -Name "vmmem"` ne matche pas `VmmemWSL` (Windows 11 recent) : toute la couche d'observation est silencieusement inoperante. `modules/Monitor.ps1` (`Get-VmmemStats`), `modules/MonitorTask.ps1`
+- [ ] **Seuil d'alerte au bon denominateur** - l'alerte compare la part de WSL2 dans la RAM *totale* a 80 %, alors que le plafond livre le plus large est 6 Go : elle ne peut mathematiquement pas se declencher. `modules/MonitorTask.ps1`
+- [ ] **`ramDeltaGB` : corriger ou retirer** - mesure l'arret de la session precedente, attribue au profil cible. Sortir du rapport hebdomadaire tant qu'il n'est pas attribuable (principe 9). `modules/ProfileManager.ps1`, `modules/Logger.ps1`, `modules/WeeklyReport.ps1`
+- [ ] **Ecriture non destructive de `.wslconfig`** - fusionner au lieu de reecrire, marquer la provenance des cles gerees. Debloque les segments Docker Desktop et poste d'entreprise. `ConvertTo-WslConfigContent`, `Test-WslConfigIntegrity`
+- [ ] **Identite du profil actif** - `Get-ActiveProfile` reconnait le profil par egalite de valeur memoire : deux profils de 4 Go sont indiscernables. Marquer l'identite au lieu de la deviner. `modules/ProfileManager.ps1`
+
+## Experiences a mener (hors code)
+
+Cout quasi nul, fort pouvoir de refutation - voir `ASSUMPTIONS.md`.
+
+- [ ] **E1 - lire `data/history.json`** (10 min) : combien de switchs reels depuis la mise en service ? Teste l'hypothese A5, dont depend toute la valeur du maillon "agir"
+- [ ] **E2 - activer `autoMemoryReclaim=gradual` une semaine** : le besoin de baisser le plafond diminue-t-il ? Teste A2
+- [ ] **E3 - publier le diagnostic seul** (apres v3.0) : quelqu'un l'utilise-t-il ? Teste A1
+
+## Annule
+
+- [x] ~~**Spike Terminal.Gui (experimental)**~~ - **annule** le 2026-08-26, pas reporte. Aucun probleme utilisateur adosse, justifie par un document lui-meme perime, ne s'exprime pas comme une operation sur l'ecart. Voir `decisions/0007-annulation-spike-terminal-gui.md`
+- [x] ~~**`wisely -Reclaim` via `Optimize-VHD`**~~ - **retire** : `Optimize-VHD` echoue sur les VHD sparse. L'axe disque est repris autrement en v3.3. Voir `decisions/0010-retrait-reclaim-optimize-vhd.md`
 
 ## Someday
 
-- [ ] **Upgrade RAM 32GB (2x8GB DDR4-2666 SO-DIMM)** - matériel, à l'étude
-- [ ] **Extension SSD** - slot M.2 confirmé libre, à l'étude
+- [ ] **Upgrade RAM 32GB (2x8GB DDR4-2666 SO-DIMM)** - materiel, a l'etude. Note : rendra les trois profils absolus livres denues de sens, ce que v3.1 corrige a la racine
+- [ ] **Extension SSD** - slot M.2 confirme libre, a l'etude
+- [ ] **Resynchroniser le depot `wisely-site`** - publie la v2.0.0, un changelog arrete la, et une commande d'installation `wsl-switch` qui n'existe plus. Prerequis de v4.0, passe dediee
 
 ## Done
 
+- [x] ~~Refondation documentaire (phase 10)~~ (v2.4 - PROBLEM/VISION/PRINCIPLES/DOCTRINE-LECTURE/ASSUMPTIONS + 12 ADR dans `decisions/` ; ROADMAP reduit a son seul metier ; guide TUIStudio et `wisely.md` supprimes, expose technologique archive)
 - [x] ~~Tests Pester sur le schéma des `settings` de `profiles.json`~~ (voir AUDIT.md v2.3 T-11 — nouveau Describe "profiles.schema.json - settings" dans `tests/Schema.Tests.ps1` : 12 cas couvrant absence/presence partielle/vide de `settings`, bornes `exclusiveMinimum`/`maximum`, types invalides et propriete inconnue, chaque cas revalide manuellement via `Test-Json` faute d'acces a PSGallery dans le sandbox)
 - [x] ~~Revalider/nettoyer les exclusions PSScriptAnalyzer~~ (voir AUDIT.md v2.3 T-7 — `PSAvoidUsingCmdletAliases` et `PSUseApprovedVerbs` retirées de `ci.yml` : aucun alias detecte via parsing AST, et les fonctions citees dans le commentaire (`Fit-String`/`Make-BoxLine`) n'existent plus, remplacees par `Format-String`/`New-BoxLine` avec verbes approuves ; les 6 autres exclusions revalidees comme toujours necessaires)
 - [x] ~~Test `Get-VmmemStats` : sortie anticipée en cours d'échantillonnage~~ (voir AUDIT.md v2.3 T-5 — nouveau test Pester dans `tests/Monitor.Tests.ps1` couvrant la disparition de `vmmem` entre les deux échantillons, distinct du cas déjà couvert d'absence totale de `vmmem`)

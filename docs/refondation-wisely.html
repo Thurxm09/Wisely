@@ -1,0 +1,839 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Analyse strategique de Wisely : six directions comparees, la capacite fondamentale du produit, la roadmap reclassee et les hypotheses a valider.">
+<!--
+  Document de reference produit le 2026-08-26 a l'issue de l'analyse
+  strategique en 13 phases. Il est la trace du raisonnement qui a conduit
+  a la refondation documentaire de la v2.4 ; ses conclusions sont actees
+  dans docs/decisions/, docs/VISION.md et docs/ROADMAP.md, qui font foi.
+  Ouvrir ce fichier dans un navigateur pour le lire.
+-->
+<title>Refondation Wisely</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+
+<style>
+:root{
+  --ground:#F6F7F9;
+  --surface:#FFFFFF;
+  --surface-2:#EDF0F4;
+  --ink:#12171E;
+  --muted:#5A6675;
+  --faint:#8A94A1;
+  --rule:#DCE1E8;
+  --rule-strong:#C3CBD5;
+  --accent:#0B6E7F;
+  --accent-soft:#E2F0F2;
+  --gap:#8A5E12;
+  --gap-soft:#F3E9D6;
+  --keep:#2E6F4E;
+  --change:#8A6516;
+  --remove:#A03A30;
+  --defer:#5A6675;
+  --validate:#5D4A93;
+  --new:#0B6E7F;
+  --shadow:0 1px 2px rgba(18,23,30,.05),0 8px 24px -12px rgba(18,23,30,.12);
+
+  --measure:68ch;
+  --wide:1120px;
+
+  --f-display:"IBM Plex Sans Condensed",-apple-system,"Segoe UI",system-ui,sans-serif;
+  --f-body:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"Cascadia Code",Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#10141A;
+    --surface:#171C24;
+    --surface-2:#1E242E;
+    --ink:#E6EAEF;
+    --muted:#98A4B2;
+    --faint:#78838F;
+    --rule:#29313B;
+    --rule-strong:#3A4450;
+    --accent:#54BACB;
+    --accent-soft:#123036;
+    --gap:#D9A441;
+    --gap-soft:#2E2617;
+    --keep:#5DBE8A;
+    --change:#D9A441;
+    --remove:#E4796C;
+    --defer:#98A4B2;
+    --validate:#A992E0;
+    --new:#54BACB;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#10141A;
+  --surface:#171C24;
+  --surface-2:#1E242E;
+  --ink:#E6EAEF;
+  --muted:#98A4B2;
+  --faint:#78838F;
+  --rule:#29313B;
+  --rule-strong:#3A4450;
+  --accent:#54BACB;
+  --accent-soft:#123036;
+  --gap:#D9A441;
+  --gap-soft:#2E2617;
+  --keep:#5DBE8A;
+  --change:#D9A441;
+  --remove:#E4796C;
+  --defer:#98A4B2;
+  --validate:#A992E0;
+  --new:#54BACB;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:var(--ground);
+  color:var(--ink);
+  font-family:var(--f-body);
+  font-size:17px;
+  line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+
+.wrap{max-width:var(--wide);margin:0 auto;padding:0 24px}
+
+/* ---------- masthead ---------- */
+.masthead{
+  border-bottom:1px solid var(--rule);
+  background:var(--surface);
+}
+.masthead .wrap{
+  display:flex;flex-direction:column;gap:26px;
+  padding-top:64px;padding-bottom:44px;
+}
+.eyebrow{
+  font-family:var(--f-mono);font-size:11.5px;font-weight:500;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--accent);
+  margin:0;
+}
+h1{
+  font-family:var(--f-display);
+  font-weight:700;
+  font-size:clamp(2.6rem,7vw,4.4rem);
+  line-height:1.02;
+  letter-spacing:-.02em;
+  margin:0;
+  text-wrap:balance;
+}
+h1 .thin{color:var(--muted);font-weight:500}
+.standfirst{
+  font-size:clamp(1.05rem,2.2vw,1.28rem);
+  line-height:1.5;
+  color:var(--muted);
+  max-width:62ch;margin:0;
+}
+.meta{
+  display:flex;flex-wrap:wrap;gap:8px 28px;
+  font-family:var(--f-mono);font-size:12px;color:var(--faint);
+  padding-top:20px;border-top:1px solid var(--rule);
+}
+.meta b{color:var(--muted);font-weight:500}
+
+/* ---------- sections ---------- */
+main{padding-bottom:96px}
+section{padding-top:72px}
+.sec-head{
+  display:grid;gap:6px;
+  padding-bottom:8px;margin-bottom:28px;
+  border-bottom:2px solid var(--ink);
+  max-width:var(--wide);
+}
+.sec-num{
+  font-family:var(--f-mono);font-size:11.5px;font-weight:500;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--accent);
+}
+h2{
+  font-family:var(--f-display);font-weight:600;
+  font-size:clamp(1.7rem,3.6vw,2.35rem);
+  line-height:1.1;letter-spacing:-.015em;margin:0;
+  text-wrap:balance;
+}
+h3{
+  font-family:var(--f-display);font-weight:600;
+  font-size:1.24rem;line-height:1.24;letter-spacing:-.005em;
+  margin:40px 0 10px;text-wrap:balance;
+}
+h4{
+  font-family:var(--f-mono);font-weight:500;font-size:12px;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+  margin:30px 0 8px;
+}
+p{max-width:var(--measure);margin:0 0 16px}
+ul,ol{max-width:var(--measure);margin:0 0 16px;padding-left:1.15em}
+li{margin-bottom:7px}
+strong{font-weight:600}
+em{font-style:italic}
+a{color:var(--accent);text-decoration-thickness:1px;text-underline-offset:2px}
+code{
+  font-family:var(--f-mono);font-size:.855em;
+  background:var(--surface-2);padding:.12em .36em;border-radius:3px;
+  border:1px solid var(--rule);
+}
+
+.lede{font-size:1.1rem;color:var(--muted);max-width:64ch}
+
+/* ---------- callouts ---------- */
+.note{
+  max-width:var(--measure);
+  background:var(--surface);
+  border:1px solid var(--rule);
+  border-left:3px solid var(--accent);
+  border-radius:0 6px 6px 0;
+  padding:18px 22px;margin:0 0 20px;
+}
+.note.gap-note{border-left-color:var(--gap)}
+.note.warn{border-left-color:var(--remove)}
+.note p:last-child{margin-bottom:0}
+.note .tag{
+  display:block;font-family:var(--f-mono);font-size:11px;font-weight:500;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--accent);
+  margin-bottom:7px;
+}
+.note.gap-note .tag{color:var(--gap)}
+.note.warn .tag{color:var(--remove)}
+
+/* ---------- the loop diagram ---------- */
+.loop{
+  display:flex;flex-wrap:wrap;align-items:stretch;gap:0;
+  margin:8px 0 28px;border:1px solid var(--rule);border-radius:8px;
+  overflow:hidden;background:var(--surface);box-shadow:var(--shadow);
+}
+.loop-step{
+  flex:1 1 128px;min-width:128px;padding:18px 16px 16px;
+  border-right:1px solid var(--rule);
+  display:flex;flex-direction:column;gap:7px;
+}
+.loop-step:last-child{border-right:0}
+.loop-step .name{
+  font-family:var(--f-display);font-weight:600;font-size:1.02rem;letter-spacing:-.005em;
+}
+.loop-step .state{
+  font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;color:var(--faint);
+}
+.loop-step.held{background:var(--accent-soft)}
+.loop-step.held .name{color:var(--accent)}
+.loop-step.held .state{color:var(--accent);font-weight:500}
+.loop-step.broken .name{color:var(--muted)}
+.loop-step .bar{height:3px;border-radius:2px;background:var(--rule-strong)}
+.loop-step.held .bar{background:var(--accent)}
+.loop-step.partial .bar{background:linear-gradient(90deg,var(--gap) 35%,var(--rule-strong) 35%)}
+
+/* ---------- gauge (l'écart) ---------- */
+.gauge{
+  max-width:var(--measure);background:var(--surface);
+  border:1px solid var(--rule);border-radius:8px;
+  padding:24px 24px 20px;margin:0 0 24px;box-shadow:var(--shadow);
+}
+.gauge-title{
+  font-family:var(--f-mono);font-size:11px;font-weight:500;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--muted);margin:0 0 18px;
+}
+.gauge-track{
+  position:relative;height:38px;background:var(--surface-2);
+  border:1px solid var(--rule);border-radius:4px;overflow:hidden;
+}
+.gauge-fill{
+  position:absolute;inset:0 auto 0 0;width:58%;
+  background:var(--accent);opacity:.22;
+}
+.gauge-allow{
+  position:absolute;top:-7px;bottom:-7px;left:72%;width:2px;background:var(--ink);
+}
+.gauge-peak{
+  position:absolute;top:-7px;bottom:-7px;left:92%;width:2px;
+  background:var(--gap);
+}
+.gauge-span{
+  position:absolute;top:50%;transform:translateY(-50%);
+  left:72%;width:20%;height:8px;
+  background:repeating-linear-gradient(-45deg,var(--gap) 0 2px,transparent 2px 5px);
+  opacity:.85;
+}
+.gauge-legend{
+  display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:22px;
+  font-family:var(--f-mono);font-size:11.5px;color:var(--muted);
+}
+.gauge-legend span{display:flex;align-items:center;gap:7px}
+.swatch{width:11px;height:11px;border-radius:2px;flex:none}
+.swatch.used{background:var(--accent);opacity:.45}
+.swatch.allow{background:var(--ink)}
+.swatch.peak{background:var(--gap)}
+
+/* ---------- tables ---------- */
+.tablewrap{
+  max-width:var(--wide);overflow-x:auto;margin:0 0 26px;
+  border:1px solid var(--rule);border-radius:8px;background:var(--surface);
+  box-shadow:var(--shadow);
+}
+table{border-collapse:collapse;width:100%;min-width:660px;font-size:14.5px}
+thead th{
+  font-family:var(--f-mono);font-size:10.5px;font-weight:600;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--muted);
+  text-align:left;padding:13px 16px;background:var(--surface-2);
+  border-bottom:1px solid var(--rule-strong);white-space:nowrap;
+}
+tbody td{
+  padding:13px 16px;border-bottom:1px solid var(--rule);
+  vertical-align:top;line-height:1.48;
+}
+tbody tr:last-child td{border-bottom:0}
+tbody th{
+  padding:13px 16px;border-bottom:1px solid var(--rule);
+  text-align:left;font-weight:600;font-family:var(--f-display);
+  font-size:15px;vertical-align:top;white-space:nowrap;
+}
+tbody tr:last-child th{border-bottom:0}
+td.num,th.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:13px}
+
+.verdict{
+  display:inline-block;font-family:var(--f-mono);font-size:10.5px;font-weight:600;
+  letter-spacing:.09em;padding:3px 8px;border-radius:3px;white-space:nowrap;
+  border:1px solid currentColor;
+}
+.v-keep{color:var(--keep)}
+.v-change{color:var(--change)}
+.v-remove{color:var(--remove)}
+.v-defer{color:var(--defer)}
+.v-validate{color:var(--validate)}
+.v-new{color:var(--new)}
+
+/* ---------- version sequence ---------- */
+.versions{
+  display:grid;gap:0;max-width:var(--wide);margin:0 0 26px;
+  border:1px solid var(--rule);border-radius:8px;overflow:hidden;
+  background:var(--surface);box-shadow:var(--shadow);
+}
+.version{
+  display:grid;grid-template-columns:132px 1fr;gap:0;
+  border-bottom:1px solid var(--rule);
+}
+.version:last-child{border-bottom:0}
+.version-id{
+  padding:22px 18px;border-right:1px solid var(--rule);
+  background:var(--surface-2);
+  display:flex;flex-direction:column;gap:4px;
+}
+.version-id .v{
+  font-family:var(--f-mono);font-size:13px;font-weight:600;color:var(--accent);
+}
+.version-id .n{
+  font-family:var(--f-display);font-size:1.16rem;font-weight:600;line-height:1.12;
+  letter-spacing:-.01em;
+}
+.version-body{padding:22px 24px}
+.version-body p{margin-bottom:12px;max-width:62ch}
+.version-body p:last-child{margin-bottom:0}
+.version-body .why{
+  font-family:var(--f-mono);font-size:11.5px;color:var(--faint);
+  border-top:1px dashed var(--rule-strong);padding-top:11px;margin-top:14px;
+  max-width:62ch;line-height:1.5;
+}
+@media (max-width:640px){
+  .version{grid-template-columns:1fr}
+  .version-id{border-right:0;border-bottom:1px solid var(--rule);flex-direction:row;align-items:baseline;gap:12px}
+}
+
+/* ---------- assumption matrix ---------- */
+.matrix{
+  max-width:var(--wide);margin:0 0 26px;overflow-x:auto;
+  border:1px solid var(--rule);border-radius:8px;background:var(--surface);
+  box-shadow:var(--shadow);
+}
+.matrix-inner{min-width:640px;padding:26px 26px 20px}
+.matrix-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:1px;
+  background:var(--rule);border:1px solid var(--rule);border-radius:6px;overflow:hidden;
+}
+.cell{background:var(--surface);padding:18px}
+.cell.hot{background:var(--gap-soft)}
+.cell h5{
+  font-family:var(--f-mono);font-size:10.5px;font-weight:600;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--muted);margin:0 0 12px;
+}
+.cell.hot h5{color:var(--gap)}
+.cell ul{margin:0;padding-left:1.05em;font-size:14.5px;max-width:none}
+.cell li{margin-bottom:9px;line-height:1.45}
+.cell li:last-child{margin-bottom:0}
+.axis{
+  font-family:var(--f-mono);font-size:11px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--faint);margin:14px 0 0;
+}
+
+/* ---------- answers ---------- */
+.answers{display:grid;gap:0;max-width:var(--wide);
+  border:1px solid var(--rule);border-radius:8px;overflow:hidden;background:var(--surface);
+  box-shadow:var(--shadow);}
+.answer{
+  display:grid;grid-template-columns:44px 1fr;
+  border-bottom:1px solid var(--rule);
+}
+.answer:last-child{border-bottom:0}
+.answer .q-num{
+  font-family:var(--f-mono);font-size:12px;font-weight:600;color:var(--accent);
+  padding:20px 0 20px 18px;
+}
+.answer .q-body{padding:20px 24px 20px 6px}
+.answer .q{
+  font-family:var(--f-display);font-weight:600;font-size:1.02rem;
+  margin:0 0 6px;max-width:64ch;
+}
+.answer .a{margin:0;max-width:64ch;color:var(--muted);font-size:15.5px}
+.answer .a strong{color:var(--ink)}
+
+footer{
+  border-top:1px solid var(--rule);padding:34px 0 60px;
+  font-family:var(--f-mono);font-size:12px;color:var(--faint);
+}
+footer p{max-width:70ch;margin:0 0 8px}
+
+@media (min-width:1024px){
+  .sec-head{grid-template-columns:1fr;}
+}
+</style>
+
+</head>
+<body>
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">Wisely · Analyse stratégique · Phases 8 à 13</p>
+    <h1>Refondation<br><span class="thin">d'un outil qui mesure mal</span></h1>
+    <p class="standfirst">Wisely exécute très bien un geste que la plateforme est en train d'absorber, et n'occupe pas le terrain que personne d'autre ne tient : la jointure entre ce que WSL2 consomme et ce qu'on l'autorise à consommer.</p>
+    <div class="meta">
+      <span><b>Base</b> code v2.3.0 · 2 dépôts lus intégralement</span>
+      <span><b>Utilisateurs réels</b> 0</span>
+      <span><b>Contrainte de délai</b> aucune</span>
+      <span><b>Statut</b> conclusions actées dans <code>docs/decisions/</code></span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ============ 0 ============ -->
+<section id="recadrage">
+  <div class="sec-head">
+    <span class="sec-num">Recadrage préalable</span>
+    <h2>Le switch n'est pas de trop. Il est orphelin.</h2>
+  </div>
+
+  <p class="lede">Une première formulation parlait de « basculer du switch vers le diagnostic ». Elle était fausse : elle suggérait une substitution. Le constat exact est ailleurs.</p>
+
+  <p>Le switch de profil est une <em>réponse</em>. Wisely livre la réponse sans jamais aider à atteindre la question. Ce n'est pas un défaut de priorité, c'est un défaut d'entourage : le geste n'a aucune mesure ni avant, ni après. Les trois défaillances trouvées dans le code n'en forment qu'une seule.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Ce qui manque autour du geste</th><th>Comment ça se manifeste dans le code</th></tr></thead>
+      <tbody>
+        <tr><td>Savoir <strong>quel</strong> profil choisir</td><td>Les trois profils livrés sont des constantes en GB calibrées sur une machine 16 Go précise</td></tr>
+        <tr><td>Savoir <strong>si ça a marché</strong></td><td><code>ramDeltaGB</code> mesure la RAM libérée par l'arrêt de WSL2, puis l'attribue au profil cible</td></tr>
+        <tr><td>Savoir <strong>quand</strong> switcher</td><td>L'alerte compare la part de WSL2 dans la RAM totale à un seuil de 80 % — inatteignable avec un plafond à 6 Go</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>La boucle, et ce que Wisely en détient</h4>
+  <div class="loop">
+    <div class="loop-step partial"><span class="name">Observer</span><span class="bar"></span><span class="state">partiel, et cassé</span></div>
+    <div class="loop-step broken"><span class="name">Comprendre</span><span class="bar"></span><span class="state">absent</span></div>
+    <div class="loop-step broken"><span class="name">Décider</span><span class="bar"></span><span class="state">absent</span></div>
+    <div class="loop-step held"><span class="name">Agir</span><span class="bar"></span><span class="state">solide, rare</span></div>
+    <div class="loop-step broken"><span class="name">Vérifier</span><span class="bar"></span><span class="state">absent</span></div>
+  </div>
+
+  <p><strong>Agir est le maillon le plus difficile de la chaîne, et Wisely le détient déjà.</strong> Backup versionné, validation post-écriture, rollback automatique, dry-run, garde-fou sur les sessions actives : aucun outil concurrent trouvé ne fait cela, et l'application WSL Settings de Microsoft non plus. Ce maillon ne bouge pas. Ce qui change, c'est qu'on lui rend ses deux extrémités.</p>
+
+  <div class="note">
+    <span class="tag">Ce qui est concurrencé, et ce qui ne l'est pas</span>
+    <p>Le switch <em>seul</em> est dans la ligne de mire de WSL Settings et déjà cloné par des outils à trois étoiles. Le switch <em>informé et vérifié</em> n'a aucun équivalent.</p>
+  </div>
+</section>
+
+<!-- ============ 8 ============ -->
+<section id="visions">
+  <div class="sec-head">
+    <span class="sec-num">Phase 8</span>
+    <h2>Six directions crédibles, comparées</h2>
+  </div>
+
+  <p class="lede">Aucune n'est absurde. Elles diffèrent par ce qu'elles rendent défendable à trois ans.</p>
+
+  <h3>V1 — Le commutateur fiable <span style="color:var(--muted);font-weight:500">(statu quo amélioré)</span></h3>
+  <p>Wisely reste ce qu'il est et s'améliore : plus de profils, meilleure distribution, meilleure UX. <strong>Avantage :</strong> zéro remise en cause, chaque heure investie est capitalisée. <strong>Limite :</strong> la proposition de valeur affichée — « sans jamais éditer <code>.wslconfig</code> à la main » — est exactement ce que Microsoft vient de livrer gratuitement. <strong>Risque :</strong> se retrouver dans deux ans avec un outil impeccable dont personne n'a besoin. <strong>Potentiel long terme : faible.</strong></p>
+
+  <h3>V2 — Le diagnostic WSL2</h3>
+  <p>L'outil qu'on lance quand ça va mal : une commande, un état complet et expliqué. <strong>Avantage :</strong> adresse la plainte réelle (« pourquoi VmmemWSL prend 9 Go ? »), et s'adresse au public le plus large, y compris ceux qui ne savent pas ce qu'est <code>.wslconfig</code>. <strong>Limite :</strong> un diagnostic sans action est un rapport ; on retombe dans la catégorie encombrée du monitoring. <strong>Potentiel : fort comme porte d'entrée, insuffisant comme produit entier.</strong></p>
+
+  <h3>V3 — La boucle fermée <span style="color:var(--accent);font-weight:500">— recommandée</span></h3>
+  <p>Mesurer ce que WSL2 consomme réellement, en déduire le bon plafond, l'appliquer avec la sécurité déjà en place, puis vérifier que l'effet est celui prévu. <strong>Avantage :</strong> c'est la seule direction où l'actif existant (le maillon « agir ») devient un avantage décisif au lieu d'un investissement isolé. <strong>Limite :</strong> exige de lever la contrainte « rien ne tourne dans Linux ». <strong>Risque :</strong> la boucle doit être juste de bout en bout — une mesure fausse produit une recommandation fausse, donc un switch nuisible. <strong>Potentiel : le plus élevé.</strong></p>
+
+  <h3>V4 — L'observabilité continue</h3>
+  <p>Une timeline de la consommation WSL2 dans le temps, avec alertes et historique. <strong>Avantage :</strong> répond à « qu'est-ce qui a saturé ma machine hier à 15 h ? », que rien ne couvre. <strong>Limite :</strong> demande une collecte permanente, donc une empreinte — un outil de gestion des ressources qui consomme des ressources en continu doit être irréprochable. <strong>Potentiel : fort, mais comme composant de V3, pas comme produit.</strong></p>
+
+  <h3>V5 — Le gestionnaire WSL2 général</h3>
+  <p>Distributions, disque, réseau, GPU, sauvegarde : la couche de gestion complète. <strong>Limite décisive :</strong> c'est précisément le « produit générique sans proposition de valeur claire » que le cadrage de départ interdit. Plusieurs outils occupent déjà ce terrain sans traction. <strong>Potentiel : faible, et coût de maintenance très élevé pour un mainteneur solo.</strong></p>
+
+  <h3>V6 — Le gardien de <code>.wslconfig</code></h3>
+  <p>L'outil garantit qu'on ne casse jamais sa configuration WSL2 : écriture transactionnelle, provenance des réglages, cohabitation avec les autres outils. <strong>Statut :</strong> ce n'est pas une vision concurrente, c'est le <em>socle</em> des cinq autres. À traiter comme un invariant, pas comme une direction.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Direction</th><th class="num">Défendable ?</th><th class="num">Capitalise l'existant ?</th><th class="num">Public atteint</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr><th>V1 Commutateur</th><td>Non — absorbé</td><td>Totalement</td><td>Le plus étroit</td><td><span class="verdict v-remove">écarter</span></td></tr>
+        <tr><th>V2 Diagnostic</th><td>Oui</td><td>Peu</td><td>Le plus large</td><td><span class="verdict v-keep">porte d'entrée</span></td></tr>
+        <tr><th>V3 Boucle fermée</th><td>Oui, fortement</td><td>Totalement</td><td>Large</td><td><span class="verdict v-new">retenue</span></td></tr>
+        <tr><th>V4 Observabilité</th><td>Oui</td><td>Peu</td><td>Moyen</td><td><span class="verdict v-change">composant de V3</span></td></tr>
+        <tr><th>V5 Gestionnaire</th><td>Non</td><td>Peu</td><td>Large mais flou</td><td><span class="verdict v-remove">écarter</span></td></tr>
+        <tr><th>V6 Gardien</th><td>—</td><td>Totalement</td><td>—</td><td><span class="verdict v-keep">invariant</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><strong>Recommandation : V3, avec V2 comme porte d'entrée et V6 comme socle non négociable.</strong> Le diagnostic est ce qui fait entrer les gens ; la boucle est ce qui les garde ; le gardien est ce qui fait qu'on peut leur confier sa machine.</p>
+</section>
+
+<!-- ============ 9 ============ -->
+<section id="coeur">
+  <div class="sec-head">
+    <span class="sec-num">Phase 9</span>
+    <h2>Le cœur : l'écart</h2>
+  </div>
+
+  <p class="lede">Une seule capacité fondamentale, formulée de cinq manières, puis une recommandation.</p>
+
+  <ul>
+    <li><strong>F1</strong> — « Wisely bascule les ressources WSL2 en sécurité. » <em>Décrit le mécanisme, pas la capacité. C'est la formulation actuelle.</em></li>
+    <li><strong>F2</strong> — « Wisely rend visible ce que WSL2 coûte. » <em>Amputée de l'action ; jette l'actif existant.</em></li>
+    <li><strong>F3</strong> — « Wisely relie ce que WSL2 consomme à ce qu'on l'autorise à consommer. » <em>Recommandée.</em></li>
+    <li><strong>F4</strong> — « Wisely est la boucle de rétroaction que WSL2 n'a pas. » <em>Juste, mais trop abstraite pour orienter une décision de scope.</em></li>
+    <li><strong>F5</strong> — « Wisely dimensionne WSL2 d'après la réalité plutôt que d'après une supposition. » <em>La meilleure promesse tournée utilisateur — la phrase du site.</em></li>
+  </ul>
+
+  <h3>Pourquoi F3</h3>
+  <p>Elle nomme la <strong>jointure</strong>, qui est le seul territoire non occupé : depuis Windows, le Gestionnaire des tâches ne voit qu'une boîte opaque ; depuis Linux, <code>htop</code> ignore le plafond et le coût côté hôte. Elle contient les deux moitiés du produit — <em>consomme</em> (mesurer) et <em>autorise</em> (agir). Et surtout, elle <strong>exclut</strong> : gestion de distributions, GPU, réseau ne rentrent que s'ils relèvent de cette relation. Une capacité fondamentale doit dire non.</p>
+
+  <h3>L'unité de pensée : l'écart</h3>
+  <p>Tout le produit se dérive d'une seule grandeur — la distance entre ce que WSL2 prend et ce qu'il a le droit de prendre.</p>
+
+  <div class="gauge">
+    <p class="gauge-title">L'écart, primitive d'affichage</p>
+    <div class="gauge-track">
+      <div class="gauge-fill"></div>
+      <div class="gauge-span"></div>
+      <div class="gauge-allow"></div>
+      <div class="gauge-peak"></div>
+    </div>
+    <div class="gauge-legend">
+      <span><i class="swatch used"></i> consommé maintenant · 3,1 Go</span>
+      <span><i class="swatch allow"></i> autorisé · 4 Go</span>
+      <span><i class="swatch peak"></i> pic sur 7 jours · 5,2 Go</span>
+    </div>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Fonction du produit</th><th>Ce qu'elle est, exprimée en écart</th></tr></thead>
+      <tbody>
+        <tr><th>Diagnostic</th><td>Mesurer l'écart, et dire d'où il vient</td></tr>
+        <tr><th>Recommandation</th><td>L'écart historique indique le plafond correct</td></tr>
+        <tr><th>Alerte</th><td>L'écart se referme — le plafond va être atteint</td></tr>
+        <tr><th>Switch</th><td>Déplacer volontairement la borne « autorisé »</td></tr>
+        <tr><th>Vérification</th><td>L'écart a-t-il bougé comme annoncé ?</td></tr>
+        <tr><th>Historique</th><td>La trajectoire de l'écart dans le temps</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note gap-note">
+    <span class="tag">Ce que ça change immédiatement</span>
+    <p>Aujourd'hui : <code>wisely web</code> → « OK, WEB actif en 4.2s ». On ignore si 4 Go suffiront.<br>
+    Avec l'écart : <code>wisely web</code> → « plafond 4 Go — pic mesuré sur 7 jours : 5,2 Go. Tu vas taper le plafond. » <strong>Le même geste, mais informé.</strong></p>
+  </div>
+</section>
+
+<!-- ============ 10 ============ -->
+<section id="documents">
+  <div class="sec-head">
+    <span class="sec-num">Phase 10</span>
+    <h2>L'architecture documentaire</h2>
+  </div>
+
+  <p class="lede">Huit documents dans <code>docs/</code>, et aucun ne dit quel problème l'outil résout indépendamment de la solution qu'il a choisie. C'est précisément le trou qui a rendu cette analyse nécessaire.</p>
+
+  <h4>Diagnostic de l'existant</h4>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Document</th><th>Problème</th><th>Décision</th></tr></thead>
+      <tbody>
+        <tr><th>ROADMAP.md</th><td>Fait cinq métiers à la fois : positionnement, axes techniques, roadmap, principes, décisions. Illisible comme référence, impossible à réviser par morceaux.</td><td><span class="verdict v-change">éclater</span></td></tr>
+        <tr><th>Exposé technologique</th><td>Catalogue partiellement périmé — recommande d'implémenter en v2.1 des choses livrées depuis, et Winget « en v2.1 ou v2.2 ».</td><td><span class="verdict v-remove">archiver</span></td></tr>
+        <tr><th>Guide TUIStudio</th><td>Marqué « périmé » en tête, mais reste la source normative du spike v2.4.</td><td><span class="verdict v-remove">supprimer</span></td></tr>
+        <tr><th>wisely.md</th><td>Instantané figé, entièrement redondant avec ROADMAP et CHANGELOG.</td><td><span class="verdict v-remove">supprimer</span></td></tr>
+        <tr><th>AUDIT.md</th><td>Bon format, bonne discipline. Mélange deux campagnes d'audit dans un seul fichier qui grossira sans fin.</td><td><span class="verdict v-keep">garder</span></td></tr>
+        <tr><th>TASKS.md · glossary.md</th><td>Opérationnels et utiles.</td><td><span class="verdict v-keep">garder</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>Ce qui devrait exister</h4>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Document</th><th>Question à laquelle il répond seul</th><th>Contenu</th></tr></thead>
+      <tbody>
+        <tr><th>PROBLEM.md</th><td>Quel problème, pour qui, avec quelles preuves ?</td><td>L'espace du problème, les segments, l'état de l'art, et surtout <strong>ce qu'on n'adresse pas</strong>. Écrit sans jamais nommer une fonctionnalité.</td></tr>
+        <tr><th>VISION.md</th><td>Quelle est la capacité fondamentale ?</td><td>L'écart, F3, la boucle. Deux pages maximum. Révisé rarement.</td></tr>
+        <tr><th>PRINCIPLES.md</th><td>Comment trancher un arbitrage sans rouvrir le débat ?</td><td>Les principes actuels, plus trois nouveaux : ne jamais détruire ce qu'on ne gère pas ; ne jamais mesurer ce qu'on ne peut pas attribuer ; aucune recommandation sans mesure qui la source.</td></tr>
+        <tr><th>DOCTRINE-LECTURE.md</th><td>Qu'est-ce que Wisely lit dans mon Linux, et que ne lira-t-il jamais ?</td><td>Le contrat de confiance : lecture seule, commandes énumérées, aucun agent installé, consentement explicite, dégradation propre en cas de refus. Livrable de premier rang de la version « Contrat ».</td></tr>
+        <tr><th>ASSUMPTIONS.md</th><td>Que croyons-nous sans l'avoir vérifié ?</td><td>Le registre Impact × Incertitude de la phase 13, vivant, avec le statut de chaque test.</td></tr>
+        <tr><th>decisions/</th><td>Pourquoi a-t-on tranché ainsi, et quand ?</td><td>Un fichier par décision, daté, révisable. Remplace le §10 monolithique de ROADMAP.</td></tr>
+        <tr><th>ROADMAP.md</th><td>Qu'est-ce qu'on fait ensuite, et pourquoi dans cet ordre ?</td><td>Réduit à ça. Les versions, ordonnées, chacune renvoyant à PROBLEM ou VISION pour sa justification.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note warn">
+    <span class="tag">Le site est un document aussi</span>
+    <p>Le site publie <code>SOFTWARE_VERSION = "2.0.0"</code>, un changelog arrêté à la v2.0, une commande d'installation qui clone dans <code>C:\Scripts\WSL-Switch</code>, et documente partout un binaire nommé <code>wsl-switch</code> alors que l'outil s'appelle <code>wisely</code>. <strong>Quelqu'un qui suit les instructions d'installation obtient un alias qui ne fonctionne pas.</strong> À resynchroniser avant toute publicité, quelle que soit la direction retenue.</p>
+  </div>
+</section>
+
+<!-- ============ 11 ============ -->
+<section id="roadmap">
+  <div class="sec-head">
+    <span class="sec-num">Phase 11</span>
+    <h2>La roadmap, reclassée puis reconstruite</h2>
+  </div>
+
+  <h4>Classement de l'existant</h4>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Élément de la roadmap actuelle</th><th>Verdict</th><th>Motif</th></tr></thead>
+      <tbody>
+        <tr><th>Backup, rollback, validation, dry-run</th><td><span class="verdict v-keep">KEEP</span></td><td>Le meilleur actif du projet. Intouché.</td></tr>
+        <tr><th>Garde-fou sessions actives</th><td><span class="verdict v-keep">KEEP</span></td><td>À étendre : dire <em>ce qu'on va tuer</em>, pas seulement qu'il y a quelque chose.</td></tr>
+        <tr><th>Menu interactif, source de vérité JSON, suite Pester, CI</th><td><span class="verdict v-keep">KEEP</span></td><td>Socle sain.</td></tr>
+        <tr><th>Profils (le concept)</th><td><span class="verdict v-change">CHANGE</span></td><td>Passer d'un plafond absolu en Go à une politique dérivée. Sans ça, rien n'est partageable entre machines — ce qui invalide import/export, bibliothèque communautaire et cascade d'équipe.</td></tr>
+        <tr><th>Monitoring et alerte RAM</th><td><span class="verdict v-change">CHANGE</span></td><td>À reconstruire sur l'écart. En l'état l'alerte ne peut pas se déclencher, pour deux raisons indépendantes.</td></tr>
+        <tr><th><code>-Watch</code></th><td><span class="verdict v-change">CHANGE</span></td><td>Bonne idée, mauvaise donnée. Affiche <code>vmmem</code>, introuvable sur Windows 11 récent.</td></tr>
+        <tr><th>Rapport hebdomadaire</th><td><span class="verdict v-change">CHANGE</span></td><td>Compte les clics dans l'outil, pas la consommation de la machine. À remplacer par l'historique de l'écart.</td></tr>
+        <tr><th><code>-Reclaim</code> via <code>Optimize-VHD</code> (v3.1)</th><td><span class="verdict v-remove">REMOVE</span></td><td>Factuellement cassé : <code>Optimize-VHD</code> échoue sur les VHD sparse. La bonne méthode est <code>fstrim</code> depuis Linux. À rouvrir sous une autre forme.</td></tr>
+        <tr><th>Spike Terminal.Gui (v2.4)</th><td><span class="verdict v-remove">REMOVE</span></td><td>Aucun problème utilisateur adossé, justifié par un document marqué périmé. Actuellement la seule tâche « Active ».</td></tr>
+        <tr><th>Import / Export</th><td><span class="verdict v-remove">REMOVE</span></td><td>Partage un plafond non portable et remplace intégralement <code>profiles.json</code>. À rouvrir seulement si les profils deviennent dérivés.</td></tr>
+        <tr><th><code>-Snapshot</code></th><td><span class="verdict v-remove">REMOVE</span></td><td>Aggrave le défaut d'identité : le profil actif est reconnu par égalité de valeur RAM.</td></tr>
+        <tr><th>Cascade organisation / équipe (v3.3, v4.0)</th><td><span class="verdict v-defer">DEFER</span></td><td>Résout un problème de distribution pour zéro utilisateur.</td></tr>
+        <tr><th>Auto-switch contextuel (v4.0)</th><td><span class="verdict v-defer">DEFER</span></td><td>L'action déclenchée est destructive. Automatiser un <code>wsl --shutdown</code> sur une règle horaire est un moyen efficace de faire perdre du travail. À rouvrir quand le coût du geste aura baissé.</td></tr>
+        <tr><th>PowerShell Gallery, Winget (v3.0)</th><td><span class="verdict v-defer">DEFER</span></td><td>Non par manque de valeur, mais par timing — voir ci-dessous.</td></tr>
+        <tr><th>GPU, alimentation (v3.2)</th><td><span class="verdict v-validate">VALIDATE</span></td><td>Signaux plausibles, aucune preuve de besoin. Ne pas coder avant d'avoir un utilisateur qui le demande.</td></tr>
+        <tr><th>Écriture non destructive de <code>.wslconfig</code></th><td><span class="verdict v-new">NEW</span></td><td>Prérequis, pas fonctionnalité. Aujourd'hui chaque switch efface <code>networkingMode</code>, <code>dnsTunneling</code>, <code>autoMemoryReclaim</code> et tout le reste.</td></tr>
+        <tr><th><code>wisely doctor</code></th><td><span class="verdict v-new">NEW</span></td><td>La porte d'entrée, et le meilleur rapport valeur/effort du plan.</td></tr>
+        <tr><th>Lecture in-distro sous contrat</th><td><span class="verdict v-new">NEW</span></td><td>Le verrou qui ouvre le diagnostic, l'attribution et la vérification.</td></tr>
+        <tr><th>Vérification post-switch</th><td><span class="verdict v-new">NEW</span></td><td>Ferme la boucle et rend le switch digne de confiance.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>La séquence</h3>
+  <p>L'ordre est imposé par les dépendances, pas par la facilité. On ne construit ni diagnostic ni recommandation sur une mesure qui ment.</p>
+
+  <div class="versions">
+    <div class="version">
+      <div class="version-id"><span class="v">v2.4</span><span class="n">Clôture</span></div>
+      <div class="version-body">
+        <p>Le garde-fou shutdown est livré. Le spike Terminal.Gui est annulé. Le guide TUIStudio est supprimé. La version se termine là.</p>
+        <p class="why">Motif — ne pas traîner une tâche ouverte qui ne répond à aucun problème, et qui bloque symboliquement le passage à la suite.</p>
+      </div>
+    </div>
+    <div class="version">
+      <div class="version-id"><span class="v">v2.5</span><span class="n">Vérité</span></div>
+      <div class="version-body">
+        <p>La version qui rend les mesures honnêtes. Détection de <code>vmmem</code> <em>et</em> <code>VmmemWSL</code>. Seuil d'alerte rapporté au plafond WSL2 et non à la RAM totale. <code>ramDeltaGB</code> supprimé ou correctement attribué, et retiré du rapport hebdomadaire tant qu'il ment. Identité du profil actif marquée dans <code>.wslconfig</code> au lieu d'être devinée par égalité de RAM. Écriture par fusion : Wisely ne touche plus qu'aux clés qu'il gère.</p>
+        <p class="why">Motif — trois défaillances silencieuses et totales de la couche d'observation, plus une destruction silencieuse de configuration. Tout ce qui suit s'appuie dessus. La fusion débloque au passage deux segments entiers : utilisateurs Docker Desktop et postes d'entreprise.</p>
+      </div>
+    </div>
+    <div class="version">
+      <div class="version-id"><span class="v">v2.6</span><span class="n">Contrat</span></div>
+      <div class="version-body">
+        <p>La doctrine de lecture dans la distribution, écrite avant d'être codée. Lecture seule, liste fermée de commandes, aucun agent installé, consentement explicite au premier usage, dégradation propre si refusé, jamais de contenu de fichier ni de variable d'environnement. Puis l'implémentation minimale : <code>/proc/meminfo</code> et la liste des distributions actives.</p>
+        <p class="why">Motif — l'enjeu n'est pas technique (<code>wsl -d X -- cat /proc/meminfo</code> est trivial) mais relève de la confiance. Un outil qui entre dans le Linux de quelqu'un doit dire d'avance ce qu'il n'y fera jamais. Fait correctement, c'est un différenciateur en soi.</p>
+      </div>
+    </div>
+    <div class="version">
+      <div class="version-id"><span class="v">v3.0</span><span class="n">L'écart</span></div>
+      <div class="version-body">
+        <p>Le produit devient lui-même. <code>wisely doctor</code> : une commande, un état complet et expliqué — validité de <code>.wslconfig</code>, <code>autoMemoryReclaim</code> actif ou non et ce que ça changerait, <code>sparseVhd</code>, taille du VHDX, distributions, plafond rapporté à la RAM hôte. La mesure de l'écart réel remplace le proxy. La vérification post-switch ferme la boucle.</p>
+        <p class="why">Motif — c'est la version qui rend le switch digne de confiance, et la seule qui occupe un terrain que personne d'autre ne tient.</p>
+      </div>
+    </div>
+    <div class="version">
+      <div class="version-id"><span class="v">v3.1</span><span class="n">Le bon plafond</span></div>
+      <div class="version-body">
+        <p>Les profils cessent d'être des constantes. Une politique relative — « laisser 8 Go à Windows », « la moitié des cœurs » — résolue à l'application sur la machine réelle. Recommandation de dimensionnement sourcée par l'historique mesuré.</p>
+        <p class="why">Motif — c'est ce qui rend un profil partageable entre machines hétérogènes, et ce qui fait que l'outil ne se casse pas le jour d'un passage à 32 Go.</p>
+      </div>
+    </div>
+    <div class="version">
+      <div class="version-id"><span class="v">v3.2</span><span class="n">La durée</span></div>
+      <div class="version-body">
+        <p>L'historique de la consommation réelle, et non l'historique des clics. Remplace le rapport hebdomadaire. Répond à « qu'est-ce qui a saturé ma machine hier à 15 h ? ».</p>
+        <p class="why">Motif — c'est la donnée qui alimente la recommandation de la v3.1 et qui rend l'alerte enfin fondée.</p>
+      </div>
+    </div>
+    <div class="version">
+      <div class="version-id"><span class="v">v3.3</span><span class="n">Le disque</span></div>
+      <div class="version-body">
+        <p>L'axe disque traité correctement : détecter le régime (<code>sparseVhd</code> ou non), mesurer le récupérable, router vers la bonne méthode — <code>fstrim</code> depuis Linux, ou compaction — et chiffrer l'effet. Jamais <code>Optimize-VHD</code> à l'aveugle.</p>
+        <p class="why">Motif — douleur réelle et mal servie, mais dont la solution naïve est déjà cassée. La valeur est dans le routage, pas dans la commande.</p>
+      </div>
+    </div>
+    <div class="version">
+      <div class="version-id"><span class="v">v4.0</span><span class="n">Distribution</span></div>
+      <div class="version-body">
+        <p>PowerShell Gallery, Winget, organisation GitHub, packaging. Déplacé délibérément après que le produit soit juste.</p>
+        <p class="why">Motif — c'est le déplacement le plus contre-intuitif de ce plan, et le plus important. On ne dispose que d'un seul lancement. Distribuer aujourd'hui, c'est dépenser cette attention unique sur la version dont Microsoft absorbe la proposition de valeur, avec un site qui documente un autre nom de commande. L'absence de contrainte de délai est exactement ce qui permet d'attendre.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 12 ============ -->
+<section id="innovation">
+  <div class="sec-head">
+    <span class="sec-num">Phase 12</span>
+    <h2>Six innovations, aucune n'est une fonctionnalité de plus</h2>
+  </div>
+
+  <h3>1. L'écart comme primitive d'affichage</h3>
+  <p><strong>Problème :</strong> « RAM : 78 % » ne dit rien d'actionnable. <strong>Insuffisance actuelle :</strong> tous les outils affichent un pourcentage d'une grandeur mal choisie. <strong>L'idée :</strong> un seul objet visuel — consommé / autorisé / pic — réutilisé partout, du prompt au rapport. <strong>Crédibilité :</strong> les trois valeurs sont déjà mesurables. <strong>Difficulté : faible. Risque :</strong> aucun.</p>
+
+  <h3>2. La recommandation sourcée</h3>
+  <p><strong>Problème :</strong> un outil qui dit « mets 6 Go » demande une confiance aveugle. <strong>L'idée :</strong> aucune recommandation sans sa preuve — « 6 Go, parce que ton pic sur 14 jours est 5,4 Go, atteint trois fois, toujours pendant des exécutions de tests ». <strong>Pourquoi ça compte :</strong> ça rend la recommandation <em>réfutable</em>, donc digne de confiance. <strong>Difficulté : moyenne</strong> (dépend de v3.2). <strong>Risque :</strong> une mesure fausse produit une recommandation fausse — d'où l'ordre des versions.</p>
+
+  <h3>3. Le coût annoncé avant le geste</h3>
+  <p><strong>Problème :</strong> le switch tue tout l'état Linux en cours. C'est la propriété la plus dangereuse du produit, et la moins discutée. <strong>L'idée :</strong> avant l'arrêt, dire exactement ce qui va mourir — les distributions, et avec la lecture in-distro, les processus. <strong>Crédibilité :</strong> <code>Get-WslActiveSessions</code> existe déjà, la moitié du travail est faite. <strong>Difficulté : faible. Potentiel :</strong> transforme le plus grand défaut en marque de sérieux.</p>
+
+  <h3>4. Le diagnostic sans installation</h3>
+  <p><strong>Problème :</strong> le public le plus large — celui qui a googlé « VmmemWSL high memory » — est exclu par <code>git clone</code> + <code>Set-ExecutionPolicy</code> + édition du <code>$PROFILE</code> + droits admin. <strong>L'idée :</strong> un <code>doctor</code> exécutable en une ligne qui n'installe rien et ne modifie rien. <strong>Pourquoi ça compte :</strong> l'outil prouve sa valeur avant de demander un engagement. <strong>Difficulté : faible. Risque :</strong> exécuter du script distant est un geste sensible — d'où l'importance qu'il soit strictement en lecture seule et que ce soit dit.</p>
+
+  <h3>5. La configuration expliquée, pas seulement écrite</h3>
+  <p><strong>Problème :</strong> <code>autoMemoryReclaim</code> et <code>sparseVhd</code> répondent en partie au grief fondateur de Wisely, et la plupart des utilisateurs ignorent leur existence. <strong>L'idée :</strong> Wisely dit lesquels sont actifs, lesquels ne le sont pas, et ce que ça changerait concrètement. <strong>Effet stratégique :</strong> positionne Wisely comme <em>complémentaire</em> de WSL Settings au lieu de concurrent frontal — Microsoft fournit les interrupteurs, Wisely dit lesquels actionner et pourquoi. <strong>Difficulté : faible.</strong></p>
+
+  <h3>6. L'écriture transactionnelle et tracée</h3>
+  <p><strong>Problème :</strong> Wisely écrase aujourd'hui tout ce qu'il ne gère pas. <strong>L'idée :</strong> fusionner au lieu de réécrire, et marquer la provenance des clés gérées. <strong>Effet :</strong> Wisely, WSL Settings et Docker Desktop peuvent coexister sur le même fichier. <strong>Difficulté : faible à moyenne. Potentiel :</strong> transforme un bug en différenciateur — c'est le seul outil de la catégorie qui ne casse pas la configuration des autres.</p>
+
+  <div class="note">
+    <span class="tag">Ce qui n'est pas retenu comme innovation</span>
+    <p>Une TUI riche, une API REST locale, une extension VS Code, une réécriture en Rust, une interface graphique. Toutes techniquement intéressantes, aucune n'adossée à un problème utilisateur formulé. Elles restent des moyens en quête d'une fin.</p>
+  </div>
+</section>
+
+<!-- ============ 13 ============ -->
+<section id="inconnues">
+  <div class="sec-head">
+    <span class="sec-num">Phase 13</span>
+    <h2>Ce que nous ne savons pas</h2>
+  </div>
+
+  <p class="lede">Zéro utilisateur, zéro retour. Tout le raisonnement produit ci-dessus repose sur des hypothèses, dont certaines peuvent être testées cette semaine pour un coût presque nul.</p>
+
+  <div class="matrix">
+    <div class="matrix-inner">
+      <div class="matrix-grid">
+        <div class="cell hot">
+          <h5>Impact fort · Incertitude forte — à tester d'abord</h5>
+          <ul>
+            <li><strong>A1</strong> — Quelqu'un d'autre que toi a ce problème assez fort pour installer un outil.</li>
+            <li><strong>A2</strong> — <code>autoMemoryReclaim</code> n'a pas déjà résolu la moitié « RAM » du problème fondateur.</li>
+            <li><strong>A5</strong> — Le coût du <code>wsl --shutdown</code> est acceptable, et les gens switchent réellement plus d'une fois.</li>
+          </ul>
+        </div>
+        <div class="cell">
+          <h5>Impact fort · Incertitude modérée</h5>
+          <ul>
+            <li><strong>A3</strong> — L'écart est mesurable assez précisément pour fonder une recommandation.</li>
+            <li><strong>A4</strong> — Les utilisateurs acceptent qu'un outil Windows lise dans leur distribution Linux.</li>
+          </ul>
+        </div>
+        <div class="cell">
+          <h5>Impact modéré · Incertitude forte</h5>
+          <ul>
+            <li><strong>A6</strong> — La douleur disque dépasse la douleur RAM.</li>
+            <li><strong>A7</strong> — Le public non-développeur est atteignable par un outil en ligne de commande.</li>
+          </ul>
+        </div>
+        <div class="cell">
+          <h5>À ne pas trancher maintenant</h5>
+          <ul>
+            <li>Auto-switch : dépend de A5.</li>
+            <li>Profils d'équipe : dépend de A1.</li>
+            <li>GPU, alimentation : aucune preuve de besoin.</li>
+            <li>Distribution : dépend de tout le reste.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="axis">Priorité de validation = Impact × Incertitude</p>
+    </div>
+  </div>
+
+  <h3>Trois expériences à coût quasi nul</h3>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Hypothèse</th><th>Expérience</th><th>Coût</th></tr></thead>
+      <tbody>
+        <tr><th>A5</th><td>Lire ton propre <code>data/history.json</code>. Combien de switchs as-tu réellement faits depuis un an, et à quel rythme ? Si la réponse est « trois », c'est le résultat le plus important de toute cette analyse — et il est déjà sur ton disque.</td><td>Dix minutes</td></tr>
+        <tr><th>A2</th><td>Activer <code>autoMemoryReclaim=gradual</code> sur ta machine pendant une semaine et mesurer si le besoin de switcher diminue. Si oui, le problème fondateur est en partie résolu par la plateforme, et la boucle doit se recentrer sur le disque et l'attribution.</td><td>Une semaine passive</td></tr>
+        <tr><th>A1</th><td>Publier <code>wisely doctor</code> seul, sans le reste, et regarder si quelqu'un l'utilise. C'est le test d'audience le moins cher possible : il ne demande aucun engagement à l'utilisateur, donc il mesure l'intérêt réel et non la politesse.</td><td>Une version</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note warn">
+    <span class="tag">L'hypothèse la plus dangereuse</span>
+    <p>A1 est à la fois la plus impactante et la moins testée. Tout le plan ci-dessus suppose qu'il existe un public. Si l'expérience A5 montre que <em>toi-même</em> switches rarement, il faut sérieusement envisager que Wisely soit un excellent outil personnel — ce qui est une conclusion parfaitement honorable, mais qui change complètement l'investissement à y consacrer.</p>
+  </div>
+</section>
+
+<!-- ============ conclusion ============ -->
+<section id="conclusion">
+  <div class="sec-head">
+    <span class="sec-num">Conclusion</span>
+    <h2>Douze réponses</h2>
+  </div>
+
+  <div class="answers">
+    <div class="answer"><div class="q-num">01</div><div class="q-body"><p class="q">Que devrait réellement être Wisely ?</p><p class="a">La <strong>boucle de rétroaction que WSL2 n'a pas</strong> : mesurer, comprendre, dimensionner, appliquer en sécurité, vérifier. Pas un éditeur de configuration — cette place est prise par Microsoft.</p></div></div>
+    <div class="answer"><div class="q-num">02</div><div class="q-body"><p class="q">Quel problème fondamental ?</p><p class="a">L'<strong>opacité</strong> de la consommation WSL2, et non la rigidité de son allocation. La rigidité ne fait mal qu'une fois le diagnostic posé — et rien aujourd'hui ne permet de le poser.</p></div></div>
+    <div class="answer"><div class="q-num">03</div><div class="q-body"><p class="q">Pour qui ?</p><p class="a">D'abord ceux qui <strong>subissent</strong> WSL2 sans l'avoir choisi — utilisateurs Docker Desktop, étudiants, « pourquoi mon PC rame ». Le développeur qui maîtrise déjà <code>.wslconfig</code> est le segment le plus petit, et c'est celui pour lequel l'outil est conçu.</p></div></div>
+    <div class="answer"><div class="q-num">04</div><div class="q-body"><p class="q">Proposition de valeur centrale ?</p><p class="a">« Wisely dimensionne WSL2 d'après la réalité plutôt que d'après une supposition. »</p></div></div>
+    <div class="answer"><div class="q-num">05</div><div class="q-body"><p class="q">Quelle capacité au cœur ?</p><p class="a">Relier ce que WSL2 <strong>consomme</strong> à ce qu'on l'<strong>autorise</strong> à consommer. L'unité de pensée est l'écart entre les deux ; toutes les fonctions s'en dérivent.</p></div></div>
+    <div class="answer"><div class="q-num">06</div><div class="q-body"><p class="q">Quelle vision abandonner ?</p><p class="a">« L'outil qui évite d'éditer <code>.wslconfig</code> à la main. » Microsoft livre désormais WSL Settings. Et « Windows ne propose aucun mécanisme natif » n'est plus une affirmation vraie.</p></div></div>
+    <div class="answer"><div class="q-num">07</div><div class="q-body"><p class="q">Que conserver absolument ?</p><p class="a">Toute la couche de sécurité du geste — backup versionné, validation post-écriture, rollback, dry-run, garde-fou sessions actives — plus l'architecture à point d'entrée unique, la source de vérité JSON, les tests et la CI. C'est ce qu'aucun concurrent ne fait.</p></div></div>
+    <div class="answer"><div class="q-num">08</div><div class="q-body"><p class="q">Qu'arrêter ?</p><p class="a">Le spike Terminal.Gui, <code>-Reclaim</code> via <code>Optimize-VHD</code>, l'import/export, <code>-Snapshot</code>, le rapport hebdomadaire dans sa forme actuelle. Et repousser la distribution jusqu'à ce que le produit soit juste.</p></div></div>
+    <div class="answer"><div class="q-num">09</div><div class="q-body"><p class="q">Quelles opportunités explorer ?</p><p class="a">L'attribution à travers la frontière Windows/Linux, le diagnostic sans installation, le dimensionnement dérivé plutôt qu'absolu, et le disque traité par routage plutôt que par compaction aveugle.</p></div></div>
+    <div class="answer"><div class="q-num">10</div><div class="q-body"><p class="q">Quelle roadmap ?</p><p class="a">Clôture → <strong>Vérité</strong> → <strong>Contrat</strong> → <strong>L'écart</strong> → Le bon plafond → La durée → Le disque → Distribution. L'ordre est dicté par les dépendances : rien ne s'empile sur une mesure qui ment.</p></div></div>
+    <div class="answer"><div class="q-num">11</div><div class="q-body"><p class="q">Quels documents ?</p><p class="a">Créer PROBLEM, VISION, PRINCIPLES, DOCTRINE-LECTURE, ASSUMPTIONS et un répertoire de décisions. Éclater ROADMAP. Supprimer le guide TUIStudio et <code>wisely.md</code>, archiver l'exposé technologique. Et resynchroniser le site, qui documente aujourd'hui un autre outil.</p></div></div>
+    <div class="answer"><div class="q-num">12</div><div class="q-body"><p class="q">Quelles hypothèses valider en priorité ?</p><p class="a"><strong>A1</strong> quelqu'un d'autre a ce problème · <strong>A2</strong> <code>autoMemoryReclaim</code> ne l'a pas déjà résolu · <strong>A5</strong> le coût du shutdown est acceptable et les gens switchent vraiment · <strong>A3</strong> l'écart est mesurable assez finement · <strong>A4</strong> la lecture in-distro est acceptée.</p></div></div>
+  </div>
+</section>
+
+</main>
+
+<footer class="wrap">
+  <p>Analyse produite à partir d'une lecture intégrale des dépôts Wisely et wisely-site (code v2.3.0, tests, CI, documentation, contenu du site), complétée par vérification en ligne de l'état de l'écosystème WSL2 en août 2026.</p>
+  <p>Ce document est un instantané daté du raisonnement, conservé comme trace. Les conclusions qu'il porte vivent désormais dans <code>docs/PROBLEM.md</code>, <code>docs/VISION.md</code>, <code>docs/PRINCIPLES.md</code>, <code>docs/ASSUMPTIONS.md</code>, <code>docs/ROADMAP.md</code> et <code>docs/decisions/</code> — ce sont ces documents qui font foi, pas celui-ci.</p>
+  <p>Les constats portant sur le code sont vérifiés. Les segments d'utilisateurs et l'estimation des douleurs relatives sont des hypothèses explicitement non validées — aucun utilisateur réel n'existe à ce jour.</p>
+</footer>
+
+</body>
+</html>

@@ -1,15 +1,17 @@
 ---
 name: wisely-conventions
-description: Conventions de code et contexte du projet Wisely (wisely), un CLI PowerShell qui gere dynamiquement les profils de ressources WSL2 (RAM, CPU, swap) via .wslconfig et data/profiles.json. A utiliser des qu'une session travaille dans ce repo -- edition de wisely.ps1, modules/*.ps1 (ProfileManager, Logger, Monitor, MonitorTask, WeeklyReport), data/profiles.json, docs/ (AUDIT.md, ROADMAP.md, TASKS.md), ou tests Pester -- meme si la demande ne mentionne pas explicitement "Wisely". Suivre systematiquement les regles de code PowerShell du projet, son architecture actuelle et l'ordre de priorite v2.1 avant de proposer une implementation.
+description: Conventions de code et contexte du projet Wisely (wisely), un CLI PowerShell qui relie ce que WSL2 consomme a ce qu'on l'autorise a consommer, via .wslconfig et data/profiles.json. A utiliser des qu'une session travaille dans ce repo -- edition de wisely.ps1, modules/*.ps1 (ProfileManager, Logger, Monitor, MonitorTask, WeeklyReport), data/profiles.json, docs/ (PROBLEM, VISION, PRINCIPLES, DOCTRINE-LECTURE, ASSUMPTIONS, ROADMAP, decisions/, AUDIT, TASKS), ou tests Pester -- meme si la demande ne mentionne pas explicitement "Wisely". Suivre systematiquement les regles de code PowerShell du projet, son architecture actuelle et l'ordre de priorite courant avant de proposer une implementation.
 ---
 
 # Wisely — Conventions et contexte du projet
 
-Wisely est un outil CLI PowerShell personnel maintenu en solo par Thuram (GitHub `Thurxm09`) sur une machine à 16 Go de RAM (HP All-in-One, i5) faisant tourner WSL2/Ubuntu, VS Code et un navigateur en simultané. Cette contrainte mémoire est la raison d'être du projet : Windows n'offre aucun mécanisme natif pour basculer dynamiquement l'allocation RAM/CPU de WSL2 selon le contexte de travail (dev web léger, data science intensive, mode minimal). L'outil résout ce problème via des profils JSON, un menu interactif, un monitoring passif et un reporting hebdomadaire.
+Wisely est un outil CLI PowerShell maintenu en solo par Thuram (GitHub `Thurxm09`), qui pilote l'allocation de ressources de WSL2 sous Windows via des profils JSON, un menu interactif, un monitoring passif et un reporting.
 
-Version actuelle : lire `VERSION` à la racine du repo pour la valeur exacte (ne pas la coder en dur ici, elle évolue). État au moment de la rédaction de ce skill : v2.0.0 stable publiée, v2.1 en développement actif. Repo : `git@github.com:Thurxm09/Wisely.git`.
+**Direction produit revue le 2026-08-26.** La capacite fondamentale visee est de *relier ce que WSL2 consomme a ce qu'on l'autorise a consommer* ; l'unite de pensee est **l'ecart** entre ces deux grandeurs (`docs/VISION.md`). Deux consequences a connaitre avant toute proposition : le projet ne doit pas etre concu autour de la machine du mainteneur (les profils absolus en Go sont un defaut identifie, corrige en v3.1), et l'affirmation historique "Windows n'offre aucun mecanisme natif" est **fausse depuis** que Microsoft livre l'application WSL Settings.
 
-Toute la documentation de fond du projet vit dans `docs/` : `AUDIT.md` (audit qualité détaillé), `ROADMAP.md` (vision stratégique et principes directeurs), `TASKS.md` (liste de tâches courante), plus deux documents d'analyse ponctuels (état des lieux / intégration TUI Studio, exposé technologique). Consulte ces fichiers directement plutôt que de supposer leur contenu — ce skill en résume les points structurants mais ne s'y substitue pas.
+Version actuelle : lire `VERSION` a la racine du repo (ne pas la coder en dur ici). Repo : `git@github.com:Thurxm09/Wisely.git`.
+
+Toute la documentation de fond vit dans `docs/`, **un document par question** : `PROBLEM.md` (quel probleme, pour qui), `VISION.md` (la capacite fondamentale), `PRINCIPLES.md` (les criteres d'arbitrage), `DOCTRINE-LECTURE.md` (contrat de lecture dans la distribution Linux), `ASSUMPTIONS.md` (ce qui n'est pas verifie), `ROADMAP.md` (l'ordre des versions), `decisions/` (les ADR), `AUDIT.md` (audit qualite), `TASKS.md` (taches courantes). `docs/archive/` contient des documents historiques a **ne pas suivre**. Consulte ces fichiers directement plutot que de supposer leur contenu.
 
 ## Conventions de code PowerShell
 
@@ -26,48 +28,55 @@ Ces règles viennent de retours d'expérience concrets sur ce projet, pas de pr�
 
 Vérifiée sur le code actuel — en cas de doute, relis le fichier plutôt que de te fier à un résumé qui pourrait dater.
 
-- **`wisely.ps1`** (racine, ~420 lignes) — point d'entrée unique et orchestrateur. Aucun couplage entre modules : ils ne se connaissent pas entre eux. Flags : `-Profil`, `-DryRun`, `-Rollback`, `-History`, `-Export`, `-Import`, `-NewProfile`, `-Monitor`, `-Report`, `-Clean`, `-Status`, `-Version`. Dashboard `-Status` : barre RAM, profil actif, historique.
-- **`modules/ProfileManager.ps1`** — coeur métier : `Get-ProfileConfig` (lit/parse `data/profiles.json`, `throw` si absent/corrompu), `Get-ActiveProfile`, `Set-WslProfile` (écrit `.wslconfig`, backup avant écriture, validation post-écriture, rollback auto si invalide), `New-CustomProfile`, `Import-Profiles`/`Export-Profiles`, `Invoke-Rollback`, `Test-WslConfigIntegrity`.
+- **`wisely.ps1`** (racine, ~540 lignes) -- point d'entree unique et orchestrateur. Aucun couplage entre modules : ils ne se connaissent pas entre eux. Flags : `-Profil`, `-DryRun`, `-Force`, `-Rollback`, `-History`, `-Export`, `-Import`, `-NewProfile`, `-Monitor`, `-Report`, `-Clean`, `-Status`, `-Short`, `-Snapshot`, `-Watch`, `-Interval`, `-Version`, `-Verbose`, `-Quiet`. Dashboard `-Status` : barre RAM, profil actif, historique ; `-Watch` : rafraichissement continu.
+- **`modules/ProfileManager.ps1`** -- coeur metier : `Get-ProfileConfig` (memoise, `Clear-ProfileConfigCache` pour invalider), `Get-ActiveProfile`, `Set-WslProfile` (backup, garde-fou sessions actives, ecriture, validation post-ecriture, rollback auto), `Test-ProfileDefinition` (validation partagee entre creation et import), `New-CustomProfile`, `New-SnapshotProfile`, `Import-Profiles`/`Export-Profiles`, `Invoke-Rollback`, `Backup-WslConfig`, `Resolve-ProfilePaths`, `Get-WslActiveSessions`/`Confirm-WslShutdown` (v2.4), `Get-AvailableRamGB`.
 - **`modules/Logger.ps1`** — `Write-SwitchLog`, `Show-SwitchHistory` (lit/écrit `data/history.json`).
 - **`modules/Monitor.ps1`** — `Start-WslMonitor`/`Stop-WslMonitor`/`Get-MonitorStatus`, enregistre deux tâches planifiées Windows (monitoring RAM + rapport hebdo lundi 09h). Les deux vérifient les droits admin avant d'agir (`Register-ScheduledTask`/`Unregister-ScheduledTask` les requièrent).
 - **`modules/MonitorTask.ps1`, `modules/WeeklyReport.ps1`** — standalone, exécutés directement par le Planificateur de tâches, jamais dot-sourcés, utilisent `$PSScriptRoot` (pas `$Global:WSLRoot`, indisponible hors du script principal) et `exit 0`.
-- **`data/profiles.json`** — source de vérité externe unique pour les profils et paramètres. Schéma : `version` (string), `profiles` (objet par clé, ex. `web`/`data`/`base`, chacun avec `displayName`, `description`, `color`, `memory`, `processors`, `swap`, `swapFile`, `swappiness`), `settings` (`monitorThreshold`, `monitorIntervalSeconds`, `historyMaxEntries`, `backupEnabled`). Consulte le fichier directement plutôt que de te fier à ce résumé s'il évolue.
+- **`data/profiles.json`** — source de vérité externe unique pour les profils et paramètres. Schéma : `version` (string), `profiles` (objet par clé, ex. `web`/`data`/`base`, chacun avec `displayName`, `description`, `color`, `memory`, `processors`, `swap`, `swapFile`, `swappiness`), `settings` (`monitorThreshold`, `monitorIntervalSeconds`, `historyMaxEntries`, `backupEnabled`, `backupHistoryMax`), valide par `schemas/profiles.schema.json` en CI. Consulte le fichier directement plutôt que de te fier à ce résumé s'il évolue.
 - **`.wslconfig`** (`C:\Users\othur\.wslconfig` côté hôte) — les chemins de swap doivent utiliser des slashs forward même en contexte Windows (ex. `C:/Temp/wsl-swap.vhdx`).
 - **CI** (`.github/workflows/ci.yml`) — syntax check de tous les `*.ps1`, `Invoke-ScriptAnalyzer -Severity Warning` avec 7 règles exclues et justifiées en commentaire, validation du schéma minimal de `data/profiles.json`. Autres workflows : `release.yml` (ZIP + GitHub Release), `bump-version.yml` (bump semver + CHANGELOG + tag), `codeql.yml`.
-- **`docs/`** — `AUDIT.md`, `ROADMAP.md`, `TASKS.md`, et deux documents d'analyse (état des lieux/TUI Studio, exposé technologique).
+- **`docs/`** — voir la carte documentaire en tete de ce skill. `decisions/` contient les ADR numerotes ; `archive/` des documents perimes conserves pour memoire.
 
 ## Principes directeurs du projet
 
-Tirés de `docs/ROADMAP.md` §9 — ce sont des critères de conception, pas seulement des règles de style. Une feature qui en viole plusieurs à la fois ne devrait pas être implémentée, quel que soit son attrait apparent :
+Tires de `docs/PRINCIPLES.md` -- ce sont des criteres de conception, pas des regles de style. Une proposition qui en viole plusieurs a la fois ne doit pas etre implementee, quel que soit son attrait technique. **Lis le fichier** : ce resume ne s'y substitue pas, et plusieurs principes y portent une revision datee.
 
-- **Zéro configuration requise pour commencer** — les profils par défaut doivent couvrir la majorité des cas sans personnalisation.
-- **Réversibilité systématique** — toute action qui modifie l'état du système (switch, import, rollback) doit être réversible ; pas d'opération destructive sans confirmation.
-- **Failing fast et bruyant** — une erreur explicite vaut mieux qu'un comportement silencieux incorrect.
-- **Scriptabilité de première classe** — toute action du menu interactif doit être réalisable en CLI directe, avec des codes de sortie standards (0 succès, 1 erreur).
-- **Source de vérité unique** — `data/profiles.json` reste la seule source de vérité pour les profils et paramètres ; pas de comportement métier hardcodé si sa valeur peut varier.
-- **Minimalisme fonctionnel** — chaque feature doit justifier une vraie valeur utilisateur documentée, pas juste "c'est possible".
-- **Compatibilité descendante des profils** — une mise à jour de l'outil ne doit jamais casser un `profiles.json` existant ; nouvelles clés optionnelles avec valeurs par défaut.
+Les sept historiques : zero configuration requise pour commencer ; reversibilite systematique ; echouer vite et bruyamment ; scriptabilite de premiere classe ; source de verite unique (`data/profiles.json`) ; minimalisme fonctionnel ; compatibilite descendante des profils.
 
-## Priorités v2.1
+Les cinq ajoutes le 2026-08-26, chacun ne d'une defaillance constatee dans le code :
 
-Ordre fixe confirmé par `docs/TASKS.md` et `docs/ROADMAP.md` — avancer une feature à la fois, dans cet ordre, sauf indication contraire explicite :
+- **Ne jamais detruire ce qu'on ne gere pas.** `.wslconfig` est un fichier PARTAGE (utilisateur, Docker Desktop, WSL Settings, politique d'entreprise). Wisely ne touche qu'aux cles qu'il gere.
+- **Ne jamais mesurer ce qu'on ne peut pas attribuer.** Une mesure qui echoue doit le dire : une metrique degradee en `$null` silencieux est pire que pas de metrique.
+- **Aucune recommandation sans la mesure qui la source.** Jamais "mets 6 Go" ; toujours "6 Go, parce que ton pic mesure sur 14 jours est 5,4 Go".
+- **Annoncer le cout avant de le faire payer.** Le switch interrompt tout l'environnement Linux : dire ce qui va etre perdu, precisement.
+- **La confiance se declare avant de s'exercer.** Toute extension de portee est documentee avant d'etre implementee (`docs/DOCTRINE-LECTURE.md`).
 
-1. **Tests Pester pour `Get-ProfileConfig` et `Import-Profiles`** — priorité absolue, bloque tout autre chantier structurel. Aucun dossier `tests/` n'existe encore dans le repo : c'est un travail entièrement greenfield, pas un ajout à une suite existante.
-2. **Validation du chemin du swap file** — vérifier que le répertoire cible de `swapFile` existe avant l'écriture dans `.wslconfig`.
-3. **Backup versionné avec historique glissant** — actuellement un seul backup de `.wslconfig` est conservé ; passer à N backups (rotation).
-4. **Flags `-Verbose`/`-Quiet`**.
-5. **Fix du bug visuel de troncature de la barre RAM** dans `wisely -Status`.
-6. **Cache mémoïsé pour `Get-ProfileConfig`** via `$script:ProfileConfigCache`, invalidé par une fonction `Clear-ProfileConfigCache` (à créer) appelée après `Set-WslProfile`, `Import-Profiles`, `New-CustomProfile`.
+## Ordre de priorite courant
 
-## État de l'audit qualité
+Refonte du 2026-08-26 (`docs/ROADMAP.md`). Regle d'ordonnancement : **on ne construit ni diagnostic ni recommandation sur une mesure qui ment.** Avancer une version a la fois, dans cet ordre, sauf indication contraire explicite.
 
-`docs/AUDIT.md` documente un audit complet (15 findings initiaux : 5 critiques, 6 importants, 4 secondaires), tous corrigés dans le code actuel.
+1. **v2.5 "Verite"** -- prochaine priorite. Corriger les mesures fausses avant toute nouvelle fonctionnalite : detection `VmmemWSL` en plus de `vmmem` ; seuil d'alerte rapporte au plafond WSL2 et non a la RAM totale ; `ramDeltaGB` corrige ou retire ; ecriture **non destructive** de `.wslconfig` (fusion, pas reecriture) ; identite du profil actif marquee au lieu d'etre devinee par egalite de RAM.
+2. **v2.6 "Contrat"** -- implementation de `docs/DOCTRINE-LECTURE.md` (liste fermee de commandes, consentement explicite, degradation propre).
+3. **v3.0 "L'ecart"** -- `wisely doctor`, mesure reelle de l'ecart, verification post-switch.
 
-Deux points à connaître :
-- **`Clear-ProfileConfigCache` n'existe pas encore** dans `modules/ProfileManager.ps1` — c'est l'item 6 de la liste v2.1 ci-dessus, pas une fonction déjà appelable. Ne suppose jamais qu'elle existe.
-- **Écart doc/code sur deux findings mineurs (N-1, N-2)** : `docs/AUDIT.md` les liste encore comme non corrigés (badge LICENSE README à "MIT" au lieu de "GPL-v3" ; absence de check admin dans `Stop-WslMonitor`), mais le code actuel montre que les deux sont en réalité déjà résolus — le README affiche bien le badge GPL-v3, et `Stop-WslMonitor` contient bien le bloc de vérification admin. En cas de divergence entre `docs/AUDIT.md` et le code, traite le code comme source de vérité et signale l'écart à Thuram plutôt que de corriger silencieusement le document.
+Puis v3.1 (profils derives), v3.2 (historique de consommation), v3.3 (disque), v4.0 (distribution).
 
-La vision long terme à 3 paliers de maturité (outil personnel de référence → outil open-source distribué v3.x via Winget/PowerShell Gallery avec suite de tests → outil de référence de l'écosystème WSL v4.x+ avec hooks/intégrations) est détaillée dans `docs/ROADMAP.md` §2.
+**Retire de la roadmap, ne pas reproposer sans nouvelle decision** : spike Terminal.Gui (annule, ADR 0007), `-Reclaim` via `Optimize-VHD` (casse sur VHD sparse, ADR 0010), import/export de profils, `-Snapshot`. Reporte avec motif : auto-switch (ADR 0011), hooks, profils d'equipe.
+
+## Etat de l'audit qualite
+
+`docs/AUDIT.md` documente deux campagnes : l'audit initial v2.0 (15 findings, tous corriges) et l'audit general v2.3 (21 constats, tous traites). Les findings N-1 et N-2 y sont desormais marques corriges et reverifies -- l'ancien ecart doc/code est resolu.
+
+**Defauts connus, non encore corriges, planifies en v2.5** -- ne pas les traiter comme des bugs a signaler, ils sont deja documentes :
+
+- `Get-Process -Name "vmmem"` ne trouve rien sur Windows 11 recent (`VmmemWSL`), ce qui rend toute la couche d'observation silencieusement inoperante.
+- Le seuil d'alerte compare la part de WSL2 dans la RAM **totale** a 80 %, alors que le plafond livre le plus large est de 6 Go : l'alerte ne peut pas se declencher.
+- `ramDeltaGB` mesure l'arret de la session precedente mais est attribue au profil cible.
+- `ConvertTo-WslConfigContent` reecrit `.wslconfig` en entier et efface les cles non gerees ; `Test-WslConfigIntegrity` ne verifie que les cles que Wisely vient d'ecrire, donc ne peut pas detecter la perte.
+- `Get-ActiveProfile` identifie le profil actif par egalite de valeur memoire : deux profils de 4 Go sont indiscernables.
+
+En cas de divergence entre un document et le code, **le code est la source de verite** : signale l'ecart plutot que de corriger silencieusement le document.
 
 ## Workflow git
 
@@ -77,4 +86,4 @@ La vision long terme à 3 paliers de maturité (outil personnel de référence �
 
 ## Stack et environnement
 
-PowerShell 5.1 + 7 (chemins `$PROFILE` distincts : `Documents\WindowsPowerShell\` pour 5.1 vs `Documents\PowerShell\` pour 7 ; l'alias `wisely` est résolu via un symlink des fichiers de profil entre les deux versions — contournement en place, résolution long terme différée en v2.2). WSL2/Ubuntu, VS Code, GitHub CLI, Docker Desktop, conda/miniforge, pyenv, nvm, pnpm. Terminal : Oh My Posh (thème Tokyo Night), Cascadia Code NF, eza, bat, fd-find, ripgrep, btop, lazygit, zoxide, fzf. Tests : Pester (à venir, voir priorités v2.1), PSScriptAnalyzer (déjà en CI).
+PowerShell 5.1 + 7 (chemins `$PROFILE` distincts : `Documents\WindowsPowerShell\` pour 5.1 vs `Documents\PowerShell\` pour 7 ; l'alias `wisely` est résolu via un symlink des fichiers de profil entre les deux versions — contournement en place, résolution long terme différée en v2.2). WSL2/Ubuntu, VS Code, GitHub CLI, Docker Desktop, conda/miniforge, pyenv, nvm, pnpm. Terminal : Oh My Posh (thème Tokyo Night), Cascadia Code NF, eza, bat, fd-find, ripgrep, btop, lazygit, zoxide, fzf. Tests : Pester (en CI depuis v2.1, couvre ProfileManager, Logger, Monitor, MonitorTask, WeeklyReport, Schema), PSScriptAnalyzer, CodeQL et Semgrep en CI.
