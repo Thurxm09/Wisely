@@ -13,6 +13,15 @@ Version actuelle : lire `VERSION` a la racine du repo (ne pas la coder en dur ic
 
 Toute la documentation de fond vit dans `docs/`, **un document par question** : `PROBLEM.md` (quel probleme, pour qui), `VISION.md` (la capacite fondamentale), `PRINCIPLES.md` (les criteres d'arbitrage), `DOCTRINE-LECTURE.md` (contrat de lecture dans la distribution Linux), `ASSUMPTIONS.md` (ce qui n'est pas verifie), `ROADMAP.md` (l'ordre des versions), `decisions/` (les ADR), `AUDIT.md` (audit qualite), `TASKS.md` (taches courantes). `docs/archive/` contient des documents historiques a **ne pas suivre**. Consulte ces fichiers directement plutot que de supposer leur contenu.
 
+## Skills de process
+
+Ce repo installe aussi `using-superpowers` et `caveman` (`.claude/skills/`). Ils s'appliquent a toute session Wisely comme a n'importe quelle autre — ce ne sont pas des options isolees reservees a d'autres projets :
+
+- **`using-superpowers`** — impose de verifier, avant toute reponse ou action (y compris une question de clarification), si un skill de process (brainstorming, systematic-debugging, ...) s'applique, et de le faire passer avant les skills d'implementation. Ce skill-ci (`wisely-conventions`) fournit le contexte projet ; il ne remplace pas un skill de process quand la tache en appelle un.
+- **`caveman`** — mode de communication compresse, active par `/caveman`. S'applique a la conversation, jamais aux artefacts persistants : commits, PR, docs (`docs/*.md`), et tout contenu de `AUDIT.md`/ADR restent en prose normale.
+
+Voir directement `.claude/skills/using-superpowers/SKILL.md` et `.claude/skills/caveman/SKILL.md` pour le detail — ne pas dupliquer leur contenu ici.
+
 ## Conventions de code PowerShell
 
 Ces règles viennent de retours d'expérience concrets sur ce projet, pas de préférences arbitraires — les respecter évite de réintroduire des bugs déjà rencontrés.
@@ -77,6 +86,12 @@ Puis v3.1 (profils derives), v3.2 (historique de consommation), v3.3 (disque), v
 - `Get-ActiveProfile` identifie le profil actif par egalite de valeur memoire : deux profils de 4 Go sont indiscernables.
 
 En cas de divergence entre un document et le code, **le code est la source de verite** : signale l'ecart plutot que de corriger silencieusement le document.
+
+## Rigueur de diagnostic
+
+Une anomalie signalee comme "probablement un probleme d'environnement/sandbox" n'est **pas** une conclusion tant qu'elle n'a pas ete activement verifiee : isole le diff en cause, lis la documentation officielle ou la source primaire pertinente, reproduis le comportement de facon deterministe. Ce n'est qu'apres cette verification que l'hypothese "environnement" peut etre acceptee -- et si elle est refutee, corrige le code qui a le bug, ne contourne pas le test qui l'a revele (pas de skip, pas de note de "limitation connue" en remplacement d'un vrai correctif).
+
+Exemple concret (session du 2026-08-26, `wisely-site`) : un test e2e sur `og:image` echouait, d'abord attribue a "un probleme d'environnement/sandbox preexistant". La lecture de la documentation officielle Next.js sur la fusion des `Metadata` par segment de route a revele la cause reelle -- une fusion *shallow* qui ecrase un `openGraph.images` genere par convention de fichier des qu'un segment enfant redefinit `openGraph` sans `images`. Correctif : un helper `openGraphImages()` partage, spreade dans chaque `openGraph`. Le pattern a retenir : hypothese initiale commode ("c'est l'environnement") -> verification par doc officielle -> cause reelle dans le code -> vrai correctif.
 
 ## Workflow git
 
