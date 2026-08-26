@@ -1,3 +1,27 @@
+> # ARCHIVE — document historique, ne pas suivre
+>
+> **Ce document est archivé et n'est plus une référence.** Il a été rédigé à
+> l'époque de la v2.0 et une partie de son contenu est aujourd'hui livrée,
+> périmée, ou factuellement fausse.
+>
+> Exemples de dérive, pour situer le niveau de confiance à lui accorder :
+> il recommande d'implémenter en v2.1 le JSON Schema et la suite Pester
+> (livrés depuis), de publier sur Winget « en v2.1 ou v2.2 » (désormais
+> repoussé en v4.0, voir `../decisions/0009-distribution-apres-le-produit.md`),
+> et il ne connaît ni `autoMemoryReclaim`, ni `sparseVhd`, ni l'application
+> WSL Settings de Microsoft — trois éléments qui changent l'analyse.
+>
+> Il est conservé parce qu'il documente un état de la réflexion technique, et
+> que certaines de ses pistes (agent de métriques côté WSL2, parseur robuste)
+> ont été reprises sous une autre forme dans `../decisions/`.
+>
+> **Pour l'état à jour :** `../PROBLEM.md`, `../VISION.md`, `../ROADMAP.md`,
+> `../decisions/`.
+>
+> *Archivé le 2026-08-26.*
+
+---
+
 # Exposé technologique — Wisely
 ## Technologies, langages et outils pour faire évoluer le projet
  

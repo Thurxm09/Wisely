@@ -2,7 +2,7 @@
 
 > Gérez vos ressources WSL2 en un instant — profils mémoire, surveillance RAM en arrière-plan et rapports hebdomadaires, le tout depuis un menu interactif ou une seule commande.
 
-![Version](https://img.shields.io/badge/version-2.3.0-blue)
+![Version](https://img.shields.io/badge/version-2.4.0-blue)
 ![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B-5391FE?logo=powershell&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D4?logo=windows&logoColor=white)
 ![WSL](https://img.shields.io/badge/WSL-2-orange?logo=linux&logoColor=white)

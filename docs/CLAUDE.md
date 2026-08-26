@@ -8,16 +8,18 @@ Thuram (GitHub: Thurxm09), développeur solo — niveau débutant/intermédiaire
 
 | Nom | Quoi |
 |-----|------|
-| **Wisely** | Outil CLI PowerShell pour gérer dynamiquement des profils de ressources WSL2 (RAM, CPU, monitoring, reporting). Passé d'un script basique à un outil modulaire pro. v2.1.0 (tests Pester, validation swap, backup versionné, cache mémoïsé, flags -Verbose/-Quiet, fix barre RAM), v2.2 (CONTRIBUTING.md + templates, variables d'environnement dans `swapFile`, intégrité des réglages, JSON Schema `profiles.json`, `wisely -Status -Short`, `wisely -Snapshot`, galerie README + snippet Oh My Posh) et v2.3.0 (observabilité : tests Pester Monitor/MonitorTask/WeeklyReport, métriques post-switch, rapports enrichis, `wisely -Watch`, audit rafraîchi, Semgrep en CI — évaluation Terminal.Gui volontairement hors scope) livrées. |
+| **Wisely** | Outil CLI PowerShell qui relie ce que WSL2 consomme a ce qu'on l'autorise a consommer, sur Windows. v2.1 (tests Pester, validation swap, backup versionne, cache memoise, flags -Verbose/-Quiet), v2.2 (CONTRIBUTING + templates, variables d'environnement dans `swapFile`, JSON Schema, `-Status -Short`, `-Snapshot`), v2.3 (observabilite : metriques post-switch, rapports enrichis, `-Watch`, Semgrep en CI) et v2.4 (garde-fou WSL2 avant shutdown + refondation documentaire, spike Terminal.Gui annule) livrees. Direction produit revue le 2026-08-26 : voir `docs/VISION.md`. |
 
 ## Termes
 
 | Terme | Signification |
 |------|---------|
-| `.wslconfig` | Fichier de config WSL2, chemin `C:\Users\othur\.wslconfig` — les chemins de swap doivent utiliser des slashs (`C:/Temp/wsl-swap.vhdx`) |
-| `wisely -Status` | Dashboard intégré : barre RAM, profil actif, 3 derniers historiques |
-| `Get-ProfileConfig` / `Import-Profiles` | Fonctions ciblées en priorité par les tests Pester |
-| AUDIT.md / ROADMAP.md | Docs de suivi d'état et de vision stratégique du projet |
+| **L'ecart** | Concept central du produit : distance entre ce que WSL2 consomme et ce qu'on l'autorise a consommer (`docs/VISION.md`) |
+| `.wslconfig` | Config WSL2, chemin `C:\Users\othur\.wslconfig` -- fichier PARTAGE, slashs pour les chemins de swap |
+| `vmmem` / `VmmemWSL` | Deux noms selon la version de Windows ; le code ne cherche que `vmmem` (corrige en v2.5) |
+| `wisely -Status` | Dashboard integre : barre RAM, profil actif, 3 derniers historiques |
+| `Get-ProfileConfig` / `Import-Profiles` | Fonctions ciblees en priorite par les tests Pester |
+| Docs de fond | `PROBLEM` (le probleme), `VISION` (la capacite), `PRINCIPLES` (les arbitrages), `DOCTRINE-LECTURE` (le contrat de lecture), `ASSUMPTIONS` (l'incertitude), `ROADMAP` (l'ordre), `decisions/` (les ADR) |
 
 ## Repos
 
@@ -32,7 +34,7 @@ Thuram (GitHub: Thurxm09), développeur solo — niveau débutant/intermédiaire
 - `throw`, jamais `exit`, dans les modules dot-sourcés
 - `git pull --rebase` en cas de divergence
 - Scope `$script:` préféré à `$Global:` pour la mémoïsation
-- Priorité tests Pester avant tout chantier structurel : atteinte en v2.1 (suite Pester en CI) — DX & documentation livrée en v2.2 — observabilité livrée en v2.3 — prochaine priorité : v2.4 (spike Terminal.Gui + garde-fou shutdown WSL2)
+- Ordre de priorite (refonte du 2026-08-26, voir `docs/ROADMAP.md`) : v2.4 clot -- **prochaine priorite : v2.5 "Verite"** (corriger les mesures fausses avant toute nouvelle feature), puis v2.6 "Contrat" (doctrine de lecture in-distro), puis v3.0 "L'ecart". Regle d'ordonnancement : on ne construit ni diagnostic ni recommandation sur une mesure qui ment
 - Aime comprendre le code en profondeur, pas juste livrer des features
 - Préfère avancer une feature à la fois, bien comprise, avant de passer à la suivante
 - Utilise des scripts bootstrap Python (ASCII-safe, réécriture complète, sortie `[OK]`/`[SKIP]`) comme mécanisme standard de livraison de fichiers générés
