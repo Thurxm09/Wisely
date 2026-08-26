@@ -46,6 +46,7 @@ l'hypothèse est fausse ; l'incertitude, notre ignorance actuelle.
 | **A4** | Les utilisateurs acceptent qu'un outil Windows lise dans leur distribution Linux | Fort | Modérée | non testée |
 | **A6** | La douleur disque dépasse la douleur RAM | Modéré | Forte | non testée |
 | **A7** | Le public non-développeur est atteignable par un outil en ligne de commande | Modéré | Forte | non testée |
+| **A8** | Les utilisateurs multi-distributions (segment F) ont besoin d'une attribution par distribution, plutôt qu'un plafond unique WSL2 toutes distros confondues | Modéré | Forte | non testée |
 
 ---
 

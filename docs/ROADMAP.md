@@ -101,6 +101,14 @@ met en œuvre.
    `.wslconfig`, `autoMemoryReclaim` actif ou non et ce que cela changerait,
    `sparseVhd`, taille du VHDX, distributions, plafond rapporté à la RAM hôte,
    état du consentement de lecture.
+   - **`--explain <clé>`** — pour toute clé de `.wslconfig` non gérée par
+     Wisely, explique ce qu'elle fait et si WSL Settings la couvre déjà.
+     Contrepartie en lecture seule de l'écriture non destructive (v2.5 item 4,
+     dont elle dépend). Sert les segments B et E (`PROBLEM.md` §4). Principe
+     engagé : 8.
+   - **`--history`** — indique si les entrées d'historique ont été
+     attribuables ou écartées, au lieu d'un rapport silencieusement
+     clairsemé. Sert tous les segments. Principe engagé : 9.
 2. **Mesure réelle de l'écart** — consommé, autorisé, pic — en remplacement du
    proxy `VmmemWSL` seul.
 3. **Vérification post-switch** — l'écart a-t-il bougé comme annoncé ? Ferme la
@@ -117,7 +125,10 @@ met en œuvre.
 ### v3.1 — Le bon plafond
 
 1. Profils dérivés : une politique résolue sur la machine réelle, la valeur
-   absolue restant acceptée en cas particulier.
+   absolue restant acceptée en cas particulier. La documentation livrée doit
+   inclure un exemple calibré pour une machine 8 Go, à côté des défauts 16 Go
+   du mainteneur — sans quoi cette version reproduit en caché le biais
+   qu'elle corrige.
 2. Recommandation de dimensionnement **sourcée** par la mesure — jamais un chiffre
    sans sa preuve.
 3. Migration de schéma `profiles.json`, compatible descendante.
