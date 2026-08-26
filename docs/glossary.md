@@ -54,4 +54,5 @@
 | `decisions/` | Pourquoi a-t-on tranché ainsi, et quand ? |
 | `AUDIT.md` | Quels défauts de qualité ont été constatés et corrigés ? |
 | `TASKS.md` | Qu'est-ce qui est en cours ? |
+| `refondation-wisely.html` | Document de travail de l'analyse stratégique du 2026-08-26 — trace du raisonnement, à ouvrir dans un navigateur. Ce sont les documents ci-dessus qui font foi |
 | `archive/` | Documents historiques conservés pour mémoire — **ne pas suivre** |

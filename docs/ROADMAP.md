@@ -212,3 +212,7 @@ spike Terminal.Gui.
 
 `PROBLEM.md` · `VISION.md` · `PRINCIPLES.md` · `ASSUMPTIONS.md` ·
 `DOCTRINE-LECTURE.md` · `decisions/` · `AUDIT.md` · `TASKS.md`
+
+Le raisonnement qui a produit cette séquence est conservé dans
+`refondation-wisely.html` (document de travail daté du 2026-08-26, à ouvrir dans
+un navigateur). Il explique les arbitrages ; les documents ci-dessus font foi.

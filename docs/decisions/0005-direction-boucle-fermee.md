@@ -8,6 +8,11 @@
 Analyse stratégique complète menée sur l'état v2.3.0, à la demande du mainteneur,
 avec pour question : construisons-nous le bon produit ?
 
+Le document de travail complet — six directions comparées, cartographie de
+l'espace du problème, état de l'art vérifié, opportunités classées — est
+conservé dans `../refondation-wisely.html` (à ouvrir dans un navigateur). Cette
+décision en est la conclusion ; en cas de divergence, c'est elle qui fait foi.
+
 Trois faits ont orienté la réponse.
 
 **La proposition de valeur affichée est en train d'être absorbée par la
