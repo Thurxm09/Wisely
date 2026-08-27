@@ -1047,3 +1047,26 @@ Deux catégories de constats n'ont **pas** donné lieu à une correction de code
 
 *Audit général réalisé sur `main` après le merge de la PR #23 (dashboard `wisely -Watch`, dernière brique v2.3 planifiée). Méthode : trois agents d'investigation parallèles (résilience, sécurité/validation, cohérence documentaire) sur l'ensemble du dépôt, triage manuel, correction directe des constats sûrs et bon marché, report au backlog des constats plus structurants, signalement sans correction des décisions de timing produit.*
 
+---
+
+### 🔴 Critique (post-v2.5)
+
+---
+
+#### v2.5-C-1 — `Test-ProfileDefinition` validait tous les champs interpolés dans `.wslconfig` sauf la clé du profil elle-même
+
+**Fichier :** `modules/ProfileManager.ps1`
+**Statut :** ✅ Corrigé
+
+**Problème initial :** v2.3-C-1 avait fait de `Test-ProfileDefinition` le point de passage unique pour tout profil entrant (créé localement ou importé), avec un contrôle explicite d'absence de `\r`/`\n` sur `swap`, `swapFile`, `swappiness`, `displayName`, `description`, `color` — mais jamais sur la **clé** du profil (`$Key`, nom de propriété JSON dans `profiles.json`). Entre-temps, P0/v2.5 (`ConvertTo-WslConfigContent`, correctif "identité du profil actif") a commencé à écrire cette clé telle quelle dans `.wslconfig`, dans une nouvelle section `[wisely]` (`profile=<cle>`) ; le correctif suivant du même palier ("écriture non destructive") l'a fait transiter par la primitive de fusion générique `Set-IniSectionKeys`. Une clé important un `\r\n` embarqué injectait donc une section ou une clé `.wslconfig` arbitraire (y compris `[wsl2]`/`kernelCommandLine`) au switch suivant. Le vecteur est réaliste : `Import-Profiles` documente elle-même un fichier importé comme "une entree externe" nécessitant la même validation qu'un profil créé localement, un cas d'usage explicite de partage de "pack de profils" ; et le menu interactif (`wisely.ps1`, `Show-InteractiveMenu`) affiche et transmet les clés de `profiles.json` telles quelles, sans que l'utilisateur ait besoin de les taper lui-même. Trouvé lors d'une revue de code post-fusion du palier P0/v2.5 (`.claude/skills/requesting-code-review`).
+
+**Correction appliquée :** `Test-ProfileDefinition` rejette désormais toute clé contenant `\r`/`\n`, avec le même message d'erreur explicite que pour les autres champs (`"la cle du profil contient un retour a la ligne, refusee (risque d'injection dans .wslconfig ...)"`). Comme `Test-ProfileDefinition` est déjà le point de passage unique (v2.3-C-1), le correctif couvre `New-CustomProfile` et `Import-Profiles` sans toucher à leurs appelants.
+
+```powershell
+if ($Key -match "[`r`n]") {
+    throw "Profil '$Key' : la cle du profil contient un retour a la ligne, refusee (risque d'injection dans .wslconfig - la cle est ecrite telle quelle dans la section [wisely])."
+}
+```
+
+Développé en TDD : nouveau test sur `Import-Profiles` (clé important `\r\n[wsl2]\r\nmemory=999GB` — construite via l'indexeur de hashtable, `Add-Member` sur un hashtable n'étant pas serialisé par `ConvertTo-Json` de la même façon qu'une propriété native, piège découvert en écrivant le test) et sur `New-CustomProfile`. Suite complète : 180 tests, 0 échec, aucune régression.
+

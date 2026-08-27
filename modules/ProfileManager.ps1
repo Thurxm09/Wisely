@@ -564,6 +564,9 @@ function Test-ProfileDefinition {
     #>
     param([Parameter(Mandatory)][PSCustomObject]$ProfileDef, [string]$Key = "?")
 
+    if ($Key -match "[`r`n]") {
+        throw "Profil '$Key' : la cle du profil contient un retour a la ligne, refusee (risque d'injection dans .wslconfig - la cle est ecrite telle quelle dans la section [wisely])."
+    }
     if ("$($ProfileDef.memory)" -notmatch "^\d+GB$") {
         throw "Profil '$Key' : format memoire invalide '$($ProfileDef.memory)'. Attendu : ex. 4GB, 8GB, 12GB"
     }
