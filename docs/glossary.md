@@ -43,7 +43,7 @@
 | `Get-ActiveProfile` | Identifie le profil actif **par égalité de valeur mémoire** (`modules/ProfileManager.ps1:64`) — deux profils de même taille sont indiscernables. Défaut corrigé en P0 / v2.5 |
 | `ConvertTo-WslConfigContent` | Génère le contenu de `.wslconfig`. **Réécrit aujourd'hui le fichier entier**, effaçant les clés non gérées — corrigé en v2.5 (principe 8) |
 | `Test-ProfileDefinition` | Validation partagée par `New-CustomProfile` et `Import-Profiles` : tout profil entrant passe par la même porte |
-| `ramDeltaGB` | Champ de `history.json` : delta de RAM Windows disponible mesuré au switch. **Mesure en réalité l'arrêt de la session précédente**, tout en étant attribué au profil cible — corrigé ou retiré en v2.5 |
+| `ramDeltaGB` | Ancien champ de `history.json` : delta de RAM Windows disponible mesuré au switch. **Mesurait en réalité l'arrêt de la session précédente**, tout en étant attribué au profil cible — **retiré en v2.5** (P0). Reste une clé optionnelle du schéma pour la lecture des entrées historiques ; plus aucune nouvelle entrée ne l'écrit |
 | `restartSeconds` | Champ de `history.json` : durée mesurée de l'arrêt WSL2 lors d'un switch |
 | `Get-WatchSnapshot` / `Get-VmmemStats` | Collecte de données pure et testable, séparée de la boucle d'affichage — motif attendu pour toute nouvelle mesure |
 | `Get-WslActiveSessions` / `Confirm-WslShutdown` | Garde-fou v2.4 : détecte les distributions actives avant `wsl --shutdown`, avec bypass `-Force`. À étendre en v3.0 pour dire *ce qui* va être interrompu |

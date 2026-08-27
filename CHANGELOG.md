@@ -2,6 +2,15 @@
 
 ## Non publie
 
+### v2.5 "Verite" -- troisieme correctif (ramDeltaGB retire)
+
+- **`ramDeltaGB` retire, pas corrige** : la mesure prise autour de `wsl --shutdown` dans `Set-WslProfile` reflete l'arret de la session PRECEDENTE, tout en etant attribuee au profil CIBLE dans l'historique -- une mesure non attribuable au sens du principe 9. `Get-AvailableRamGB` (fonction dediee a cette seule mesure) et l'affichage "RAM Windows disponible : ..." sont retires de `modules/ProfileManager.ps1`
+- Le parametre `-RamDeltaGB` est retire de `Write-SwitchLog` (`modules/Logger.ps1`) -- plus aucune nouvelle entree d'historique ne l'ecrit. `data/history.json` garde `ramDeltaGB` comme cle optionnelle du schema, pour la lecture retro-compatible des entrees existantes
+- La section "RAM liberee/consommee en moyenne au switch" est retiree du rapport hebdomadaire (`modules/WeeklyReport.ps1`), conformement a `docs/TASKS.md` : elle etait entierement construite sur cette mesure non attribuable
+- Le vrai remplacement (contrat avant/apres mesure apres redemarrage effectif) reste planifie au palier P6 de `docs/ROADMAP.md`, deliberement hors scope de ce correctif -- P0 n'ajoute aucune fonctionnalite visible
+- Developpe en TDD : tests reecrits dans `Logger.Tests.ps1`, `ProfileManager.Tests.ps1`, `WeeklyReport.Tests.ps1` et `Schema.Tests.ps1` (retrait des tests devenus obsoletes, ajout d'un test de compatibilite retroactive du schema), verifies en echec pour la bonne raison avant le correctif. Suite complete : 164 tests, 0 echec, aucune regression
+- Troisieme des cinq correctifs de P0 / v2.5 "Verite" (`docs/TASKS.md`) ; deux restent a faire
+
 ### v2.5 "Verite" -- deuxieme correctif (seuil d'alerte au bon denominateur)
 
 - **Seuil rapporte au plafond WSL2, pas a la RAM totale** : l'alerte comparait la part de WSL2 dans la RAM *totale* de la machine a un seuil de 80 % -- avec un plafond livre de 6 Go maximum, elle ne pouvait mathematiquement pas se declencher. Elle compare desormais l'usage au plafond configure dans `.wslconfig` (`memory=`, accepte GB et MB). `modules/MonitorTask.ps1` (`Get-WslMemoryCeilingBytes`, nouvelle)

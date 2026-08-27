@@ -29,20 +29,19 @@ function Write-SwitchLog {
         Clé du profil concerné (ex: "web", "data")
     .PARAMETER Details
         Informations complémentaires libres
-    .PARAMETER RamDeltaGB
-        Delta de RAM Windows disponible entre avant et après le switch
-        (positif = RAM libérée, négatif = RAM consommée). $null si non
-        mesurable (ex: Get-CimInstance indisponible). Metrique v2.3
-        (observabilite) - voir docs/ROADMAP.md Axe 6.
     .PARAMETER RestartSeconds
         Temps mesuré de l'arrêt WSL2 (wsl --shutdown + délai de
         stabilisation). $null si non applicable. Metrique v2.3.
+    .NOTES
+        Ne prend plus de RamDeltaGB (retire en v2.5) : la mesure prise
+        autour du switch refletait l'arret de la session PRECEDENTE tout
+        en etant attribuee au profil CIBLE - non attribuable au sens du
+        principe 9 (voir docs/RESOURCE-MODEL.md, grandeurs refusees).
     #>
     param(
         [Parameter(Mandatory)][string]$Action,
         [string]$ProfileKey = "N/A",
         [string]$Details = "",
-        [Nullable[double]]$RamDeltaGB = $null,
         [Nullable[double]]$RestartSeconds = $null
     )
 
@@ -59,7 +58,6 @@ function Write-SwitchLog {
         profile        = $ProfileKey
         details        = $Details
         user           = $currentUser
-        ramDeltaGB     = $RamDeltaGB
         restartSeconds = $RestartSeconds
     }
 

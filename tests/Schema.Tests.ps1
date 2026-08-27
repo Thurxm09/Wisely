@@ -167,10 +167,10 @@ Describe "history.schema.json" {
         Test-AgainstHistorySchema -Json "[]" | Should -Be $true
     }
 
-    It "valide un historique reel produit par Write-SwitchLog (avec et sans metriques v2.3)" {
+    It "valide un historique reel produit par Write-SwitchLog (avec et sans metrique v2.3)" {
         $testRoot = New-TestWslRoot
         try {
-            Write-SwitchLog -Action "SWITCH" -ProfileKey "web" -Details "4GB, 3 CPU" -RamDeltaGB 1.5 -RestartSeconds 2.3
+            Write-SwitchLog -Action "SWITCH" -ProfileKey "web" -Details "4GB, 3 CPU" -RestartSeconds 2.3
             Write-SwitchLog -Action "ROLLBACK" -ProfileKey "web" -Details "restaure"
             Write-SwitchLog -Action "EXPORT" -Details "C:/export.json"
 
@@ -179,6 +179,21 @@ Describe "history.schema.json" {
         } finally {
             Remove-TestWslRoot -Path $testRoot
         }
+    }
+
+    It "valide toujours une entree historique qui porte encore ramDeltaGB (donnees pre-v2.5)" {
+        $doc = @(
+            @{
+                timestamp  = "2026-08-25 10:00:00"
+                action     = "SWITCH"
+                profile    = "web"
+                details    = "4GB, 3 CPU"
+                user       = "test"
+                ramDeltaGB = 1.5
+            }
+        ) | ConvertTo-Json -Depth 5 -AsArray
+
+        Test-AgainstHistorySchema -Json $doc | Should -Be $true
     }
 
     It "rejette une entree avec une action inconnue" {
