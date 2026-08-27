@@ -12,7 +12,10 @@ function Write-MonitorTaskError {
     "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] $Message" | Add-Content $errorLog -Encoding ASCII
 }
 
-$vmmem = Get-Process -Name "vmmem" -ErrorAction SilentlyContinue
+# "vmmem" sur les versions plus anciennes de Windows, "VmmemWSL" sur
+# Windows 11 recent - les deux noms sont acceptes (v2.5, voir
+# RESOURCE-MODEL.md).
+$vmmem = Get-Process -Name "VmmemWSL", "vmmem" -ErrorAction SilentlyContinue | Select-Object -First 1
 if (-not $vmmem) { exit 0 }
 
 try {

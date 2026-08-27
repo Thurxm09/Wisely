@@ -50,6 +50,20 @@ Describe "MonitorTask.ps1" {
         Should -Invoke -CommandName Get-CimInstance -Times 0 -Exactly
     }
 
+    It "detecte VmmemWSL quand vmmem est absent (Windows 11 recent)" {
+        Mock Get-Process {
+            if ($Name -contains "VmmemWSL") {
+                [PSCustomObject]@{ WorkingSet64 = 8000000000 }
+            } else {
+                $null
+            }
+        }
+
+        Invoke-TestMonitorTask -ThresholdPct 40
+
+        Test-Path (Get-TestCooldownPath) | Should -Be $true
+    }
+
     It "n'ecrit pas de cooldown quand la RAM utilisee reste sous le seuil" {
         Mock Get-Process { [PSCustomObject]@{ WorkingSet64 = 8000000000 } }
 

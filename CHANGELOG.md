@@ -2,6 +2,12 @@
 
 ## Non publie
 
+### v2.5 "Verite" -- premier correctif (detection du processus WSL2)
+
+- **Detection VmmemWSL** : `Get-Process -Name "vmmem"` ne trouvait rien sur Windows 11 recent, ou le processus s'appelle `VmmemWSL` -- toute la couche d'observation (`wisely -Watch`, l'alerte de `MonitorTask.ps1`) etait silencieusement inoperante sur ces machines. Les deux noms sont desormais acceptes (`Get-Process -Name "VmmemWSL", "vmmem"`). `modules/Monitor.ps1` (`Get-VmmemStats`), `modules/MonitorTask.ps1`
+- Developpe en TDD : deux tests Pester ecrits et verifies en echec avant le correctif, dans `tests/Monitor.Tests.ps1` et `tests/MonitorTask.Tests.ps1`
+- Premier des cinq correctifs de P0 / v2.5 "Verite" (`docs/TASKS.md`) ; les quatre autres restent a faire
+
 ### Adoption de l'audit strategique externe d'aout 2026
 
 - **Direction produit revisee** : la capacite fondamentale devient *transformer l'etat reel des ressources WSL2 en decisions explicables et en actions sures*. Categorie : WSL2 Resource Intelligence & Control. Promesse : *Comprendre WSL. Agir en confiance.* Voir `docs/decisions/0013-adoption-audit-strategique-externe.md`, qui revise 0005 sans l'annuler
