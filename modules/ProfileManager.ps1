@@ -267,23 +267,6 @@ kernelCommandLine=sysctl.vm.swappiness=$($ProfileDef.swappiness)
 "@
 }
 
-function Get-AvailableRamGB {
-    <#
-    .SYNOPSIS
-        RAM Windows disponible (en GB), mesuree avant/apres un switch pour
-        calculer le delta reel libere - Axe 6 (Observabilite), v2.3.
-        Retourne $null si la mesure echoue (ex: Get-CimInstance
-        indisponible) plutot que de faire echouer le switch pour une
-        metrique optionnelle.
-    #>
-    try {
-        $os = Get-CimInstance Win32_OperatingSystem
-        return [math]::Round($os.FreePhysicalMemory / 1MB, 2)
-    } catch {
-        return $null
-    }
-}
-
 # ---- Garde-fou WSL2 actif avant shutdown -----------------------------
 
 function Test-WiselyNonInteractive {
@@ -397,7 +380,6 @@ function Set-WslProfile {
     }
 
     $oldContent = if (Test-Path (Get-WslConfigPath)) { Get-Content (Get-WslConfigPath) -Raw -Encoding UTF8 } else { "" }
-    $ramBefore  = Get-AvailableRamGB
 
     Backup-WslConfig
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
@@ -421,23 +403,16 @@ function Set-WslProfile {
 
     $stopwatch.Stop()
     $elapsed  = [math]::Round($stopwatch.Elapsed.TotalSeconds, 1)
-    $ramAfter = Get-AvailableRamGB
-    $ramDelta = if (($null -ne $ramBefore) -and ($null -ne $ramAfter)) { [math]::Round($ramAfter - $ramBefore, 2) } else { $null }
-    $ramSign  = if (($null -ne $ramDelta) -and ($ramDelta -ge 0)) { "+" } else { "" }
 
     Write-Host "  OK - $($profileDef.displayName) actif en ${elapsed}s - $($profileDef.memory) / $($profileDef.processors) CPU" -ForegroundColor Green
-    if ($null -ne $ramDelta) {
-        Write-Host "  RAM Windows disponible : ${ramSign}${ramDelta}GB (arret WSL2 mesure : ${restartSeconds}s)" -ForegroundColor Gray
-    }
     Write-Host "  WSL2 demarrera avec ce profil au prochain lancement." -ForegroundColor DarkGray
     Write-Host ""
 
     $details = "$($profileDef.memory), $($profileDef.processors) CPU, ${elapsed}s"
-    if ($null -ne $ramDelta) { $details += ", RAM ${ramSign}${ramDelta}GB" }
     if ($forcedActiveSessions.Count -gt 0) {
         $details += ", Force (sessions actives ignorees : $($forcedActiveSessions -join ', '))"
     }
-    Write-SwitchLog -Action "SWITCH" -ProfileKey $Key -Details $details -RamDeltaGB $ramDelta -RestartSeconds $restartSeconds
+    Write-SwitchLog -Action "SWITCH" -ProfileKey $Key -Details $details -RestartSeconds $restartSeconds
 }
 
 # ---- Profils personnalises ------------------------------------------

@@ -340,28 +340,6 @@ Describe "Test-SwapFilePath" {
     }
 }
 
-Describe "Get-AvailableRamGB" {
-
-    BeforeEach {
-        if (-not (Get-Command Get-CimInstance -ErrorAction SilentlyContinue)) {
-            function script:Get-CimInstance { }
-        }
-    }
-
-    It "convertit FreePhysicalMemory (KB) en GB arrondi a 2 decimales" {
-        Mock Get-CimInstance { [PSCustomObject]@{ FreePhysicalMemory = 8000000 } }
-
-        Get-AvailableRamGB | Should -Be 7.63
-    }
-
-    It "retourne `$null si la mesure echoue, sans lever d'exception" {
-        Mock Get-CimInstance { throw "WMI indisponible" }
-
-        { Get-AvailableRamGB } | Should -Not -Throw
-        Get-AvailableRamGB | Should -Be $null
-    }
-}
-
 Describe "Get-WslActiveSessions" {
 
     BeforeEach {
@@ -527,8 +505,6 @@ Describe "Set-WslProfile - switch reussi et metriques (RAM, temps de redemarrage
     }
 
     It "applique le profil, ecrit .wslconfig et journalise un SWITCH" {
-        Mock Get-CimInstance { [PSCustomObject]@{ FreePhysicalMemory = 8000000 } }
-
         Set-WslProfile -Key "web"
 
         (Get-Content (Get-WslConfigPath) -Raw) | Should -Match "memory=4GB"
@@ -537,38 +513,22 @@ Describe "Set-WslProfile - switch reussi et metriques (RAM, temps de redemarrage
         $history[-1].profile | Should -Be "web"
     }
 
-    It "mesure et journalise le delta de RAM disponible (avant/apres)" {
-        $script:ramCallCount = 0
-        Mock Get-CimInstance {
-            $script:ramCallCount++
-            if ($script:ramCallCount -eq 1) {
-                return [PSCustomObject]@{ FreePhysicalMemory = 4000000 }
-            }
-            return [PSCustomObject]@{ FreePhysicalMemory = 6000000 }
-        }
-
+    It "journalise restartSeconds, sans mesurer ni journaliser de delta de RAM (retire en v2.5)" {
+        # Plus aucun appel a Get-CimInstance dans Set-WslProfile : la mesure
+        # RAM avant/apres etait attribuee au profil cible alors qu'elle
+        # mesurait l'arret de la session PRECEDENTE (voir RESOURCE-MODEL.md,
+        # section des grandeurs refusees). Retiree, pas corrigee - le vrai
+        # remplacement (contrat avant/apres post-restart) est planifie P6.
         Set-WslProfile -Key "web"
 
         $history = @(Get-Content (Get-HistoryPath) -Raw | ConvertFrom-Json)
         $entry = $history[-1]
-        $entry.ramDeltaGB | Should -Be 1.91
-        $entry.details | Should -Match "RAM \+1.91GB"
-    }
-
-    It "journalise quand meme restartSeconds si la mesure RAM echoue (metrique optionnelle)" {
-        Mock Get-CimInstance { throw "WMI indisponible" }
-
-        { Set-WslProfile -Key "web" } | Should -Not -Throw
-
-        $history = @(Get-Content (Get-HistoryPath) -Raw | ConvertFrom-Json)
-        $entry = $history[-1]
-        $entry.ramDeltaGB | Should -Be $null
+        $entry.PSObject.Properties.Name | Should -Not -Contain "ramDeltaGB"
         $entry.restartSeconds | Should -Not -BeNullOrEmpty
         $entry.details | Should -Not -Match "RAM"
     }
 
     It "declenche un rollback automatique quand .wslconfig est invalide apres ecriture" {
-        Mock Get-CimInstance { [PSCustomObject]@{ FreePhysicalMemory = 8000000 } }
         Mock Test-WslConfigIntegrity { $false }
         $dir = Get-BackupDir
         New-Item -ItemType Directory -Path $dir -Force | Out-Null
@@ -588,10 +548,6 @@ Describe "Set-WslProfile - garde-fou session WSL2 active" {
         $script:testRoot = New-TestWslRoot
         Set-TestUserProfile -Path $script:testRoot
         Enable-WslMocks -RunningDistros @("Ubuntu")
-        if (-not (Get-Command Get-CimInstance -ErrorAction SilentlyContinue)) {
-            function script:Get-CimInstance { }
-        }
-        Mock Get-CimInstance { [PSCustomObject]@{ FreePhysicalMemory = 8000000 } }
         $config = Get-ValidProfilesConfig
         $config.profiles.web.swapFile = Join-Path $script:testRoot "wsl-swap.vhdx"
         New-TestProfilesJson -Config $config

@@ -155,7 +155,7 @@ function New-BoxLine {
 }
 
 function Get-RamInfo {
-    # Resiliente comme Get-AvailableRamGB/Get-VmmemStats (modules/) : $null
+    # Resiliente comme Get-VmmemStats (modules/) : $null
     # en cas d'echec plutot qu'un crash de tout wisely.ps1 sur le chemin
     # par defaut (menu interactif) si Get-CimInstance echoue (voir AUDIT.md).
     try {

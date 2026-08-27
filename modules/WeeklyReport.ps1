@@ -75,28 +75,6 @@ if ($switches.Count -eq 0) {
         $lines += ("  " + $g.Name.PadRight(16) + $bar.PadRight(20) + " $($g.Count)x ($pct%)")
     }
 
-    # RAM moyenne observee par profil (Axe 6 - Observabilite, v2.3). Basee
-    # sur ramDeltaGB (delta de RAM Windows disponible mesure au moment du
-    # switch, journalise par Write-SwitchLog depuis v2.3 - voir
-    # modules/Logger.ps1). N'est PAS un usage moyen soutenu pendant que le
-    # profil est actif : uniquement les profils ayant au moins une mesure
-    # dans la fenetre de 7 jours apparaissent (historique pre-v2.3 ou
-    # mesure indisponible sur la machine => silencieusement omis).
-    $ramLines = @()
-    foreach ($g in $grouped) {
-        $ramValues = @($g.Group | Where-Object { $null -ne $_.ramDeltaGB } | ForEach-Object { $_.ramDeltaGB })
-        if ($ramValues.Count -eq 0) { continue }
-        $avgRam = [math]::Round(($ramValues | Measure-Object -Average).Average, 1)
-        $sign   = if ($avgRam -ge 0) { "+" } else { "" }
-        $ramLines += ("  " + $g.Name.PadRight(16) + "${sign}${avgRam}GB")
-    }
-    if ($ramLines.Count -gt 0) {
-        $lines += ""
-        $lines += "RAM liberee/consommee en moyenne au switch (+ = liberee, - = consommee) :"
-        $lines += "-" * 30
-        $lines += $ramLines
-    }
-
     $lines += ""
     $lines += "Profil dominant   : $($dominant.Name.ToUpper()) ($($dominant.Count) activations)"
     $lines += "Total de switchs  : $total"

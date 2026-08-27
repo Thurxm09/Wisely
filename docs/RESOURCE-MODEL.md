@@ -262,7 +262,7 @@ précédentes.
 | Un « % d'utilisation CPU » de WSL2 | Aucune source ne le fournit avec une sémantique unique (§5) |
 | Une somme de RSS présentée comme la consommation totale | Double comptage des pages partagées (§4.4) |
 | Un « écart » sur une ressource sans plafond configurable | Il n'y a pas de borne « autorisée » à laquelle comparer |
-| La RAM libérée par un `wsl --shutdown` attribuée au profil **cible** | Mesure l'arrêt de la session **précédente** — c'est le défaut de `ramDeltaGB`, retiré ou corrigé en v2.5 |
+| La RAM libérée par un `wsl --shutdown` attribuée au profil **cible** | Mesure l'arrêt de la session **précédente** — c'était le défaut de `ramDeltaGB`, retiré en v2.5 (P0) |
 | Toute métrique dégradée en `$null` silencieux | Indiscernable d'une valeur nulle légitime. Une mesure qui échoue **le dit** |
 | Une cause présentée comme établie à partir d'une corrélation | « Observé en même temps » n'est pas « causé par » (§2) |
 

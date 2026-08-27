@@ -52,20 +52,25 @@ Describe "Write-SwitchLog" {
         $history[0].details | Should -Be "apres corruption"
     }
 
-    It "enregistre ramDeltaGB et restartSeconds quand fournis (metriques v2.3)" {
-        Write-SwitchLog -Action "SWITCH" -ProfileKey "web" -Details "test" -RamDeltaGB 1.5 -RestartSeconds 2.3
+    It "enregistre restartSeconds quand fourni (metrique v2.3)" {
+        Write-SwitchLog -Action "SWITCH" -ProfileKey "web" -Details "test" -RestartSeconds 2.3
 
         $history = @(Get-Content (Get-HistoryPath) -Raw | ConvertFrom-Json)
-        $history[0].ramDeltaGB | Should -Be 1.5
         $history[0].restartSeconds | Should -Be 2.3
     }
 
-    It "enregistre ramDeltaGB et restartSeconds a `$null quand non fournis (retro-compatible)" {
+    It "enregistre restartSeconds a `$null quand non fourni" {
         Write-SwitchLog -Action "ROLLBACK" -ProfileKey "web" -Details "test"
 
         $history = @(Get-Content (Get-HistoryPath) -Raw | ConvertFrom-Json)
-        $history[0].ramDeltaGB | Should -Be $null
         $history[0].restartSeconds | Should -Be $null
+    }
+
+    It "n'ecrit plus la cle ramDeltaGB (retiree en v2.5 - mesure non attribuable, voir RESOURCE-MODEL.md)" {
+        Write-SwitchLog -Action "SWITCH" -ProfileKey "web" -Details "test" -RestartSeconds 1.0
+
+        $history = @(Get-Content (Get-HistoryPath) -Raw | ConvertFrom-Json)
+        $history[0].PSObject.Properties.Name | Should -Not -Contain "ramDeltaGB"
     }
 }
 
