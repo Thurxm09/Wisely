@@ -300,6 +300,21 @@ Describe "Get-VmmemStats" {
         Get-VmmemStats | Should -Be $null
     }
 
+    It "detecte VmmemWSL quand vmmem est absent (Windows 11 recent)" {
+        Mock Get-Process {
+            if ($Name -contains "VmmemWSL") {
+                [PSCustomObject]@{ CPU = 5.0; WorkingSet64 = 3GB }
+            } else {
+                $null
+            }
+        }
+
+        $result = Get-VmmemStats
+
+        $result | Should -Not -Be $null
+        $result.ramGB | Should -Be 3
+    }
+
     It "retourne `$null si vmmem disparait entre les deux echantillons" {
         $script:sampleCount = 0
         Mock Get-Process {

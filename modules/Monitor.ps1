@@ -123,23 +123,26 @@ function Get-MonitorStatus {
 function Get-VmmemStats {
     <#
     .SYNOPSIS
-        RAM et CPU du process vmmem (proxy de consommation WSL2), pour
-        wisely -Watch - Axe 6 (Observabilite), v2.3. Le CPU est estime par
-        double echantillonnage (delta de temps processeur sur $SampleMs),
-        seul moyen fiable d'obtenir un pourcentage instantane plutot que le
-        temps processeur cumule depuis le demarrage du process. Retourne
-        $null si vmmem est absent ou si la mesure echoue (metrique
-        optionnelle - ne doit jamais faire echouer l'appelant).
+        RAM et CPU du process VM WSL2 (proxy de consommation), pour
+        wisely -Watch - Axe 6 (Observabilite), v2.3. Le process s'appelle
+        "vmmem" sur les versions plus anciennes de Windows et "VmmemWSL"
+        sur Windows 11 recent - les deux noms sont acceptes (v2.5, voir
+        RESOURCE-MODEL.md). Le CPU est estime par double echantillonnage
+        (delta de temps processeur sur $SampleMs), seul moyen fiable
+        d'obtenir un pourcentage instantane plutot que le temps processeur
+        cumule depuis le demarrage du process. Retourne $null si le
+        process est absent ou si la mesure echoue (metrique optionnelle -
+        ne doit jamais faire echouer l'appelant).
     #>
     param([int]$SampleMs = 200)
     try {
-        $proc1 = Get-Process -Name "vmmem" -ErrorAction SilentlyContinue
+        $proc1 = Get-Process -Name "VmmemWSL", "vmmem" -ErrorAction SilentlyContinue | Select-Object -First 1
         if (-not $proc1) { return $null }
         $cpu1 = $proc1.CPU
 
         Start-Sleep -Milliseconds $SampleMs
 
-        $proc2 = Get-Process -Name "vmmem" -ErrorAction SilentlyContinue
+        $proc2 = Get-Process -Name "VmmemWSL", "vmmem" -ErrorAction SilentlyContinue | Select-Object -First 1
         if (-not $proc2) { return $null }
         $cpu2 = $proc2.CPU
 

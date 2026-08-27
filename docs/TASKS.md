@@ -9,7 +9,7 @@ d'ordonnancement : on ne construit ni diagnostic ni recommandation sur une mesur
 qui ment. **Inchangee par l'adoption de l'audit du 2026-08-27** : celle-ci la
 confirme au lieu de la deplacer.
 
-- [ ] **Detection du processus WSL2** - `Get-Process -Name "vmmem"` ne matche pas `VmmemWSL` (Windows 11 recent) : toute la couche d'observation est silencieusement inoperante. `modules/Monitor.ps1` (`Get-VmmemStats`), `modules/MonitorTask.ps1`
+- [x] ~~**Detection du processus WSL2**~~ - `Get-Process -Name "vmmem", "VmmemWSL"` accepte les deux noms desormais. `modules/Monitor.ps1` (`Get-VmmemStats`), `modules/MonitorTask.ps1`, tests Pester dedies dans `Monitor.Tests.ps1`/`MonitorTask.Tests.ps1`
 - [ ] **Seuil d'alerte au bon denominateur** - l'alerte compare la part de WSL2 dans la RAM *totale* a 80 %, alors que le plafond livre le plus large est 6 Go : elle ne peut mathematiquement pas se declencher. C'est un melange de portees au sens de `RESOURCE-MODEL.md` §3. `modules/MonitorTask.ps1`
 - [ ] **`ramDeltaGB` : corriger ou retirer** - mesure l'arret de la session precedente, attribue au profil cible. Sortir du rapport hebdomadaire tant qu'il n'est pas attribuable (principe 9). `modules/ProfileManager.ps1`, `modules/Logger.ps1`, `modules/WeeklyReport.ps1`
 - [ ] **Ecriture non destructive de `.wslconfig`** - fusionner au lieu de reecrire, marquer la provenance des cles gerees (principe 14 : la provenance est visible). Debloque la situation S5 et les contextes Docker Desktop et poste d'entreprise. `ConvertTo-WslConfigContent`, `Test-WslConfigIntegrity`
