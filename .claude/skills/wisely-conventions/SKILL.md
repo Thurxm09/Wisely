@@ -39,6 +39,39 @@ Ce repo installe aussi `using-superpowers` et `caveman` (`.claude/skills/`). Ils
 
 Voir directement `.claude/skills/using-superpowers/SKILL.md` et `.claude/skills/caveman/SKILL.md` pour le detail — ne pas dupliquer leur contenu ici.
 
+## Discipline d'ingenierie et qualite du code
+
+Le fait qu'un changement passe la CI actuelle (syntax check, `Invoke-ScriptAnalyzer`, schema, CodeQL, Semgrep) ne veut pas dire que c'est la bonne solution. Le projet en a deja fait les frais : plusieurs findings d'audit, aujourd'hui corriges (livres en P0/v2.5, voir "Ordre de priorite courant"), sont des instances reelles, pas theoriques, de ce que cette discipline doit prevenir -- la detection `VmmemWSL` qui manquait un processus sur Windows recent (une hypothese non verifiee), `ramDeltaGB` qui attribuait une mesure au mauvais profil (une mesure sans attribution fiable), l'ancienne reecriture complete de `.wslconfig` qui effacait les cles non gerees (un effet de bord silencieux sur un fichier partage, corrige depuis par `Set-IniSectionKeys`), `Get-ActiveProfile` qui identifiait un profil par egalite de valeur RAM (une ambiguite d'etat, corrigee depuis par le marqueur `[wisely]`), et le finding historique C-1 -- un `exit` dans un module dot-source qui tuait la session PowerShell entiere de l'utilisateur (une erreur non maitrisee). Chaque ligne de code sur ce depot est une decision d'ingenierie, pas juste du texte qui compile.
+
+**Note :** si la section "Etat de l'audit qualite" plus bas dans ce fichier liste encore certains de ces points comme "non encore corriges", c'est ce document-la qui est en retard sur le code -- verifie l'implementation reelle dans `modules/*.ps1` avant de reproposer un correctif deja livre, et signale l'ecart plutot que de le corriger silencieusement.
+
+**Ne jamais ecrire de code avant d'avoir compris le probleme.** Quand le contexte est insuffisant pour une decision fiable, va le chercher dans le projet avant d'implementer -- n'invente pas une convention, une fonction ou un comportement non verifie. Pour toute modification non triviale, suis cette methode :
+
+1. **Comprendre** -- le comportement attendu, le comportement actuel, les entrees/sorties, les effets de bord possibles, les zones sensibles (ecriture de `.wslconfig`, arret de session WSL, taches planifiees).
+2. **Inspecter** -- cherche d'abord une solution existante avant d'en creer une nouvelle : `docs/PRINCIPLES.md` (criteres d'arbitrage), `docs/RESOURCE-MODEL.md` (ce qu'un chiffre a le droit de signifier), `docs/DOCTRINE-LECTURE.md` (ce que Wisely a le droit de lire), `docs/AUDIT.md` et `decisions/*.md` (pourquoi le code est comme il est), les fonctions deja presentes dans `modules/*.ps1` (voir "Carte d'architecture" ci-dessous), et les tests `tests/*.Tests.ps1` correspondants.
+3. **Concevoir** -- choisis la solution la plus simple qui reste robuste ; ne force pas une abstraction pour economiser quelques lignes, ne construis pas de generalisation pour un besoin hypothetique.
+4. **Implementer** -- en respectant les conventions PowerShell ci-dessous et les responsabilites de chaque module (aucun couplage inter-modules, voir "Carte d'architecture").
+5. **Verifier** -- relis ta propre implementation a la recherche des erreurs non gerees, cas limites, entrees invalides, effets de bord, regressions, et incoherences avec les principes du projet.
+6. **Valider** -- fais tourner ce qui existe reellement dans ce depot avant de considerer une tache terminee : `Invoke-Pester` sur le(s) fichier(s) `tests/*.Tests.ps1` concernes, `Invoke-ScriptAnalyzer -Severity Warning` sur tout `.ps1` modifie, et la validation de schema si `data/profiles.json`/`schemas/*.schema.json` sont touches. "Le code semble correct" n'est jamais une validation.
+
+**Anti-patterns a refuser, avec leur precedent connu sur ce projet :**
+
+- Un `catch` qui avale une erreur sans la propager ni la logger -- contredit "ne jamais mesurer ce qu'on ne peut pas attribuer".
+- Une metrique ou un etat qui degrade silencieusement vers `$null`/`0` plutot que de signaler l'echec (le gap `VmmemWSL`, corrige depuis, existait precisement parce qu'une detection qui echoue silencieusement ne remontait rien).
+- Une recommandation ou un seuil sans la mesure qui le source (le principe "aucune recommandation sans la mesure qui la source" existe deja -- ne le contredis pas dans du nouveau code).
+- Une reecriture destructive d'un fichier partage comme `.wslconfig` (l'ancienne `ConvertTo-WslConfigContent` faisait ca avant sa reecriture en fusion via `Set-IniSectionKeys`) -- toute ecriture doit fusionner, jamais remplacer en bloc, sauf si c'est explicitement le correctif demande.
+- `exit` dans un module dot-source (`ProfileManager.ps1`, `Logger.ps1`, `Monitor.ps1`) -- c'etait le finding C-1, `throw` est la seule sortie correcte hors de `MonitorTask.ps1`/`WeeklyReport.ps1`.
+- Une valeur seuil ou un chiffre magique invente dans le code plutot que sourcee depuis `data/profiles.json`, `docs/RESOURCE-MODEL.md` ou une constante nommee existante.
+- Une nouvelle fonction qui duplique une fonction deja presente dans `ProfileManager.ps1` (`Get-ProfileConfig`, `Test-ProfileDefinition`, `Get-AvailableRamGB`, ...) au lieu de la reutiliser.
+- Une extension de perimetre de lecture (nouvelle commande executee, nouveau fichier lu) non documentee au prealable dans `docs/DOCTRINE-LECTURE.md`.
+- Une action destructive (ecriture de `.wslconfig`, arret de session WSL) sans le garde-fou reversibilite/backup deja en place ailleurs dans `Set-WslProfile`.
+- De la logique metier nouvelle ou modifiee sans test Pester correspondant dans `tests/`.
+- Un correctif qui contourne un test qui a revele un bug plutot que de corriger la cause reelle (voir "Rigueur de diagnostic" plus bas).
+
+**Avant de considerer une modification terminee**, verifie mentalement : ai-je compris le besoin reel ? ai-je cherche une solution existante avant d'en creer une nouvelle ? ma solution est-elle la plus simple parmi celles qui restent robustes ? les erreurs et cas limites importants sont-ils geres explicitement (pas de `catch` muet, pas de `$null` silencieux) ? est-ce que je touche a un fichier partage (`.wslconfig`) sans risque de destruction ? ai-je introduit une regression sur un comportement existant ou un profil deja valide ? le changement est-il teste (Pester) et verifie (`Invoke-ScriptAnalyzer`) ? ai-je modifie uniquement ce qui etait necessaire a la tache ? Si une reponse souleve un probleme, corrige-le avant de considerer la tache finie.
+
+Le detail complet de la methode (les criteres de qualite, les standards par theme -- gestion d'erreurs, validation des donnees, securite, performance, couplage, compatibilite, tests -- et la liste exhaustive des anti-patterns) est dans `references/code-quality.md`.
+
 ## Conventions de code PowerShell
 
 Ces règles viennent de retours d'expérience concrets sur ce projet, pas de préférences arbitraires — les respecter évite de réintroduire des bugs déjà rencontrés.
