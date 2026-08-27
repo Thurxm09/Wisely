@@ -116,7 +116,7 @@ C'est la ressource centrale, et celle où les pièges sont les plus coûteux.
 ### 4.1 RAM hôte — portée `host`
 
 **Source :** `Win32_OperatingSystem` (`FreePhysicalMemory`, `TotalVisibleMemorySize`),
-déjà utilisé par `Get-AvailableRamGB` dans `modules/ProfileManager.ps1`.
+déjà utilisé par `Get-RamInfo` dans `wisely.ps1`.
 **Classe :** directe. **Confiance :** haute.
 
 **Ce que c'est :** la mémoire physique que Windows considère comme libre.
@@ -137,9 +137,10 @@ tous les processus invités de **toutes** les distributions.
 
 > **Piège de nommage, à traiter partout.** Le processus s'appelle `vmmem` sur les
 > versions plus anciennes de Windows et `VmmemWSL` sur Windows 11 récent. Le code
-> actuel ne cherche que `vmmem` (`modules/Monitor.ps1`, `modules/MonitorTask.ps1`),
-> ce qui rend toute la couche d'observation silencieusement inopérante sur une
-> partie du parc. Corrigé en v2.5. **Toute lecture de ce processus doit accepter
+> ne cherchait auparavant que `vmmem` (`modules/Monitor.ps1`, `modules/MonitorTask.ps1`),
+> ce qui rendait toute la couche d'observation silencieusement inopérante sur une
+> partie du parc. **Corrigé en P0/v2.5** : les deux fichiers utilisent désormais
+> `Get-Process -Name "VmmemWSL", "vmmem"`. **Toute lecture de ce processus doit accepter
 > les deux noms, et dire explicitement quand elle ne trouve ni l'un ni l'autre.**
 
 ### 4.3 RAM vue de Linux — portée `distro`

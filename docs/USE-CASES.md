@@ -82,8 +82,10 @@ c'est corrigeable par configuration plutôt qu'en tuant l'environnement.
 | Action | Le réglage adapté — sans effacer `networkingMode`, `dnsTunneling` ni le reste du `.wslconfig` de Docker |
 
 **Carte :** RAM × « pourquoi ? » et × « que faire ? ». **Palier :** Diagnostic.
-**Principe engagé :** 8 — c'est la situation où le code actuel est **activement
-nuisible**, puisqu'un simple changement de profil efface les clés de Docker.
+**Principe engagé :** 8 — c'était la situation où le code était **activement
+nuisible**, puisqu'un simple changement de profil effaçait les clés de Docker.
+**Corrigé en P0/v2.5** : l'écriture de `.wslconfig` fusionne désormais les clés
+gérées au lieu de régénérer le fichier (voir S5 ci-dessous).
 
 ---
 
