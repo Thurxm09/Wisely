@@ -343,7 +343,10 @@ Describe "Get-WatchSnapshot" {
         Mock Start-Sleep {}
         Mock Get-CimInstance { [PSCustomObject]@{ NumberOfLogicalProcessors = 4 } }
         New-TestProfilesJson -Config (Get-ValidProfilesConfig) | Out-Null
-        New-TestWslConfig -Content "[wsl2]`nmemory=4GB`nprocessors=3`n"
+        # Marqueur [wisely] requis depuis v2.5 : Get-ActiveProfile n'identifie
+        # plus un profil par simple egalite de valeur memoire (voir
+        # ProfileManager.Tests.ps1, Describe "Get-ActiveProfile").
+        New-TestWslConfig -Content "[wsl2]`nmemory=4GB`nprocessors=3`n`n[wisely]`nprofile=web`n"
     }
 
     AfterEach {

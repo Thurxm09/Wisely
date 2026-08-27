@@ -40,7 +40,7 @@
 | `history.json` | Journal des opérations, validé par `schemas/history.schema.json`. **Aussi un jeu de données** : sa lecture teste l'hypothèse A5 (voir `ASSUMPTIONS.md`, expérience E1) |
 | `Get-ProfileConfig` / `Import-Profiles` | Lecture et import de `profiles.json` — cibles prioritaires des tests Pester et de la mémoïsation |
 | `Clear-ProfileConfigCache` | Invalidation du cache mémoïsé, appelée après toute réécriture de `profiles.json` |
-| `Get-ActiveProfile` | Identifie le profil actif **par égalité de valeur mémoire** (`modules/ProfileManager.ps1:64`) — deux profils de même taille sont indiscernables. Défaut corrigé en P0 / v2.5 |
+| `Get-ActiveProfile` | Identifie le profil actif **par le marqueur `[wisely]` / `profile=`** dans `.wslconfig` (`Get-WiselyProfileMarker`) — plus par égalité de valeur mémoire. Retourne "Personnalisé" quand le marqueur est absent, plutôt que de deviner. Corrigé en P0 / v2.5 |
 | `ConvertTo-WslConfigContent` | Génère le contenu de `.wslconfig`. **Réécrit aujourd'hui le fichier entier**, effaçant les clés non gérées — corrigé en v2.5 (principe 8) |
 | `Test-ProfileDefinition` | Validation partagée par `New-CustomProfile` et `Import-Profiles` : tout profil entrant passe par la même porte |
 | `ramDeltaGB` | Ancien champ de `history.json` : delta de RAM Windows disponible mesuré au switch. **Mesurait en réalité l'arrêt de la session précédente**, tout en étant attribué au profil cible — **retiré en v2.5** (P0). Reste une clé optionnelle du schéma pour la lecture des entrées historiques ; plus aucune nouvelle entrée ne l'écrit |

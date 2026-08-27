@@ -49,6 +49,29 @@ function Clear-ProfileConfigCache {
     $script:ProfileConfigCache = $null
 }
 
+function Get-WiselyProfileMarker {
+    <#
+    .SYNOPSIS
+        Lit la cle "profile=" dans la section [wisely] d'un .wslconfig
+        (deja charge en lignes). C'est l'identite marquee du profil actif
+        - voir PRINCIPLES.md principe 9 : ne jamais deviner une identite a
+        partir d'une valeur qui peut coincider entre deux profils (ex:
+        memoire identique). Retourne $null si la section ou la cle est
+        absente (fichier non gere par Wisely, ou ecrit avant v2.5).
+    #>
+    param([string[]]$Lines)
+    $sectionStart = -1
+    for ($i = 0; $i -lt $Lines.Count; $i++) {
+        if ($Lines[$i].Trim() -eq "[wisely]") { $sectionStart = $i; break }
+    }
+    if ($sectionStart -eq -1) { return $null }
+    for ($i = $sectionStart + 1; $i -lt $Lines.Count; $i++) {
+        if ($Lines[$i] -match '^\s*\[.+\]\s*$') { break }
+        if ($Lines[$i] -match '^\s*profile\s*=\s*(.+?)\s*$') { return $Matches[1] }
+    }
+    return $null
+}
+
 function Get-ActiveProfile {
     param([PSCustomObject]$Config = $null)
     $wslConfig = Get-WslConfigPath
@@ -58,13 +81,19 @@ function Get-ActiveProfile {
     $lines = Get-Content $wslConfig -Encoding UTF8
     $mem   = ($lines | Where-Object { $_ -match "^memory=" }     | Select-Object -First 1) -replace "memory=", ""
     $cpu   = ($lines | Where-Object { $_ -match "^processors=" } | Select-Object -First 1) -replace "processors=", ""
+
+    $markedKey = Get-WiselyProfileMarker -Lines $lines
+    if (-not $markedKey) {
+        return [PSCustomObject]@{ name = "Personnalise"; key = "custom"; memory = $mem; processors = $cpu }
+    }
+
     try {
         $cfg     = if ($null -ne $Config) { $Config } else { Get-ProfileConfig }
         $matched = $cfg.profiles.PSObject.Properties |
-                   Where-Object { $_.Value.memory -eq $mem } |
+                   Where-Object { $_.Name -eq $markedKey } |
                    Select-Object -First 1
         return [PSCustomObject]@{
-            name       = if ($matched) { $matched.Value.displayName } else { "Personnalise" }
+            name       = if ($matched) { $matched.Value.displayName } else { "Modifie (profil '$markedKey' introuvable)" }
             key        = if ($matched) { $matched.Name } else { "custom" }
             memory     = $mem
             processors = $cpu
@@ -255,9 +284,21 @@ function Show-WslConfigDiff {
 }
 
 function ConvertTo-WslConfigContent {
-    param([Parameter(Mandatory)][PSCustomObject]$ProfileDef)
+    <#
+    .SYNOPSIS
+        Genere le contenu de .wslconfig pour un profil.
+    .PARAMETER ProfileKey
+        Cle du profil (ex: "web"), marquee dans une section [wisely]
+        dediee pour que Get-ActiveProfile identifie le profil actif sans
+        deviner (principe 9) - deux profils de memoire identique restent
+        distinguables. Omise, aucun marqueur n'est ecrit.
+    #>
+    param(
+        [Parameter(Mandatory)][PSCustomObject]$ProfileDef,
+        [string]$ProfileKey = ""
+    )
     $swapFile = $ProfileDef.swapFile
-    return @"
+    $content = @"
 [wsl2]
 memory=$($ProfileDef.memory)
 processors=$($ProfileDef.processors)
@@ -265,6 +306,15 @@ swap=$($ProfileDef.swap)
 swapFile=$swapFile
 kernelCommandLine=sysctl.vm.swappiness=$($ProfileDef.swappiness)
 "@
+    if ($ProfileKey) {
+        $content += @"
+
+
+[wisely]
+profile=$ProfileKey
+"@
+    }
+    return $content
 }
 
 # ---- Garde-fou WSL2 actif avant shutdown -----------------------------
@@ -355,7 +405,7 @@ function Set-WslProfile {
     } catch {
         throw "Validation du profil '$Key' echouee : $_"
     }
-    $content = ConvertTo-WslConfigContent -ProfileDef $profileDef
+    $content = ConvertTo-WslConfigContent -ProfileDef $profileDef -ProfileKey $Key
 
     if ($DryRun) {
         Write-Host ""

@@ -484,6 +484,41 @@ Describe "Set-WslProfile - validation du swap file" {
     }
 }
 
+Describe "ConvertTo-WslConfigContent" {
+
+    BeforeAll {
+        $script:baseProfileDef = [PSCustomObject]@{
+            displayName = "WEB"
+            memory      = "4GB"
+            processors  = 3
+            swap        = "2GB"
+            swapFile    = "C:/Temp/wisely-swap.vhdx"
+            swappiness  = 10
+        }
+    }
+
+    It "genere les cinq cles gerees dans [wsl2]" {
+        $content = ConvertTo-WslConfigContent -ProfileDef $baseProfileDef
+
+        $content | Should -Match "\[wsl2\]"
+        $content | Should -Match "memory=4GB"
+        $content | Should -Match "processors=3"
+    }
+
+    It "n'ecrit pas de marqueur [wisely] quand aucune cle de profil n'est fournie" {
+        $content = ConvertTo-WslConfigContent -ProfileDef $baseProfileDef
+
+        $content | Should -Not -Match "\[wisely\]"
+    }
+
+    It "marque l'identite du profil dans une section [wisely] quand une cle est fournie" {
+        $content = ConvertTo-WslConfigContent -ProfileDef $baseProfileDef -ProfileKey "web"
+
+        $content | Should -Match "\[wisely\]"
+        $content | Should -Match "profile=web"
+    }
+}
+
 Describe "Set-WslProfile - switch reussi et metriques (RAM, temps de redemarrage)" {
 
     BeforeEach {
@@ -511,6 +546,13 @@ Describe "Set-WslProfile - switch reussi et metriques (RAM, temps de redemarrage
         $history = @(Get-Content (Get-HistoryPath) -Raw | ConvertFrom-Json)
         $history[-1].action | Should -Be "SWITCH"
         $history[-1].profile | Should -Be "web"
+    }
+
+    It "marque l'identite du profil switche, reconnue ensuite par Get-ActiveProfile (bout en bout)" {
+        Set-WslProfile -Key "web"
+
+        (Get-ActiveProfile).key | Should -Be "web"
+        (Get-ActiveProfile).name | Should -Be "WEB"
     }
 
     It "journalise restartSeconds, sans mesurer ni journaliser de delta de RAM (retire en v2.5)" {
@@ -948,8 +990,8 @@ Describe "Get-ActiveProfile" {
         $result.memory | Should -Be "N/A"
     }
 
-    It "reconnait le profil actif quand la memoire correspond a un profil connu" {
-        New-TestWslConfig -Content "[wsl2]`nmemory=4GB`nprocessors=3`n"
+    It "reconnait le profil actif via le marqueur [wisely], pas par la memoire" {
+        New-TestWslConfig -Content "[wsl2]`nmemory=4GB`nprocessors=3`n`n[wisely]`nprofile=web`n"
         New-TestProfilesJson -Config (Get-ValidProfilesConfig) | Out-Null
 
         $result = Get-ActiveProfile
@@ -959,8 +1001,27 @@ Describe "Get-ActiveProfile" {
         $result.processors | Should -Be "3"
     }
 
-    It "retourne 'Personnalise' quand la memoire ne correspond a aucun profil connu" {
-        New-TestWslConfig -Content "[wsl2]`nmemory=7GB`nprocessors=3`n"
+    It "distingue deux profils de memoire identique grace au marqueur (corrige en v2.5)" {
+        # Avant v2.5 : Get-ActiveProfile devinait l'identite par egalite de
+        # valeur memoire et retenait arbitrairement le premier profil du
+        # fichier - deux profils a 4GB etaient indiscernables. Desormais,
+        # le marqueur [wisely] tranche sans ambiguite, quel que soit
+        # l'ordre des profils dans profiles.json.
+        New-TestWslConfig -Content "[wsl2]`nmemory=4GB`nprocessors=3`n`n[wisely]`nprofile=beta`n"
+        $json = '{"profiles":{"alpha":{"displayName":"ALPHA","memory":"4GB"},"beta":{"displayName":"BETA","memory":"4GB"}}}'
+        $config = $json | ConvertFrom-Json
+
+        $result = Get-ActiveProfile -Config $config
+
+        $result.key | Should -Be "beta"
+        $result.name | Should -Be "BETA"
+    }
+
+    It "retourne 'Personnalise' quand .wslconfig n'a pas de marqueur [wisely] (non gere par Wisely, ou fichier pre-v2.5)" {
+        # Plus de recours a la memoire comme identite de repli : une
+        # coincidence de valeur ne doit jamais se faire passer pour une
+        # identite connue (principe 9).
+        New-TestWslConfig -Content "[wsl2]`nmemory=4GB`nprocessors=3`n"
         New-TestProfilesJson -Config (Get-ValidProfilesConfig) | Out-Null
 
         $result = Get-ActiveProfile
@@ -969,17 +1030,14 @@ Describe "Get-ActiveProfile" {
         $result.key | Should -Be "custom"
     }
 
-    It "retient le premier profil du fichier en cas de memoire identique entre plusieurs profils" {
-        New-TestWslConfig -Content "[wsl2]`nmemory=4GB`nprocessors=3`n"
-        # JSON brut plutot qu'une hashtable : l'ordre des proprietes d'une
-        # hashtable @{} n'est pas garanti, ce test depend explicitement de
-        # l'ordre "alpha avant beta".
-        $json = '{"profiles":{"alpha":{"displayName":"ALPHA","memory":"4GB"},"beta":{"displayName":"BETA","memory":"4GB"}}}'
-        $config = $json | ConvertFrom-Json
+    It "signale un marqueur qui pointe vers un profil introuvable (renomme ou supprime depuis)" {
+        New-TestWslConfig -Content "[wsl2]`nmemory=4GB`nprocessors=3`n`n[wisely]`nprofile=disparu`n"
+        New-TestProfilesJson -Config (Get-ValidProfilesConfig) | Out-Null
 
-        $result = Get-ActiveProfile -Config $config
+        $result = Get-ActiveProfile
 
-        $result.key | Should -Be "alpha"
+        $result.key | Should -Be "custom"
+        $result.name | Should -Match "disparu"
     }
 }
 
