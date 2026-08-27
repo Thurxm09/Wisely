@@ -7,22 +7,32 @@
 > délibérément aucune fonctionnalité de Wisely : si une phrase ci-dessous ne
 > reste pas vraie le jour où Wisely disparaît, elle n'a rien à faire ici.
 >
-> Statut : vivant. Dernière révision : 2026-08-26.
+> Statut : vivant. Dernière révision : 2026-08-27.
 
 ---
 
 ## 1. Le problème, en une phrase
 
-**La consommation de ressources de WSL2 est opaque, et son plafond est global.**
+**L'utilisateur ne peut pas relier la pression de ressources qu'il observe sur
+Windows à ce qui se passe réellement dans WSL2, ni savoir quelle action serait
+sûre et pertinente.**
 
-L'opacité vient d'abord : personne ne peut voir ce que WSL2 consomme réellement,
-ni pourquoi. Le plafond rigide n'est douloureux qu'ensuite — une fois qu'on sait
-qu'il y a un problème, on découvre que le seul levier disponible s'applique à
-toute la machine, s'édite dans un fichier texte, et exige de tuer l'ensemble de
-l'environnement Linux pour prendre effet.
+C'est le problème tel qu'il est **vécu**. Il a deux causes structurelles, dans cet
+ordre :
 
-L'ordre compte. Longtemps, ce projet a considéré la rigidité comme le problème
-premier et l'opacité comme un détail. C'est l'inverse.
+1. **La consommation de ressources de WSL2 est opaque.** Personne ne peut voir ce
+   que WSL2 consomme réellement, ni pourquoi.
+2. **Son plafond est global.** Une fois qu'on sait qu'il y a un problème, on
+   découvre que le seul levier disponible s'applique à toute la machine, s'édite
+   dans un fichier texte, et exige de tuer l'ensemble de l'environnement Linux
+   pour prendre effet.
+
+L'ordre compte, deux fois. Longtemps, ce projet a considéré la rigidité comme le
+problème premier et l'opacité comme un détail — c'est l'inverse. Et jusqu'au
+2026-08-27, ce paragraphe énonçait encore les deux causes **à la place** du
+problème vécu : personne n'écrit « la consommation de WSL2 est opaque ». Les gens
+écrivent « pourquoi mon PC rame ». Les situations correspondantes sont décrites
+dans `USE-CASES.md`.
 
 ---
 
@@ -74,6 +84,22 @@ utilisateur réel à ce jour, aucun retour, aucune télémétrie. Tout ce qui su
 **hypothèse**, classée par confiance décroissante. Ces segments ne doivent jamais
 être cités comme des faits dans une décision produit ; ils sont là pour être
 falsifiés. Voir `ASSUMPTIONS.md`.
+
+### Le segment primaire est une situation, pas un métier
+
+> **Un utilisateur confronté à un problème de ressources WSL2 qu'il ne comprend pas.**
+
+Le métier est le mauvais axe de découpage. Un ingénieur ML et un étudiant vivent
+exactement le même incident quand WSL2 consomme toute la RAM disponible ; un
+développeur web et un SRE vivent le même incident quand un service Linux reste
+actif toute la nuit. Ce qui distingue réellement les besoins, c'est la
+**situation** — décrite dans `USE-CASES.md`.
+
+Les segments A à F ci-dessous restent valides et utiles : ils décrivent les
+**contextes** qui modulent ces situations — environnement Docker, machine
+contrainte, poste d'entreprise, multi-distribution. Ils ne sont plus lus comme
+des marchés distincts, mais comme des variantes d'un même problème. C'est ce qui
+permet d'élargir l'audience sans fabriquer un produit générique.
 
 ### A — « Pourquoi mon PC rame ? » · confiance haute, volume le plus élevé
 
@@ -140,6 +166,7 @@ existent, et les reconstruire serait du gaspillage.
 | **Profils de ressources commutables** | WSL-Memory-Monitor (profils, curseur, icône de zone de notification). Existe, sans traction : 3 étoiles, 4 commits |
 | **Compaction VHDX manuelle** | Plusieurs scripts publics, dont WSL-VHDX-Compact — désormais partiellement obsolètes face à `sparseVhd` |
 | **Limites de ressources du backend WSL** | Docker Desktop expose sa propre interface |
+| **Gestion graphique généraliste des distributions** | `wsl2-distro-manager` et `wsl-dashboard` couvrent installation, sauvegarde, restauration, configuration, monitoring temps réel, réseau, USB, migration. Une extension VS Code « WSL Manager » couvre déjà mémoire, CPU, swap, `sparseVhd` et `autoMemoryReclaim`. **Traction rapportée par l'audit d'août 2026, non revérifiée ici :** de l'ordre de quelques milliers d'étoiles chacun |
 
 ### Ce qui reste vraiment absent
 
@@ -155,8 +182,14 @@ existent, et les reconstruire serait du gaspillage.
 
 ### Lecture du paysage concurrentiel
 
-La catégorie « profils de ressources WSL2 » **existe déjà et personne ne l'a
-gagnée**. Information à double tranchant, à ne sur-interpréter dans aucun sens :
+Deux catégories doivent être distinguées, et l'audit d'août 2026 a raison
+d'insister. Celle des **gestionnaires WSL graphiques généralistes** est occupée
+par des projets matures et adoptés : la reconstruire serait du gaspillage, et
+c'est la raison pour laquelle `VISION.md` exclut explicitement le tableau de bord
+comme proposition de valeur.
+
+Celle des « profils de ressources WSL2 », en revanche, **existe déjà et personne
+ne l'a gagnée**. Information à double tranchant, à ne sur-interpréter dans aucun sens :
 ce n'est pas la preuve d'une demande refoulée (aucun de ces outils n'a de
 traction, y compris ceux plus accessibles qu'un script PowerShell à cloner), ni
 la preuve d'un marché mort (aucun ne fait la jointure, et aucun n'a un niveau
@@ -183,9 +216,13 @@ Délimiter est aussi important que décrire. Ne relèvent pas de ce problème :
 
 ## 7. Comment ce document est utilisé
 
-`VISION.md` choisit **une** partie de cet espace et explique pourquoi. Aucune
-fonctionnalité ne devrait entrer dans `ROADMAP.md` sans pouvoir désigner la case
-du tableau §3 qu'elle remplit et le segment du §4 qu'elle sert.
+`VISION.md` choisit **une** partie de cet espace et explique pourquoi.
+`USE-CASES.md` en décrit la face vécue, situation par situation.
+`RESOURCE-MODEL.md` dit ce que valent réellement les chiffres qu'on y manipule.
+
+Aucune fonctionnalité ne devrait entrer dans `ROADMAP.md` sans pouvoir désigner
+la case du tableau §3 qu'elle remplit et la situation de `USE-CASES.md` qu'elle
+sert.
 
 Si une décision produit contredit ce document, c'est ce document qu'il faut
 réviser d'abord — pas le contourner.
