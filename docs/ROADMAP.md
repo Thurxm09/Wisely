@@ -66,12 +66,12 @@ refondation documentaire de 2026-08-26, révisée le 2026-08-27 par
 
 ---
 
-### P0 · v2.5 — Vérité
+### P0 · v2.5 — Vérité · livrée
 
-**La version qui rend les mesures honnêtes.** Elle n'ajoute aucune
-fonctionnalité visible, et c'est la plus importante de la séquence. **Elle reste
-la prochaine priorité d'implémentation, inchangée** — l'adoption de l'audit
-d'août 2026 ne la déplace pas d'un cran, elle la confirme.
+**La version qui rend les mesures honnêtes.** Elle n'a ajouté aucune
+fonctionnalité visible, et c'était la plus importante de la séquence. Les cinq
+correctifs sont livrés (`decisions/`, `CHANGELOG.md`) ; **prochaine priorité
+d'implémentation : P1 · v2.6 — Contrat**, ci-dessous.
 
 1. **Détection du processus WSL2.** `Get-Process -Name "vmmem"` ne trouve rien sur
    Windows 11 récent, où le processus s'appelle `VmmemWSL`. Toute la couche

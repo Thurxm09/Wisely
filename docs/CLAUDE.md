@@ -38,7 +38,7 @@ Thuram (GitHub: Thurxm09), développeur solo — niveau débutant/intermédiaire
 - `throw`, jamais `exit`, dans les modules dot-sourcés
 - `git pull --rebase` en cas de divergence
 - Scope `$script:` préféré à `$Global:` pour la mémoïsation
-- Ordre de priorite (revise le 2026-08-27, voir `docs/ROADMAP.md`) : **prochaine priorite inchangee : P0 / v2.5 "Verite"** (corriger les mesures fausses avant toute nouvelle feature), puis P1 / v2.6 "Contrat" (lecture in-distro), puis P2 / v3.0 "Diagnostic" (`wisely diagnose`), puis **P3, barriere de validation bloquante**. Deux regles d'ordonnancement : on ne construit ni diagnostic ni recommandation sur une mesure qui ment ; et on ne construit pas au-dela d'une capacite qu'on n'a pas confrontee a un utilisateur
+- Ordre de priorite (revise le 2026-08-27, voir `docs/ROADMAP.md`) : **P0 / v2.5 "Verite" livree** (les cinq correctifs de mesures fausses, une PR par correctif) -- **prochaine priorite : P1 / v2.6 "Contrat"** (lecture in-distro), puis P2 / v3.0 "Diagnostic" (`wisely diagnose`), puis **P3, barriere de validation bloquante**. Deux regles d'ordonnancement : on ne construit ni diagnostic ni recommandation sur une mesure qui ment ; et on ne construit pas au-dela d'une capacite qu'on n'a pas confrontee a un utilisateur
 - Aime comprendre le code en profondeur, pas juste livrer des features
 - Préfère avancer une feature à la fois, bien comprise, avant de passer à la suivante
 - Utilise des scripts bootstrap Python (ASCII-safe, réécriture complète, sortie `[OK]`/`[SKIP]`) comme mécanisme standard de livraison de fichiers générés
