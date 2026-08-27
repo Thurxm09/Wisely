@@ -2,6 +2,15 @@
 
 ## Non publie
 
+### v2.5 "Verite" -- deuxieme correctif (seuil d'alerte au bon denominateur)
+
+- **Seuil rapporte au plafond WSL2, pas a la RAM totale** : l'alerte comparait la part de WSL2 dans la RAM *totale* de la machine a un seuil de 80 % -- avec un plafond livre de 6 Go maximum, elle ne pouvait mathematiquement pas se declencher. Elle compare desormais l'usage au plafond configure dans `.wslconfig` (`memory=`, accepte GB et MB). `modules/MonitorTask.ps1` (`Get-WslMemoryCeilingBytes`, nouvelle)
+- **`Get-CimInstance`/`Win32_OperatingSystem` retire** de `MonitorTask.ps1` : la RAM totale de la machine n'a plus sa place dans ce calcul (melange de portees, `docs/RESOURCE-MODEL.md` section 3)
+- Sans plafond connu (`.wslconfig` absent, illisible, ou sans cle `memory=` reconnue), l'alerte est ignoree et journalisee explicitement plutot que de deviner -- principe 9
+- Le message de la notification toast reflete le nouveau denominateur (`% du plafond utilise`, pas `% de RAM utilise`)
+- Developpe en TDD : suite de tests reecrite dans `tests/MonitorTask.Tests.ps1` (11 tests, dont trois nouveaux cas -- plafond absent, cle `memory=` absente, plafond exprime en MB), verifiee en echec pour la bonne raison avant le correctif
+- Deuxieme des cinq correctifs de P0 / v2.5 "Verite" (`docs/TASKS.md`) ; trois restent a faire
+
 ### v2.5 "Verite" -- premier correctif (detection du processus WSL2)
 
 - **Detection VmmemWSL** : `Get-Process -Name "vmmem"` ne trouvait rien sur Windows 11 recent, ou le processus s'appelle `VmmemWSL` -- toute la couche d'observation (`wisely -Watch`, l'alerte de `MonitorTask.ps1`) etait silencieusement inoperante sur ces machines. Les deux noms sont desormais acceptes (`Get-Process -Name "VmmemWSL", "vmmem"`). `modules/Monitor.ps1` (`Get-VmmemStats`), `modules/MonitorTask.ps1`
