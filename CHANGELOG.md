@@ -1,5 +1,23 @@
 # Wisely - Changelog
 
+## Non publie
+
+### Adoption de l'audit strategique externe d'aout 2026
+
+- **Direction produit revisee** : la capacite fondamentale devient *transformer l'etat reel des ressources WSL2 en decisions explicables et en actions sures*. Categorie : WSL2 Resource Intelligence & Control. Promesse : *Comprendre WSL. Agir en confiance.* Voir `docs/decisions/0013-adoption-audit-strategique-externe.md`, qui revise 0005 sans l'annuler
+- **L'ecart requalifie** : il devient la relation entre l'Etat observe et la Politique de ressources, modele interne des ressources a plafond configurable, et cesse d'etre l'ontologie du produit. Motif : il ne modelise ni le cache, ni l'I/O, ni le disque, et il masque que 8 Go consommes ne sont pas 8 Go necessaires
+- **`docs/VISION.md` reecrit** autour de quatre objets (Etat, Cause, Politique, Action) et d'une boucle ou *expliquer* est un maillon nomme. Le test de perimetre de l'ecart est remplace par un filtre a trois questions, pour que la vision conserve son pouvoir de refus
+- **`docs/RESOURCE-MODEL.md`** (nouveau) : ce que signifie chaque chiffre affiche, et lequel Wisely refuse d'afficher. Taxonomie directe/attribuee/estimee/correlee, contrat de metrique (portee, source, fraicheur, confiance), et deux regles dures -- la somme des RSS n'est jamais la RAM consommee, il n'y a pas d'ecart CPU
+- **`docs/USE-CASES.md`** (nouveau) : sept situations reelles, en remplacement du raisonnement par metier
+- **`docs/PRINCIPLES.md`** : principe 1 reformule (configuration technique vs consentement utilisateur), principe 9 renforce, principes 13 (expliquer avant de recommander) et 14 (la provenance est visible) ajoutes
+- **`docs/PROBLEM.md`** : le probleme enonce cote utilisateur d'abord ; segment primaire par situation, les segments A-F devenant des contextes
+- **`docs/ROADMAP.md`** : paliers de capacites validables. Nouveau palier P3, **barriere de validation bloquante**. L'historique remonte avant la recommandation -- la dependance etait inversee. `wisely doctor` renomme **`wisely diagnose`** avant ecriture. Rapport hebdomadaire requalifie CHANGE -> REMOVE
+- **`docs/ASSUMPTIONS.md`** : hypotheses A9, A10, A11 ajoutees ; A5 reformulee autour de la frequence des problemes non expliques plutot que des switchs ; **journal de validation** ouvert, avec les experiences E4 et E5
+- **`docs/audits/`** (nouveau) : l'audit archive integralement, jamais reecrit, avec un README qui le distingue de `docs/AUDIT.md` (audit qualite du code) et pose la regle -- un audit ne fait jamais foi, et chacun a son ADR de reponse
+- `README.md`, `docs/glossary.md`, `docs/CLAUDE.md`, `docs/TASKS.md` et le skill `wisely-conventions` resynchronises
+
+> Aucun changement de code de production. La priorite d'implementation reste **P0 / v2.5 "Verite"**, inchangee : on ne construit ni diagnostic ni recommandation sur une mesure qui ment.
+
 ## v2.4.0 - 2026-08-26
 
 ### v2.4 - Garde-fou shutdown & refondation documentaire

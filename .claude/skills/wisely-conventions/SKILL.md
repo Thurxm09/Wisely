@@ -1,17 +1,34 @@
 ---
 name: wisely-conventions
-description: Conventions de code et contexte du projet Wisely (wisely), un CLI PowerShell qui relie ce que WSL2 consomme a ce qu'on l'autorise a consommer, via .wslconfig et data/profiles.json. A utiliser des qu'une session travaille dans ce repo -- edition de wisely.ps1, modules/*.ps1 (ProfileManager, Logger, Monitor, MonitorTask, WeeklyReport), data/profiles.json, docs/ (PROBLEM, VISION, PRINCIPLES, DOCTRINE-LECTURE, ASSUMPTIONS, ROADMAP, decisions/, AUDIT, TASKS), ou tests Pester -- meme si la demande ne mentionne pas explicitement "Wisely". Suivre systematiquement les regles de code PowerShell du projet, son architecture actuelle et l'ordre de priorite courant avant de proposer une implementation.
+description: Conventions de code et contexte du projet Wisely (wisely), un CLI PowerShell qui transforme l'etat reel des ressources WSL2 en decisions explicables et en actions sures, via .wslconfig et data/profiles.json. A utiliser des qu'une session travaille dans ce repo -- edition de wisely.ps1, modules/*.ps1 (ProfileManager, Logger, Monitor, MonitorTask, WeeklyReport), data/profiles.json, docs/ (PROBLEM, VISION, USE-CASES, PRINCIPLES, DOCTRINE-LECTURE, RESOURCE-MODEL, ASSUMPTIONS, ROADMAP, decisions/, audits/, AUDIT, TASKS), ou tests Pester -- meme si la demande ne mentionne pas explicitement "Wisely". Suivre systematiquement les regles de code PowerShell du projet, son architecture actuelle et l'ordre de priorite courant avant de proposer une implementation.
 ---
 
 # Wisely — Conventions et contexte du projet
 
 Wisely est un outil CLI PowerShell maintenu en solo par Thuram (GitHub `Thurxm09`), qui pilote l'allocation de ressources de WSL2 sous Windows via des profils JSON, un menu interactif, un monitoring passif et un reporting.
 
-**Direction produit revue le 2026-08-26.** La capacite fondamentale visee est de *relier ce que WSL2 consomme a ce qu'on l'autorise a consommer* ; l'unite de pensee est **l'ecart** entre ces deux grandeurs (`docs/VISION.md`). Deux consequences a connaitre avant toute proposition : le projet ne doit pas etre concu autour de la machine du mainteneur (les profils absolus en Go sont un defaut identifie, corrige en v3.1), et l'affirmation historique "Windows n'offre aucun mecanisme natif" est **fausse depuis** que Microsoft livre l'application WSL Settings.
+**Direction produit revue le 2026-08-26, puis revisee le 2026-08-27** apres adoption d'un audit strategique externe (`docs/decisions/0013-adoption-audit-strategique-externe.md`).
+
+La capacite fondamentale visee est de **transformer l'etat reel des ressources WSL2 en decisions explicables et en actions sures** (`docs/VISION.md`). Le vocabulaire du produit tient en quatre objets — **Etat, Cause, Politique, Action** — et une boucle : observer -> **expliquer** -> recommander -> agir -> verifier.
+
+**L'ecart** (distance entre consomme et autorise) n'est plus l'ontologie du produit : c'est la relation entre l'Etat observe et la Politique, modele interne des ressources a plafond configurable. Il ne dit rien du cache, de l'I/O ni du disque, et il masque que 8 Go consommes ne sont pas 8 Go necessaires.
+
+Quatre consequences a connaitre avant toute proposition :
+
+1. **Le filtre de perimetre a change.** Ce n'est plus « est-ce une operation sur l'ecart ? » mais : servir un des quatre objets pour un maillon nomme de la boucle, designer une case de `docs/PROBLEM.md` §3 et une situation de `docs/USE-CASES.md`, et ne tomber dans aucun non-but declare dans `docs/VISION.md`. Une reponse absente est un signal d'arret.
+2. **Aucune grandeur ne s'affiche sans son entree dans `docs/RESOURCE-MODEL.md`** — portee, source, classe (directe/attribuee/estimee/correlee), confiance. Deux regles dures : la somme des RSS n'est jamais presentee comme la RAM consommee (pages partagees comptees plusieurs fois), et il n'y a pas d'« ecart CPU » (`loadavg` n'est pas un pourcentage, `nproc` ne mesure aucun usage).
+3. **Le projet ne doit pas etre concu autour de la machine du mainteneur** : les profils absolus en Go sont un defaut identifie, corrige au palier P7.
+4. L'affirmation historique « Windows n'offre aucun mecanisme natif » est **fausse depuis** que Microsoft livre l'application WSL Settings.
+
+**Barriere de validation.** Le palier P3 de `docs/ROADMAP.md` est **bloquant** : aucun palier au-dela ne demarre avant que quelqu'un d'autre que le mainteneur se soit servi de l'outil. C'est la seconde regle d'ordonnancement, a cote de « on ne construit pas sur une mesure qui ment ».
 
 Version actuelle : lire `VERSION` a la racine du repo (ne pas la coder en dur ici). Repo : `git@github.com:Thurxm09/Wisely.git`.
 
-Toute la documentation de fond vit dans `docs/`, **un document par question** : `PROBLEM.md` (quel probleme, pour qui), `VISION.md` (la capacite fondamentale), `PRINCIPLES.md` (les criteres d'arbitrage), `DOCTRINE-LECTURE.md` (contrat de lecture dans la distribution Linux), `ASSUMPTIONS.md` (ce qui n'est pas verifie), `ROADMAP.md` (l'ordre des versions), `decisions/` (les ADR), `AUDIT.md` (audit qualite), `TASKS.md` (taches courantes). `docs/archive/` contient des documents historiques a **ne pas suivre**. Consulte ces fichiers directement plutot que de supposer leur contenu.
+Toute la documentation de fond vit dans `docs/`, **un document par question** : `PROBLEM.md` (quel probleme, pour qui), `VISION.md` (la capacite fondamentale), `USE-CASES.md` (les situations reelles, jamais des personas), `PRINCIPLES.md` (les criteres d'arbitrage), `DOCTRINE-LECTURE.md` (ce que Wisely a le droit de lire dans Linux), `RESOURCE-MODEL.md` (ce que chaque chiffre signifie — les deux listes de commandes doivent rester identiques), `ASSUMPTIONS.md` (ce qui n'est pas verifie, plus le journal de validation), `ROADMAP.md` (les paliers et leur ordre), `decisions/` (les ADR), `AUDIT.md` (audit qualite du code), `TASKS.md` (taches courantes).
+
+Deux repertoires qui ne font **pas** foi : `docs/audits/` (audits strategiques externes, archives integralement, chacun avec son ADR de reponse — a ne pas confondre avec `AUDIT.md`) et `docs/archive/` (documents historiques perimes, a **ne pas suivre**).
+
+Consulte ces fichiers directement plutot que de supposer leur contenu.
 
 ## Skills de process
 
@@ -63,13 +80,14 @@ Les cinq ajoutes le 2026-08-26, chacun ne d'une defaillance constatee dans le co
 
 ## Ordre de priorite courant
 
-Refonte du 2026-08-26 (`docs/ROADMAP.md`). Regle d'ordonnancement : **on ne construit ni diagnostic ni recommandation sur une mesure qui ment.** Avancer une version a la fois, dans cet ordre, sauf indication contraire explicite.
+Paliers revises le 2026-08-27 (`docs/ROADMAP.md`). **Deux** regles d'ordonnancement : on ne construit ni diagnostic ni recommandation sur une mesure qui ment ; et on ne construit pas au-dela d'une capacite qu'on n'a pas confrontee a un utilisateur. Avancer un palier a la fois, dans cet ordre, sauf indication contraire explicite.
 
-1. **v2.5 "Verite"** -- prochaine priorite. Corriger les mesures fausses avant toute nouvelle fonctionnalite : detection `VmmemWSL` en plus de `vmmem` ; seuil d'alerte rapporte au plafond WSL2 et non a la RAM totale ; `ramDeltaGB` corrige ou retire ; ecriture **non destructive** de `.wslconfig` (fusion, pas reecriture) ; identite du profil actif marquee au lieu d'etre devinee par egalite de RAM.
-2. **v2.6 "Contrat"** -- implementation de `docs/DOCTRINE-LECTURE.md` (liste fermee de commandes, consentement explicite, degradation propre).
-3. **v3.0 "L'ecart"** -- `wisely doctor`, mesure reelle de l'ecart, verification post-switch.
+1. **P0 / v2.5 "Verite"** -- prochaine priorite, **inchangee par la revision**. Corriger les mesures fausses avant toute nouvelle fonctionnalite : detection `VmmemWSL` en plus de `vmmem` ; seuil d'alerte rapporte au plafond WSL2 et non a la RAM totale (melange de portees) ; `ramDeltaGB` corrige ou retire ; ecriture **non destructive** de `.wslconfig` (fusion, pas reecriture) avec provenance des cles ; identite du profil actif marquee au lieu d'etre devinee par egalite de RAM.
+2. **P1 / v2.6 "Contrat"** -- implementation de `docs/DOCTRINE-LECTURE.md` (liste fermee de commandes, consentement explicite, degradation propre).
+3. **P2 / v3.0 "Diagnostic"** -- `wisely diagnose`, Etat et Cause avec leurs classes de mesure, annonce du cout avant le geste. Prerequis : `docs/RESOURCE-MODEL.md` fait foi.
+4. **P3 -- barriere de validation, BLOQUANTE.** Publier `wisely diagnose` seul et le confronter a des utilisateurs externes. **Aucun palier au-dela ne demarre avant.** Resultats consignes dans le journal de validation de `docs/ASSUMPTIONS.md`.
 
-Puis v3.1 (profils derives), v3.2 (historique de consommation), v3.3 (disque), v4.0 (distribution).
+Puis P4 (historique de consommation), P5 (recommandation sourcee), P6 (verification avant/apres), P7 (profils derives), P8 (disque), P9 (distribution). Noter que l'historique passe **avant** la recommandation : une recommandation sourcee par un pic sur 14 jours exige que l'historique existe.
 
 **Retire de la roadmap, ne pas reproposer sans nouvelle decision** : spike Terminal.Gui (annule, ADR 0007), `-Reclaim` via `Optimize-VHD` (casse sur VHD sparse, ADR 0010), import/export de profils, `-Snapshot`. Reporte avec motif : auto-switch (ADR 0011), hooks, profils d'equipe.
 

@@ -2,25 +2,30 @@
 
 > Ordre de priorite et motifs : `ROADMAP.md`. Decisions de retrait : `decisions/`.
 
-## Active — v2.5 "Verite"
+## Active — P0 / v2.5 "Verite"
 
 Corriger les mesures fausses **avant** toute nouvelle fonctionnalite. Regle
 d'ordonnancement : on ne construit ni diagnostic ni recommandation sur une mesure
-qui ment.
+qui ment. **Inchangee par l'adoption de l'audit du 2026-08-27** : celle-ci la
+confirme au lieu de la deplacer.
 
 - [ ] **Detection du processus WSL2** - `Get-Process -Name "vmmem"` ne matche pas `VmmemWSL` (Windows 11 recent) : toute la couche d'observation est silencieusement inoperante. `modules/Monitor.ps1` (`Get-VmmemStats`), `modules/MonitorTask.ps1`
-- [ ] **Seuil d'alerte au bon denominateur** - l'alerte compare la part de WSL2 dans la RAM *totale* a 80 %, alors que le plafond livre le plus large est 6 Go : elle ne peut mathematiquement pas se declencher. `modules/MonitorTask.ps1`
+- [ ] **Seuil d'alerte au bon denominateur** - l'alerte compare la part de WSL2 dans la RAM *totale* a 80 %, alors que le plafond livre le plus large est 6 Go : elle ne peut mathematiquement pas se declencher. C'est un melange de portees au sens de `RESOURCE-MODEL.md` §3. `modules/MonitorTask.ps1`
 - [ ] **`ramDeltaGB` : corriger ou retirer** - mesure l'arret de la session precedente, attribue au profil cible. Sortir du rapport hebdomadaire tant qu'il n'est pas attribuable (principe 9). `modules/ProfileManager.ps1`, `modules/Logger.ps1`, `modules/WeeklyReport.ps1`
-- [ ] **Ecriture non destructive de `.wslconfig`** - fusionner au lieu de reecrire, marquer la provenance des cles gerees. Debloque les segments Docker Desktop et poste d'entreprise. `ConvertTo-WslConfigContent`, `Test-WslConfigIntegrity`
+- [ ] **Ecriture non destructive de `.wslconfig`** - fusionner au lieu de reecrire, marquer la provenance des cles gerees (principe 14 : la provenance est visible). Debloque la situation S5 et les contextes Docker Desktop et poste d'entreprise. `ConvertTo-WslConfigContent`, `Test-WslConfigIntegrity`
 - [ ] **Identite du profil actif** - `Get-ActiveProfile` reconnait le profil par egalite de valeur memoire : deux profils de 4 Go sont indiscernables. Marquer l'identite au lieu de la deviner. `modules/ProfileManager.ps1`
 
 ## Experiences a mener (hors code)
 
-Cout quasi nul, fort pouvoir de refutation - voir `ASSUMPTIONS.md`.
+Cout quasi nul, fort pouvoir de refutation. Seuils de succes et resultats :
+**journal de validation** de `ASSUMPTIONS.md` -- un seuil fixe apres coup ne
+refute rien.
 
-- [ ] **E1 - lire `data/history.json`** (10 min) : combien de switchs reels depuis la mise en service ? Teste l'hypothese A5, dont depend toute la valeur du maillon "agir"
+- [ ] **E1 - lire `data/history.json`** (10 min) : combien de switchs reels depuis la mise en service ? Teste A5
 - [ ] **E2 - activer `autoMemoryReclaim=gradual` une semaine** : le besoin de baisser le plafond diminue-t-il ? Teste A2
-- [ ] **E3 - publier le diagnostic seul** (apres v3.0) : quelqu'un l'utilise-t-il ? Teste A1
+- [ ] **E3 - publier `wisely diagnose` seul** (palier P3, bloquant) : quelqu'un l'utilise-t-il ? Teste A1 et A9
+- [ ] **E4 - temps pour identifier la cause** : Gestionnaire des taches seul vs htop seul vs Wisely. Teste A9 et A10
+- [ ] **E5 - sortie brute vs sortie sourcee** : laquelle declenche l'action ? Teste A11
 
 ## Annule
 
@@ -35,6 +40,7 @@ Cout quasi nul, fort pouvoir de refutation - voir `ASSUMPTIONS.md`.
 
 ## Done
 
+- [x] ~~Adoption de l'audit strategique externe d'aout 2026~~ (2026-08-27 - audit archive integralement dans `docs/audits/` avec son README ; ADR 0013 ; VISION reecrit autour des quatre objets Etat/Cause/Politique/Action et d'une boucle ou "expliquer" est un maillon nomme ; `RESOURCE-MODEL.md` et `USE-CASES.md` crees ; PRINCIPLES 1 et 9 revises, 13 et 14 ajoutes ; PROBLEM enonce cote utilisateur ; ROADMAP en paliers validables avec barriere de validation bloquante ; A9/A10/A11 et journal de validation. Aucun changement de code de production)
 - [x] ~~Refondation documentaire (phase 10)~~ (v2.4 - PROBLEM/VISION/PRINCIPLES/DOCTRINE-LECTURE/ASSUMPTIONS + 12 ADR dans `decisions/` ; ROADMAP reduit a son seul metier ; guide TUIStudio et `wisely.md` supprimes, expose technologique archive)
 - [x] ~~Tests Pester sur le schéma des `settings` de `profiles.json`~~ (voir AUDIT.md v2.3 T-11 — nouveau Describe "profiles.schema.json - settings" dans `tests/Schema.Tests.ps1` : 12 cas couvrant absence/presence partielle/vide de `settings`, bornes `exclusiveMinimum`/`maximum`, types invalides et propriete inconnue, chaque cas revalide manuellement via `Test-Json` faute d'acces a PSGallery dans le sandbox)
 - [x] ~~Revalider/nettoyer les exclusions PSScriptAnalyzer~~ (voir AUDIT.md v2.3 T-7 — `PSAvoidUsingCmdletAliases` et `PSUseApprovedVerbs` retirées de `ci.yml` : aucun alias detecte via parsing AST, et les fonctions citees dans le commentaire (`Fit-String`/`Make-BoxLine`) n'existent plus, remplacees par `Format-String`/`New-BoxLine` avec verbes approuves ; les 6 autres exclusions revalidees comme toujours necessaires)

@@ -107,6 +107,14 @@ l'historique, la lecture in-distro et l'écart restent tous — ils cessent
 seulement d'être *le produit* pour devenir les briques d'une question plus
 profonde : *pourquoi WSL fait-il cela, est-ce un problème, et que dois-je faire ?*
 
+**Elle ne rouvre pas les retraits déjà décidés.** [0007](0007-annulation-spike-terminal-gui.md)
+et [0012](0012-hooks-echec-par-regle.md) motivent leur verdict par l'ancien test —
+« ne s'exprime pas comme une opération sur l'écart ». Ces décisions ne sont pas
+réécrites, conformément à la convention du répertoire, et **leur conclusion tient
+sous le nouveau filtre** : ni le spike Terminal.Gui ni les hooks ne servent un des
+quatre objets pour un maillon nommé de la boucle. L'audit d'août 2026 arrive
+d'ailleurs aux mêmes verdicts par un autre chemin.
+
 **Elle ne relance pas la course au tableau de bord.** L'audit confirme ce que
 `../PROBLEM.md` §5 constatait déjà : la catégorie « gestionnaire WSL graphique »
 est occupée. L'exclusion posée par `../VISION.md` reste entière.
