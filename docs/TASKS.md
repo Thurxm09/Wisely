@@ -2,18 +2,12 @@
 
 > Ordre de priorite et motifs : `ROADMAP.md`. Decisions de retrait : `decisions/`.
 
-## Active — P0 / v2.5 "Verite"
+## Active
 
-Corriger les mesures fausses **avant** toute nouvelle fonctionnalite. Regle
-d'ordonnancement : on ne construit ni diagnostic ni recommandation sur une mesure
-qui ment. **Inchangee par l'adoption de l'audit du 2026-08-27** : celle-ci la
-confirme au lieu de la deplacer.
-
-- [x] ~~**Detection du processus WSL2**~~ - `Get-Process -Name "vmmem", "VmmemWSL"` accepte les deux noms desormais. `modules/Monitor.ps1` (`Get-VmmemStats`), `modules/MonitorTask.ps1`, tests Pester dedies dans `Monitor.Tests.ps1`/`MonitorTask.Tests.ps1`
-- [x] ~~**Seuil d'alerte au bon denominateur**~~ - l'alerte compare desormais l'usage au plafond WSL2 configure dans `.wslconfig` (`memory=`, GB ou MB), pas a la RAM totale de la machine. `Get-CimInstance`/`Win32_OperatingSystem` retire de `MonitorTask.ps1`, remplace par `Get-WslMemoryCeilingBytes`. Sans plafond connu, l'alerte est ignoree et journalisee plutot que de deviner (principe 9). `modules/MonitorTask.ps1`, tests Pester dedies dans `MonitorTask.Tests.ps1`
-- [x] ~~**`ramDeltaGB` : corriger ou retirer**~~ - **retire**, pas corrige : `Get-AvailableRamGB` et la mesure avant/apres sont retirees de `Set-WslProfile` (`ProfileManager.ps1`), le parametre `-RamDeltaGB` retire de `Write-SwitchLog` (`Logger.ps1`), la section "RAM moyenne par profil" retiree du rapport (`WeeklyReport.ps1`). Le vrai remplacement (contrat avant/apres post-restart) est planifie P6. `data/history.json` garde `ramDeltaGB` comme cle optionnelle pour la lecture retro-compatible des entrees existantes ; plus aucune nouvelle entree ne l'ecrit.
-- [ ] **Ecriture non destructive de `.wslconfig`** - fusionner au lieu de reecrire, marquer la provenance des cles gerees (principe 14 : la provenance est visible). Debloque la situation S5 et les contextes Docker Desktop et poste d'entreprise. `ConvertTo-WslConfigContent`, `Test-WslConfigIntegrity`
-- [x] ~~**Identite du profil actif**~~ - `Get-ActiveProfile` ne devine plus par egalite de valeur memoire. `ConvertTo-WslConfigContent` marque desormais le profil switche dans une section `[wisely]` dediee de `.wslconfig` (`profile=<cle>`), lue par un nouveau `Get-WiselyProfileMarker`. Sans marqueur (fichier pre-v2.5 ou non gere par Wisely), retourne honnetement "Personnalise" plutot que de deviner. `modules/ProfileManager.ps1`
+P0 / v2.5 "Verite" est termine (voir Done ci-dessous). Prochain palier :
+P1 / v2.6 "Contrat" (`ROADMAP.md`) - implementation de `DOCTRINE-LECTURE.md`
+(liste fermee de commandes, consentement explicite, degradation propre,
+premiere lecture `/proc/meminfo`). Pas encore decoupe en taches unitaires ici.
 
 ## Experiences a mener (hors code)
 
@@ -39,6 +33,8 @@ refute rien.
 - [ ] **Resynchroniser le depot `wisely-site`** - publie la v2.0.0, un changelog arrete la, et une commande d'installation `wsl-switch` qui n'existe plus. Prerequis de v4.0, passe dediee
 
 ## Done
+
+- [x] ~~P0 / v2.5 "Verite" - corriger les mesures fausses avant toute nouvelle fonctionnalite~~ (2026-08-27 - cinq correctifs : detection `VmmemWSL` en plus de `vmmem` ; seuil d'alerte rapporte au plafond `.wslconfig` plutot qu'a la RAM totale (`Get-CimInstance` retire de `MonitorTask.ps1`) ; `ramDeltaGB` retire (mesure non attribuable, pas corrige - le vrai remplacement est planifie P6) ; identite du profil actif marquee dans une section `[wisely]` de `.wslconfig` plutot que devinee par egalite de memoire ; ecriture de `.wslconfig` non destructive via `Set-IniSectionKeys`, qui fusionne les cles gerees sans toucher aux cles et sections non gerees (autoMemoryReclaim, sparseVhd, `[experimental]`, etc.) - debloque la situation S5 et les contextes Docker Desktop et poste d'entreprise. Chaque correctif developpe en TDD, une PR par correctif. Detail complet : `CHANGELOG.md`)
 
 - [x] ~~Adoption de l'audit strategique externe d'aout 2026~~ (2026-08-27 - audit archive integralement dans `docs/audits/` avec son README ; ADR 0013 ; VISION reecrit autour des quatre objets Etat/Cause/Politique/Action et d'une boucle ou "expliquer" est un maillon nomme ; `RESOURCE-MODEL.md` et `USE-CASES.md` crees ; PRINCIPLES 1 et 9 revises, 13 et 14 ajoutes ; PROBLEM enonce cote utilisateur ; ROADMAP en paliers validables avec barriere de validation bloquante ; A9/A10/A11 et journal de validation. Aucun changement de code de production)
 - [x] ~~Refondation documentaire (phase 10)~~ (v2.4 - PROBLEM/VISION/PRINCIPLES/DOCTRINE-LECTURE/ASSUMPTIONS + 12 ADR dans `decisions/` ; ROADMAP reduit a son seul metier ; guide TUIStudio et `wisely.md` supprimes, expose technologique archive)

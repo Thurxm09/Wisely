@@ -283,10 +283,95 @@ function Show-WslConfigDiff {
     Write-Host ""
 }
 
+function Set-IniSectionKeys {
+    <#
+    .SYNOPSIS
+        Fusionne des cles key=value dans une section INI nommee, sans
+        toucher au reste du contenu - c'est le mecanisme qui rend
+        l'ecriture de .wslconfig non destructive (principe 8 : ne jamais
+        detruire ce qu'on ne gere pas). Une cle geree deja presente est
+        mise a jour en place (position preservee) ; une cle geree absente
+        est ajoutee a la fin de la section. Toute autre ligne de la
+        section (cle non geree, commentaire) et toute autre section du
+        fichier restent inchangees, y compris leur ordre. Si la section
+        n'existe pas, elle est ajoutee a la fin du fichier.
+    .PARAMETER Content
+        Contenu existant du fichier, ou chaine vide si le fichier n'existe
+        pas encore.
+    .PARAMETER Section
+        Nom de la section, sans crochets (ex: "wsl2").
+    .PARAMETER KeyValues
+        Dictionnaire ordonne cle -> valeur des cles gerees a ecrire.
+    .NOTES
+        Les fins de ligne du fichier resultant sont normalisees en LF,
+        comme le reste du code de ce projet (voir ConvertTo-WslConfigContent
+        historique). Les parseurs INI, y compris celui de WSL2, tolerent
+        LF aussi bien que CRLF.
+    #>
+    param(
+        [string]$Content,
+        [Parameter(Mandatory)][string]$Section,
+        [Parameter(Mandatory)][System.Collections.Specialized.OrderedDictionary]$KeyValues
+    )
+    $lines = if ([string]::IsNullOrEmpty($Content)) { @() } else { @($Content -split "`r`n|`n") }
+    $sectionHeader = "[$Section]"
+    $sectionStart = -1
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        if ($lines[$i].Trim() -eq $sectionHeader) { $sectionStart = $i; break }
+    }
+
+    if ($sectionStart -eq -1) {
+        $newLines = [System.Collections.Generic.List[string]]::new()
+        foreach ($l in $lines) { $newLines.Add($l) }
+        if ($newLines.Count -gt 0 -and $newLines[$newLines.Count - 1] -ne "") { $newLines.Add("") }
+        $newLines.Add($sectionHeader)
+        foreach ($k in $KeyValues.Keys) { $newLines.Add("$k=$($KeyValues[$k])") }
+        return ($newLines -join "`n")
+    }
+
+    $sectionEnd = $lines.Count
+    for ($i = $sectionStart + 1; $i -lt $lines.Count; $i++) {
+        if ($lines[$i] -match '^\s*\[.+\]\s*$') { $sectionEnd = $i; break }
+    }
+
+    $remainingKeys = [ordered]@{}
+    foreach ($k in $KeyValues.Keys) { $remainingKeys[$k] = $KeyValues[$k] }
+
+    $newLines = [System.Collections.Generic.List[string]]::new()
+    for ($i = 0; $i -le $sectionStart; $i++) { $newLines.Add($lines[$i]) }
+    for ($i = $sectionStart + 1; $i -lt $sectionEnd; $i++) {
+        $line = $lines[$i]
+        $matchedKey = $null
+        foreach ($k in $remainingKeys.Keys) {
+            if ($line -match "^\s*$([regex]::Escape($k))\s*=") { $matchedKey = $k; break }
+        }
+        if ($matchedKey) {
+            $newLines.Add("$matchedKey=$($remainingKeys[$matchedKey])")
+            $remainingKeys.Remove($matchedKey)
+        } else {
+            $newLines.Add($line)
+        }
+    }
+    foreach ($k in $remainingKeys.Keys) { $newLines.Add("$k=$($remainingKeys[$k])") }
+    for ($i = $sectionEnd; $i -lt $lines.Count; $i++) { $newLines.Add($lines[$i]) }
+
+    return ($newLines -join "`n")
+}
+
 function ConvertTo-WslConfigContent {
     <#
     .SYNOPSIS
-        Genere le contenu de .wslconfig pour un profil.
+        Genere le contenu de .wslconfig pour un profil, en fusionnant dans
+        le contenu existant plutot qu'en le remplacant (principe 8 : ne
+        jamais detruire ce qu'on ne gere pas). Seules les cles gerees par
+        Wisely dans [wsl2], plus la cle profile= dans [wisely], sont
+        touchees - toute autre cle, tout autre commentaire, toute autre
+        section (autoMemoryReclaim, sparseVhd, [experimental], etc., poses
+        par l'utilisateur, Docker Desktop ou WSL Settings) sont preserves
+        tels quels.
+    .PARAMETER ExistingContent
+        Contenu actuel de .wslconfig, ou chaine vide si le fichier n'existe
+        pas encore. Omis, se comporte comme une creation a partir de rien.
     .PARAMETER ProfileKey
         Cle du profil (ex: "web"), marquee dans une section [wisely]
         dediee pour que Get-ActiveProfile identifie le profil actif sans
@@ -295,24 +380,20 @@ function ConvertTo-WslConfigContent {
     #>
     param(
         [Parameter(Mandatory)][PSCustomObject]$ProfileDef,
-        [string]$ProfileKey = ""
+        [string]$ProfileKey = "",
+        [string]$ExistingContent = ""
     )
-    $swapFile = $ProfileDef.swapFile
-    $content = @"
-[wsl2]
-memory=$($ProfileDef.memory)
-processors=$($ProfileDef.processors)
-swap=$($ProfileDef.swap)
-swapFile=$swapFile
-kernelCommandLine=sysctl.vm.swappiness=$($ProfileDef.swappiness)
-"@
+    $wsl2Keys = [ordered]@{
+        memory             = $ProfileDef.memory
+        processors         = $ProfileDef.processors
+        swap               = $ProfileDef.swap
+        swapFile           = $ProfileDef.swapFile
+        kernelCommandLine  = "sysctl.vm.swappiness=$($ProfileDef.swappiness)"
+    }
+    $content = Set-IniSectionKeys -Content $ExistingContent -Section "wsl2" -KeyValues $wsl2Keys
     if ($ProfileKey) {
-        $content += @"
-
-
-[wisely]
-profile=$ProfileKey
-"@
+        $wiselyKeys = [ordered]@{ profile = $ProfileKey }
+        $content = Set-IniSectionKeys -Content $content -Section "wisely" -KeyValues $wiselyKeys
     }
     return $content
 }
@@ -405,7 +486,8 @@ function Set-WslProfile {
     } catch {
         throw "Validation du profil '$Key' echouee : $_"
     }
-    $content = ConvertTo-WslConfigContent -ProfileDef $profileDef -ProfileKey $Key
+    $oldContent = if (Test-Path (Get-WslConfigPath)) { Get-Content (Get-WslConfigPath) -Raw -Encoding UTF8 } else { "" }
+    $content = ConvertTo-WslConfigContent -ProfileDef $profileDef -ProfileKey $Key -ExistingContent $oldContent
 
     if ($DryRun) {
         Write-Host ""
@@ -428,8 +510,6 @@ function Set-WslProfile {
         Write-Host ""
         return
     }
-
-    $oldContent = if (Test-Path (Get-WslConfigPath)) { Get-Content (Get-WslConfigPath) -Raw -Encoding UTF8 } else { "" }
 
     Backup-WslConfig
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()

@@ -41,7 +41,8 @@
 | `Get-ProfileConfig` / `Import-Profiles` | Lecture et import de `profiles.json` — cibles prioritaires des tests Pester et de la mémoïsation |
 | `Clear-ProfileConfigCache` | Invalidation du cache mémoïsé, appelée après toute réécriture de `profiles.json` |
 | `Get-ActiveProfile` | Identifie le profil actif **par le marqueur `[wisely]` / `profile=`** dans `.wslconfig` (`Get-WiselyProfileMarker`) — plus par égalité de valeur mémoire. Retourne "Personnalisé" quand le marqueur est absent, plutôt que de deviner. Corrigé en P0 / v2.5 |
-| `ConvertTo-WslConfigContent` | Génère le contenu de `.wslconfig`. **Réécrit aujourd'hui le fichier entier**, effaçant les clés non gérées — corrigé en v2.5 (principe 8) |
+| `ConvertTo-WslConfigContent` | Génère le contenu de `.wslconfig` pour un profil. **Fusionne** dans le contenu existant via `Set-IniSectionKeys` plutôt que de le réécrire — les clés et sections non gérées (`autoMemoryReclaim`, `sparseVhd`, `[experimental]`...) sont préservées. Corrigé en v2.5 (principe 8) |
+| `Set-IniSectionKeys` | Primitive de fusion INI non destructive (`ProfileManager.ps1`) : remplace/ajoute des clés gérées dans une section nommée, sans toucher au reste. Utilisée pour `[wsl2]` et pour la section `[wisely]` (marqueur d'identité) |
 | `Test-ProfileDefinition` | Validation partagée par `New-CustomProfile` et `Import-Profiles` : tout profil entrant passe par la même porte |
 | `ramDeltaGB` | Ancien champ de `history.json` : delta de RAM Windows disponible mesuré au switch. **Mesurait en réalité l'arrêt de la session précédente**, tout en étant attribué au profil cible — **retiré en v2.5** (P0). Reste une clé optionnelle du schéma pour la lecture des entrées historiques ; plus aucune nouvelle entrée ne l'écrit |
 | `restartSeconds` | Champ de `history.json` : durée mesurée de l'arrêt WSL2 lors d'un switch |

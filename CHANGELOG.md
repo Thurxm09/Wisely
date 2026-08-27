@@ -2,6 +2,15 @@
 
 ## Non publie
 
+### v2.5 "Verite" -- cinquieme correctif, cycle termine (ecriture non destructive de .wslconfig)
+
+- **`.wslconfig` n'est plus jamais reecrit entierement, seulement fusionne.** Nouvelle primitive `Set-IniSectionKeys` (`modules/ProfileManager.ps1`) : remplace ou ajoute les cles gerees dans une section INI nommee, sans toucher au reste -- toute autre cle, tout autre commentaire, toute autre section (`autoMemoryReclaim`, `sparseVhd`, `nestedVirtualization`, `[experimental]`, poses par l'utilisateur, Docker Desktop ou WSL Settings) sont preserves tels quels. `ConvertTo-WslConfigContent` l'utilise pour `[wsl2]` (les cinq cles gerees) et pour `[wisely]` (le marqueur d'identite du correctif precedent)
+- `Set-WslProfile` lit desormais `.wslconfig` existant **avant** de calculer le contenu a ecrire (au lieu de generer un contenu neuf independamment du fichier), pour que la fusion ait quelque chose dans lequel fusionner
+- Debloque la situation S5 (`docs/USE-CASES.md`) et les contextes Docker Desktop et poste d'entreprise (`docs/PROBLEM.md` section 4) -- l'outil etait jusqu'ici activement nuisible pour ces deux contextes, un simple switch de profil detruisant leur configuration `.wslconfig`
+- Developpe en TDD : nouveau `Describe "Set-IniSectionKeys"` (6 tests couvrant creation, mise a jour en place, ajout, preservation de cle et de section non gerees, ajout de section absente), tests etendus sur `ConvertTo-WslConfigContent` et sur `Set-WslProfile` (preservation d'une cle et d'une section non gerees lors d'un switch reel). Tous verifies en echec pour la bonne raison avant le correctif
+- Suite complete : 178 tests, 0 echec, aucune regression
+- **Cinquieme et dernier correctif de P0 / v2.5 "Verite"** (`docs/TASKS.md`) : le cycle est termine. Cinq PR, une par correctif, chacune developpee en TDD. Prochaine priorite : P1 / v2.6 "Contrat" (`docs/ROADMAP.md`)
+
 ### v2.5 "Verite" -- quatrieme correctif (identite du profil actif marquee)
 
 - **`Get-ActiveProfile` ne devine plus l'identite par egalite de valeur memoire** : deux profils de meme taille (ex. deux profils a 4GB) etaient indiscernables, et le code retenait arbitrairement le premier du fichier. `ConvertTo-WslConfigContent` marque desormais le profil switche dans une section `[wisely]` dediee de `.wslconfig` (`profile=<cle>`), ajoutee apres la section `[wsl2]`

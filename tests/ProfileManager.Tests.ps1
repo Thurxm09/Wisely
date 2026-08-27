@@ -484,6 +484,63 @@ Describe "Set-WslProfile - validation du swap file" {
     }
 }
 
+Describe "Set-IniSectionKeys" {
+    # Primitive de fusion non destructive : remplace/ajoute des cles gerees
+    # dans une section INI nommee, sans toucher au reste du contenu (autres
+    # cles, autres sections, commentaires). C'est le mecanisme qui rend
+    # l'ecriture de .wslconfig non destructive - voir docs/TASKS.md.
+
+    It "cree la section quand le contenu est vide" {
+        $result = Set-IniSectionKeys -Content "" -Section "wsl2" -KeyValues ([ordered]@{ memory = "4GB"; processors = "3" })
+
+        $result | Should -Match "\[wsl2\]"
+        $result | Should -Match "memory=4GB"
+        $result | Should -Match "processors=3"
+    }
+
+    It "met a jour une cle geree existante, en place, sans dupliquer la ligne" {
+        $existing = "[wsl2]`nmemory=2GB`nprocessors=2`n"
+        $result = Set-IniSectionKeys -Content $existing -Section "wsl2" -KeyValues ([ordered]@{ memory = "4GB" })
+
+        $result | Should -Match "memory=4GB"
+        ([regex]::Matches($result, "memory=")).Count | Should -Be 1
+    }
+
+    It "ajoute une cle geree absente a la fin de la section, sans toucher aux autres" {
+        $existing = "[wsl2]`nmemory=4GB`n"
+        $result = Set-IniSectionKeys -Content $existing -Section "wsl2" -KeyValues ([ordered]@{ memory = "4GB"; processors = "3" })
+
+        $result | Should -Match "memory=4GB"
+        $result | Should -Match "processors=3"
+    }
+
+    It "preserve une cle non geree presente dans la section (ex: autoMemoryReclaim)" {
+        $existing = "[wsl2]`nmemory=2GB`nautoMemoryReclaim=gradual`n"
+        $result = Set-IniSectionKeys -Content $existing -Section "wsl2" -KeyValues ([ordered]@{ memory = "4GB" })
+
+        $result | Should -Match "autoMemoryReclaim=gradual"
+    }
+
+    It "preserve une autre section entiere, avant ou apres la section geree" {
+        $existing = "[experimental]`nsparseVhd=true`n`n[wsl2]`nmemory=2GB`n"
+        $result = Set-IniSectionKeys -Content $existing -Section "wsl2" -KeyValues ([ordered]@{ memory = "4GB" })
+
+        $result | Should -Match "\[experimental\]"
+        $result | Should -Match "sparseVhd=true"
+        $result | Should -Match "memory=4GB"
+    }
+
+    It "ajoute la section a la fin du fichier quand elle est absente, sans toucher au contenu existant" {
+        $existing = "[experimental]`nsparseVhd=true`n"
+        $result = Set-IniSectionKeys -Content $existing -Section "wsl2" -KeyValues ([ordered]@{ memory = "4GB" })
+
+        $result | Should -Match "\[experimental\]"
+        $result | Should -Match "sparseVhd=true"
+        $result | Should -Match "\[wsl2\]"
+        $result | Should -Match "memory=4GB"
+    }
+}
+
 Describe "ConvertTo-WslConfigContent" {
 
     BeforeAll {
@@ -517,6 +574,19 @@ Describe "ConvertTo-WslConfigContent" {
         $content | Should -Match "\[wisely\]"
         $content | Should -Match "profile=web"
     }
+
+    It "fusionne dans le contenu existant au lieu de le reecrire (ecriture non destructive)" {
+        $existing = "[wsl2]`nmemory=2GB`nprocessors=2`nautoMemoryReclaim=gradual`n`n[experimental]`nsparseVhd=true`n"
+
+        $content = ConvertTo-WslConfigContent -ProfileDef $baseProfileDef -ProfileKey "web" -ExistingContent $existing
+
+        $content | Should -Match "memory=4GB"
+        $content | Should -Match "autoMemoryReclaim=gradual"
+        $content | Should -Match "\[experimental\]"
+        $content | Should -Match "sparseVhd=true"
+        $content | Should -Match "\[wisely\]"
+        $content | Should -Match "profile=web"
+    }
 }
 
 Describe "Set-WslProfile - switch reussi et metriques (RAM, temps de redemarrage)" {
@@ -546,6 +616,32 @@ Describe "Set-WslProfile - switch reussi et metriques (RAM, temps de redemarrage
         $history = @(Get-Content (Get-HistoryPath) -Raw | ConvertFrom-Json)
         $history[-1].action | Should -Be "SWITCH"
         $history[-1].profile | Should -Be "web"
+    }
+
+    It "preserve une cle .wslconfig non geree lors d'un switch (ecriture non destructive)" {
+        # Le defaut historique du projet : ConvertTo-WslConfigContent
+        # reecrivait .wslconfig entier a partir de cinq champs, effacant
+        # silencieusement tout le reste au premier switch - voir
+        # PRINCIPLES.md principe 8. autoMemoryReclaim est un reglage
+        # legitime, pose par l'utilisateur ou WSL Settings, jamais gere
+        # par Wisely.
+        New-TestWslConfig -Content "[wsl2]`nmemory=2GB`nprocessors=2`nautoMemoryReclaim=gradual`n"
+
+        Set-WslProfile -Key "web"
+
+        (Get-Content (Get-WslConfigPath) -Raw) | Should -Match "autoMemoryReclaim=gradual"
+        (Get-Content (Get-WslConfigPath) -Raw) | Should -Match "memory=4GB"
+    }
+
+    It "preserve une section .wslconfig entiere non geree (ex: [experimental]) lors d'un switch" {
+        New-TestWslConfig -Content "[experimental]`nsparseVhd=true`n`n[wsl2]`nmemory=2GB`nprocessors=2`n"
+
+        Set-WslProfile -Key "web"
+
+        $result = Get-Content (Get-WslConfigPath) -Raw
+        $result | Should -Match "\[experimental\]"
+        $result | Should -Match "sparseVhd=true"
+        $result | Should -Match "memory=4GB"
     }
 
     It "marque l'identite du profil switche, reconnue ensuite par Get-ActiveProfile (bout en bout)" {
