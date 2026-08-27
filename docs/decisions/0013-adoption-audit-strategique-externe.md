@@ -115,6 +115,18 @@ sous le nouveau filtre** : ni le spike Terminal.Gui ni les hooks ne servent un d
 quatre objets pour un maillon nommé de la boucle. L'audit d'août 2026 arrive
 d'ailleurs aux mêmes verdicts par un autre chemin.
 
+> **Précision du 2026-08-27, plus tard le même jour.** Un rejeu rigoureux du
+> filtre contre ces deux cas (voir la note sous « Le filtre de périmètre » dans
+> `../VISION.md`) a montré que l'affirmation ci-dessus est trop optimiste : sous
+> lecture adversariale, le spike Terminal.Gui et les hooks passent les questions
+> 1 à 3 sans effort — un menu réécrit sert toujours l'objet Action, un hook
+> générique peut être présenté comme servant n'importe quel objet selon ce qu'on
+> y met. Ils ont en réalité été écartés par le principe 6 (`../PRINCIPLES.md`),
+> pas par le filtre de périmètre lui-même. Le filtre a depuis reçu une clause
+> anti-contournement sur la question 1 (voir `../VISION.md`), mais la phrase
+> « leur conclusion tient sous le nouveau filtre » reste incorrecte telle quelle
+> et ne doit pas être citée comme preuve.
+
 **Elle ne relance pas la course au tableau de bord.** L'audit confirme ce que
 `../PROBLEM.md` §5 constatait déjà : la catégorie « gestionnaire WSL graphique »
 est occupée. L'exclusion posée par `../VISION.md` reste entière.

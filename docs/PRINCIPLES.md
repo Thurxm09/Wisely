@@ -228,7 +228,9 @@ Settings et une politique d'entreprise réellement crédible.
 Devant une proposition, les questions dans l'ordre :
 
 1. Sert-elle un des **quatre objets** — État, Cause, Politique, Action — pour un
-   **maillon nommé** de la boucle (`VISION.md`) ? Lequel ?
+   **maillon nommé** de la boucle (`VISION.md`) ? Lequel ? Un mécanisme
+   générique qui pourrait servir n'importe quel objet selon ce qu'on y
+   brancherait ne compte pas comme réponse valide.
 2. Quelle case de la carte du problème remplit-elle (`PROBLEM.md` §3), et quelle
    **situation** sert-elle (`USE-CASES.md`) ?
 3. Tombe-t-elle dans un des **non-buts** déclarés (`VISION.md`) ?
@@ -239,8 +241,12 @@ Devant une proposition, les questions dans l'ordre :
 Une réponse absente à la question 1 ou 2 est un signal d'arrêt, pas un détail à
 préciser plus tard.
 
-> **Note 2026-08-27.** La question 1 disait auparavant « s'exprime-t-elle comme
-> une opération sur l'écart ? ». Ce test a réellement servi — il a écarté le spike
-> Terminal.Gui, les hooks et `-Snapshot`. En requalifiant l'écart, il fallait le
-> remplacer par un filtre au moins aussi tranchant, et non le diluer. Voir
-> `decisions/0013-adoption-audit-strategique-externe.md`.
+> **Note 2026-08-27, corrigée le même jour.** La question 1 disait auparavant
+> « s'exprime-t-elle comme une opération sur l'écart ? ». En requalifiant
+> l'écart, il fallait le remplacer par un filtre au moins aussi tranchant, et non
+> le diluer — voir `decisions/0013-adoption-audit-strategique-externe.md`. Un
+> rejeu rigoureux (voir la note sous « Le filtre de périmètre » dans
+> `VISION.md`) a montré que l'affirmation initiale — « ce test a écarté le spike
+> Terminal.Gui, les hooks et `-Snapshot` » — était fausse : ces trois passent en
+> réalité les questions 1 à 3 sans effort, et ont été écartés par les questions 4
+> et 5 ci-dessous, pas par le filtre de `VISION.md`.
