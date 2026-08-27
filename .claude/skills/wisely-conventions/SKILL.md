@@ -43,7 +43,7 @@ Voir directement `.claude/skills/using-superpowers/SKILL.md` et `.claude/skills/
 
 Le fait qu'un changement passe la CI actuelle (syntax check, `Invoke-ScriptAnalyzer`, schema, CodeQL, Semgrep) ne veut pas dire que c'est la bonne solution. Le projet en a deja fait les frais : plusieurs findings d'audit, aujourd'hui corriges (livres en P0/v2.5, voir "Ordre de priorite courant"), sont des instances reelles, pas theoriques, de ce que cette discipline doit prevenir -- la detection `VmmemWSL` qui manquait un processus sur Windows recent (une hypothese non verifiee), `ramDeltaGB` qui attribuait une mesure au mauvais profil (une mesure sans attribution fiable), l'ancienne reecriture complete de `.wslconfig` qui effacait les cles non gerees (un effet de bord silencieux sur un fichier partage, corrige depuis par `Set-IniSectionKeys`), `Get-ActiveProfile` qui identifiait un profil par egalite de valeur RAM (une ambiguite d'etat, corrigee depuis par le marqueur `[wisely]`), et le finding historique C-1 -- un `exit` dans un module dot-source qui tuait la session PowerShell entiere de l'utilisateur (une erreur non maitrisee). Chaque ligne de code sur ce depot est une decision d'ingenierie, pas juste du texte qui compile.
 
-**Note :** si la section "Etat de l'audit qualite" plus bas dans ce fichier liste encore certains de ces points comme "non encore corriges", c'est ce document-la qui est en retard sur le code -- verifie l'implementation reelle dans `modules/*.ps1` avant de reproposer un correctif deja livre, et signale l'ecart plutot que de le corriger silencieusement.
+**Note :** ces cinq points sont a jour avec la section "Etat de l'audit qualite" plus bas dans ce fichier (corrigee le 2026-08-27). Si les deux redivergent un jour, verifie l'implementation reelle dans `modules/*.ps1` avant de faire confiance a l'un ou l'autre, et signale l'ecart plutot que de le corriger silencieusement.
 
 **Ne jamais ecrire de code avant d'avoir compris le probleme.** Quand le contexte est insuffisant pour une decision fiable, va le chercher dans le projet avant d'implementer -- n'invente pas une convention, une fonction ou un comportement non verifie. Pour toute modification non triviale, suis cette methode :
 
@@ -128,15 +128,15 @@ Puis P4 (historique de consommation), P5 (recommandation sourcee), P6 (verificat
 
 `docs/AUDIT.md` documente deux campagnes : l'audit initial v2.0 (15 findings, tous corriges) et l'audit general v2.3 (21 constats, tous traites). Les findings N-1 et N-2 y sont desormais marques corriges et reverifies -- l'ancien ecart doc/code est resolu.
 
-**Defauts connus, non encore corriges, planifies en v2.5** -- ne pas les traiter comme des bugs a signaler, ils sont deja documentes :
+**Les cinq defauts que l'audit v2.3 avait laisses ouverts sont desormais corriges**, livres par le palier P0/v2.5 "Verite" (voir "Ordre de priorite courant") -- verifie le 2026-08-27 directement dans le code, pas seulement dans la doc :
 
-- `Get-Process -Name "vmmem"` ne trouve rien sur Windows 11 recent (`VmmemWSL`), ce qui rend toute la couche d'observation silencieusement inoperante.
-- Le seuil d'alerte compare la part de WSL2 dans la RAM **totale** a 80 %, alors que le plafond livre le plus large est de 6 Go : l'alerte ne peut pas se declencher.
-- `ramDeltaGB` mesure l'arret de la session precedente mais est attribue au profil cible.
-- `ConvertTo-WslConfigContent` reecrit `.wslconfig` en entier et efface les cles non gerees ; `Test-WslConfigIntegrity` ne verifie que les cles que Wisely vient d'ecrire, donc ne peut pas detecter la perte.
-- `Get-ActiveProfile` identifie le profil actif par egalite de valeur memoire : deux profils de 4 Go sont indiscernables.
+- Detection vmmem : `Get-VmmemStats` (`modules/Monitor.ps1`) cherche desormais `Get-Process -Name "VmmemWSL", "vmmem"`, et non plus seulement `vmmem`.
+- Seuil d'alerte : `modules/MonitorTask.ps1` calcule le pourcentage par rapport au plafond WSL2 lu dans `.wslconfig` (`Get-WslMemoryCeilingBytes`), et non plus par rapport a la RAM totale de la machine.
+- `ramDeltaGB` : retire du code (mesure jugee non attribuable ; son remplacement legitime -- l'historique de consommation -- reste planifie en P6).
+- Ecriture de `.wslconfig` : `ConvertTo-WslConfigContent` fusionne desormais les cles gerees via `Set-IniSectionKeys` au lieu de reecrire le fichier en entier -- les cles et sections non gerees (`autoMemoryReclaim`, `sparseVhd`, `[experimental]`, etc.) sont preservees. `Test-WslConfigIntegrity` ne verifie toujours que les cles que Wisely gere lui-meme ([wsl2], `memory=`, `processors=`) : ce n'est plus une lacune vu que l'ecriture elle-meme ne detruit plus les autres cles, mais garde a l'esprit que cette fonction ne peut pas non plus servir a detecter une perte causee par autre chose que Wisely.
+- `Get-ActiveProfile` identifie desormais le profil actif via un marqueur explicite dans une section `[wisely]` de `.wslconfig` (pose par `ConvertTo-WslConfigContent`), et non plus par egalite de valeur memoire -- deux profils de meme taille restent distinguables.
 
-En cas de divergence entre un document et le code, **le code est la source de verite** : signale l'ecart plutot que de corriger silencieusement le document.
+En cas de divergence entre un document et le code, **le code est la source de verite** : signale l'ecart plutot que de corriger silencieusement le document. Cette regle vaut aussi pour cette section : si le code evolue de nouveau (regression, nouveau defaut), verifie-le directement dans `modules/*.ps1` avant de faire confiance a ce resume, qui peut a son tour prendre du retard.
 
 ## Rigueur de diagnostic
 
