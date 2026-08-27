@@ -2,6 +2,15 @@
 
 ## Non publie
 
+### v2.5 "Verite" -- quatrieme correctif (identite du profil actif marquee)
+
+- **`Get-ActiveProfile` ne devine plus l'identite par egalite de valeur memoire** : deux profils de meme taille (ex. deux profils a 4GB) etaient indiscernables, et le code retenait arbitrairement le premier du fichier. `ConvertTo-WslConfigContent` marque desormais le profil switche dans une section `[wisely]` dediee de `.wslconfig` (`profile=<cle>`), ajoutee apres la section `[wsl2]`
+- Nouveau `Get-WiselyProfileMarker` (`modules/ProfileManager.ps1`) lit ce marqueur ; `Get-ActiveProfile` l'utilise comme source d'identite unique. Sans marqueur (fichier ecrit avant v2.5, ou `.wslconfig` non gere par Wisely), retourne honnetement "Personnalise" plutot que de deviner par coincidence de valeur (principe 9)
+- Si le marqueur pointe vers une cle de profil qui n'existe plus (renommee ou supprimee depuis), le signale explicitement plutot que de se rabattre en silence
+- Developpe en TDD : tests reecrits sur `Get-ActiveProfile` (marqueur present, absent, profil introuvable, deux profils de memoire identique correctement distingues), nouveaux tests directs sur `ConvertTo-WslConfigContent`, test bout-en-bout confirmant qu'un switch reel est ensuite reconnu par `Get-ActiveProfile`. Fixture de `Monitor.Tests.ps1` mise a jour (dependait implicitement de l'ancienne identification par memoire)
+- Suite complete : 169 tests, 0 echec, aucune regression
+- Quatrieme des cinq correctifs de P0 / v2.5 "Verite" (`docs/TASKS.md`) ; un dernier reste a faire (ecriture non destructive de `.wslconfig`)
+
 ### v2.5 "Verite" -- troisieme correctif (ramDeltaGB retire)
 
 - **`ramDeltaGB` retire, pas corrige** : la mesure prise autour de `wsl --shutdown` dans `Set-WslProfile` reflete l'arret de la session PRECEDENTE, tout en etant attribuee au profil CIBLE dans l'historique -- une mesure non attribuable au sens du principe 9. `Get-AvailableRamGB` (fonction dediee a cette seule mesure) et l'affichage "RAM Windows disponible : ..." sont retires de `modules/ProfileManager.ps1`
