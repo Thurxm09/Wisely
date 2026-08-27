@@ -20,7 +20,7 @@ L'audit initial a identifié \*\*15 problèmes\*\* répartis sur trois niveaux d
 
 Après revue du code actuel, \*\*15 sur 15 ont été corrigés\*\*.  
 
-Deux nouvelles incohérences mineures ont été détectées lors de cette revue de suivi.
+Deux nouvelles incohérences mineures ont été détectées lors de cette revue de suivi — depuis corrigées et reverifiees (voir N-1/N-2 plus bas et le recapitulatif final).
 
 &#x20;
 
@@ -34,9 +34,9 @@ Deux nouvelles incohérences mineures ont été détectées lors de cette revue 
 
 | 🟡 Secondaire | 4 | 4 | 0 |
 
-| 🆕 Nouveau | 2 | 0 | 2 |
+| 🆕 Nouveau | 2 | 2 | 0 |
 
-| \*\*Total\*\* | \*\*15\*\* | \*\*15\*\* | \*\*2\*\* |
+| \*\*Total\*\* | \*\*17\*\* | \*\*17\*\* | \*\*0\*\* |
 
 &#x20;
 
@@ -1002,22 +1002,28 @@ return $default
 
 ---
 
-### Constats non corrigés dans cette passe
+### Constats non corrigés dans cette passe (mis à jour depuis)
 
-Deux catégories de constats n'ont **pas** donné lieu à une correction de code dans cette passe :
+Au moment de cette passe d'audit (2026-08-24), deux catégories de constats n'avaient **pas** donné lieu à une correction de code :
 
 - **Reportés au backlog** (`docs/TASKS.md`, section Someday) car non urgents et hors du périmètre "correction sûre et bon marché" de cet audit : absence de schéma formalisé pour `history.json` (contrairement à `profiles.json` depuis v2.2) ; absence de test couvrant une sortie anticipée en cours d'échantillonnage dans `Get-VmmemStats` ; exclusions PSScriptAnalyzer à revalider/nettoyer ; actions GitHub non épinglées par SHA (durcissement supply-chain) ; absence de tests Pester sur le schéma des `settings` de `profiles.json`.
-- **Signalé sans correction, décision produit à trancher par l'utilisateur** : `CHANGELOG.md`/`VERSION`/`ROADMAP.md` ne reflètent pas encore l'état "v2.3 complet" — c'est un choix de timing de release (à quel moment bump la version et clôturer formellement v2.3), pas un bug, donc volontairement non tranché par cet audit.
+- **Signalé sans correction, décision produit à trancher par l'utilisateur** : `CHANGELOG.md`/`VERSION`/`ROADMAP.md` ne reflétaient pas encore l'état "v2.3 complet" — un choix de timing de release, pas un bug, donc volontairement non tranché par cet audit.
+
+**Les cinq constats reportés au backlog ont depuis tous été traités** (voir `docs/TASKS.md`, section Someday, chaque entrée cochée y pointe vers le commit/PR correspondant) : schéma `schemas/history.schema.json` ajouté, test de sortie anticipée de `Get-VmmemStats` écrit dans `tests/Monitor.Tests.ps1`, exclusions PSScriptAnalyzer revalidées et deux d'entre elles retirées de `ci.yml`, Actions GitHub épinglées par SHA, tests Pester ajoutés sur le schéma `settings` dans `tests/Schema.Tests.ps1`. Le tableau détaillé ci-dessous (T-4, T-5, T-7, T-9, T-11) reflète déjà cet état corrigé. Le point F5 (timing CHANGELOG/VERSION/ROADMAP) est lui aussi resolu par la marche normale du projet : v2.3.0 a été formellement publiée le 2026-08-25 (`CHANGELOG.md`), et le projet a depuis avance jusqu'a v2.4.0 puis au palier P0/v2.5.
 
 ### Récapitulatif — Audit v2.3 (Général)
 
-| Priorité | Détectés | Corrigés | Reportés (backlog) | Signalés (décision utilisateur) |
+Compteurs de la passe d'audit elle-même (2026-08-24), conservés tels quels pour l'historique :
+
+| Priorité | Détectés | Corrigés (a l'epoque) | Reportés (backlog, a l'epoque) | Signalés (décision utilisateur, a l'epoque) |
 |----------|----------|----------|---------------------|----------------------------------|
 | 🔴 Critique | 1 | 1 | 0 | 0 |
 | 🟠 Important | 7 | 7 | 0 | 0 |
 | 🟡 Secondaire | 7 | 7 | 0 | 0 |
 | Hors sévérité (dette/doc) | 6 | 0 | 5 | 1 |
 | **Total** | **21** | **15** | **5** | **1** |
+
+**État actuel** (verifie dans le code et `docs/TASKS.md`) : les 5 constats "backlog" sont corrigés, et le constat F5 est resolu par la publication normale des versions -- il ne reste **aucun** constat ouvert issu de cet audit.
 
 | # | Finding | Fichier | Priorité | Statut |
 |---|---------|---------|----------|--------|
@@ -1041,7 +1047,7 @@ Deux catégories de constats n'ont **pas** donné lieu à une correction de code
 | T-7 | Exclusions PSScriptAnalyzer à revalider | ci.yml | — | ✅ Corrigé |
 | T-9 | Actions GitHub non épinglées par SHA | .github/workflows/*.yml | — | ✅ Corrigé |
 | T-11 | Pas de tests sur le schéma `settings` | data/profiles.json | — | ✅ Corrigé |
-| F5 | Timing de bump CHANGELOG/VERSION/ROADMAP pour "v2.3 complet" | CHANGELOG.md, VERSION, ROADMAP.md | — | ❓ Décision utilisateur |
+| F5 | Timing de bump CHANGELOG/VERSION/ROADMAP pour "v2.3 complet" | CHANGELOG.md, VERSION, ROADMAP.md | — | ✅ Resolu (v2.3.0 publiee le 2026-08-25, projet avance depuis a v2.4.0/P0-v2.5) |
 
 ---
 
