@@ -306,11 +306,10 @@ wisely -Report
 
 **Contenu du rapport :**
 
-- Répartition du temps par profil
-- RAM libérée/consommée en moyenne au switch, par profil (delta mesuré au moment du switch — pas un usage soutenu pendant que le profil reste actif)
+- Répartition des switchs par profil
 - Profil dominant de la semaine
-- Heure de pointe d'utilisation
-- Liste des derniers switchs effectués
+- Total de switchs, jour le plus actif, heure de pointe
+- Liste des 5 derniers switchs effectués
 
 Les rapports sont sauvegardés dans `data/reports/report_YYYY-MM-DD.txt`. Un maximum de 12 rapports est conservé (rotation automatique). Pour nettoyer manuellement :
 

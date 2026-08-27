@@ -19,7 +19,7 @@ Thuram (GitHub: Thurxm09), développeur solo — niveau débutant/intermédiaire
 | **L'ecart** | Relation entre l'Etat observe et la Politique de ressources. **Requalifie le 2026-08-27** : modele interne des ressources a plafond configurable, plus l'ontologie du produit -- il ne dit rien du cache ni du disque, et masque que 8 Go consommes ne sont pas 8 Go necessaires |
 | **Classe de mesure** | directe / attribuee / estimee / correlee. La somme des RSS n'est jamais la RAM consommee ; il n'y a pas d'ecart CPU (`docs/RESOURCE-MODEL.md`) |
 | `.wslconfig` | Config WSL2, chemin `C:\Users\othur\.wslconfig` -- fichier PARTAGE, slashs pour les chemins de swap |
-| `vmmem` / `VmmemWSL` | Deux noms selon la version de Windows ; le code ne cherche que `vmmem` (corrige en v2.5) |
+| `vmmem` / `VmmemWSL` | Deux noms selon la version de Windows ; le code cherchait auparavant seulement `vmmem`, corrige en P0/v2.5 -- `Get-Process -Name "VmmemWSL", "vmmem"` desormais |
 | `wisely -Status` | Dashboard integre : barre RAM, profil actif, 3 derniers historiques |
 | `wisely diagnose` | La commande d'entree du produit, planifiee au palier P2. Anciennement `wisely doctor`, renommee avant ecriture |
 | `Get-ProfileConfig` / `Import-Profiles` | Fonctions ciblees en priorite par les tests Pester |

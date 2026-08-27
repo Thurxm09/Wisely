@@ -153,7 +153,9 @@ Une réponse absente à la question 1 ou 2 est un **signal d'arrêt**, pas un d�
 > `PRINCIPLES.md` (aucun besoin utilisateur documenté — voir
 > [0007](decisions/0007-annulation-spike-terminal-gui.md) et
 > [0012](decisions/0012-hooks-echec-par-regle.md)), et le rapport hebdomadaire
-> actuel par le principe 9 (la mesure qu'il affiche est fausse). La clause
+> actuel également par le principe 6 (il compte l'usage de l'outil, pas la
+> consommation de la machine — générer un artefact n'est pas une valeur ; voir
+> `ROADMAP.md`, requalifié CHANGE → REMOVE le 2026-08-27). La clause
 > anti-contournement ajoutée à la question 1 ci-dessus ferme une partie de cet
 > écart, mais ne le ferme pas entièrement. Conclusion opérationnelle : passer ce
 > filtre ne veut jamais dire « donc on construit » — les questions 4 et 5 de

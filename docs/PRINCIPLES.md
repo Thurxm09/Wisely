@@ -112,10 +112,13 @@ politique d'entreprise : `networkingMode`, `dnsTunneling`, `autoMemoryReclaim`,
 pour tout fichier, tout réglage système et toute tâche planifiée que l'outil n'a
 pas créés lui-même.
 
-> *Origine :* `ConvertTo-WslConfigContent` régénère aujourd'hui le fichier entier
-> à partir de cinq champs, effaçant silencieusement tout le reste au premier
-> switch. Et `Test-WslConfigIntegrity` ne vérifie que les trois clés que Wisely
-> vient d'écrire — le filet de sécurité ne pouvait donc pas détecter la perte.
+> *Origine :* `ConvertTo-WslConfigContent` régénérait le fichier entier à partir
+> de cinq champs, effaçant silencieusement tout le reste au premier switch —
+> **corrigé en P0/v2.5** (fusion via `Set-IniSectionKeys`, plus jamais de
+> réécriture complète). `Test-WslConfigIntegrity` continue de ne vérifier que
+> les trois clés que Wisely gère lui-même ; ce n'est plus un filet de sécurité
+> manquant puisque l'écriture ne détruit plus le reste, mais elle ne peut pas
+> non plus détecter une perte causée par autre chose que Wisely.
 
 ### 9. Toute mesure porte sa portée, sa source, sa fraîcheur et sa confiance
 
@@ -149,11 +152,13 @@ qu'elle est indiscernable d'une valeur nulle légitime.
 > Le détail par ressource vit dans `RESOURCE-MODEL.md`, qui est à ce principe ce
 > que `DOCTRINE-LECTURE.md` est au principe 12.
 
-> *Origine :* `ramDeltaGB` mesure la RAM libérée par l'arrêt de WSL2, puis
-> l'attribue au profil cible dans le rapport hebdomadaire. Le seuil d'alerte
-> compare la part de WSL2 dans la RAM **totale** à un seuil pensé pour la part de
-> son **plafond**. Et `Get-Process -Name "vmmem"` ne trouve rien sur Windows 11
-> récent, où le processus s'appelle `VmmemWSL` — trois échecs silencieux.
+> *Origine :* `ramDeltaGB` mesurait la RAM libérée par l'arrêt de WSL2, mais
+> l'attribuait au profil cible dans le rapport hebdomadaire ; le seuil d'alerte
+> comparait la part de WSL2 dans la RAM **totale** à un seuil pensé pour la part
+> de son **plafond** ; et `Get-Process -Name "vmmem"` ne trouvait rien sur
+> Windows 11 récent, où le processus s'appelle aussi `VmmemWSL` — trois échecs
+> silencieux, tous **corrigés en P0/v2.5** (`ramDeltaGB` retiré, seuil rapporté
+> au plafond `.wslconfig`, les deux noms de processus désormais recherchés).
 
 ### 10. Aucune recommandation sans la mesure qui la source
 
