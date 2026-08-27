@@ -8,18 +8,22 @@ Thuram (GitHub: Thurxm09), développeur solo — niveau débutant/intermédiaire
 
 | Nom | Quoi |
 |-----|------|
-| **Wisely** | Outil CLI PowerShell qui relie ce que WSL2 consomme a ce qu'on l'autorise a consommer, sur Windows. v2.1 (tests Pester, validation swap, backup versionne, cache memoise, flags -Verbose/-Quiet), v2.2 (CONTRIBUTING + templates, variables d'environnement dans `swapFile`, JSON Schema, `-Status -Short`, `-Snapshot`), v2.3 (observabilite : metriques post-switch, rapports enrichis, `-Watch`, Semgrep en CI) et v2.4 (garde-fou WSL2 avant shutdown + refondation documentaire, spike Terminal.Gui annule) livrees. Direction produit revue le 2026-08-26 : voir `docs/VISION.md`. |
+| **Wisely** | Outil CLI PowerShell qui transforme l'etat reel des ressources WSL2 en decisions explicables et en actions sures, sur Windows. v2.1 (tests Pester, validation swap, backup versionne, cache memoise, flags -Verbose/-Quiet), v2.2 (CONTRIBUTING + templates, variables d'environnement dans `swapFile`, JSON Schema, `-Status -Short`, `-Snapshot`), v2.3 (observabilite : metriques post-switch, rapports enrichis, `-Watch`, Semgrep en CI) et v2.4 (garde-fou WSL2 avant shutdown + refondation documentaire, spike Terminal.Gui annule) livrees. Direction produit revue le 2026-08-26, puis **revisee le 2026-08-27** apres adoption d'un audit strategique externe : voir `docs/VISION.md` et `docs/decisions/0013-adoption-audit-strategique-externe.md`. |
 
 ## Termes
 
 | Terme | Signification |
 |------|---------|
-| **L'ecart** | Concept central du produit : distance entre ce que WSL2 consomme et ce qu'on l'autorise a consommer (`docs/VISION.md`) |
+| **Les quatre objets** | Le vocabulaire du produit : Etat, Cause, Politique, Action (`docs/VISION.md`) |
+| **La boucle** | observer -> **expliquer** -> recommander -> agir -> verifier. "Expliquer" est un maillon nomme, pas un sous-produit |
+| **L'ecart** | Relation entre l'Etat observe et la Politique de ressources. **Requalifie le 2026-08-27** : modele interne des ressources a plafond configurable, plus l'ontologie du produit -- il ne dit rien du cache ni du disque, et masque que 8 Go consommes ne sont pas 8 Go necessaires |
+| **Classe de mesure** | directe / attribuee / estimee / correlee. La somme des RSS n'est jamais la RAM consommee ; il n'y a pas d'ecart CPU (`docs/RESOURCE-MODEL.md`) |
 | `.wslconfig` | Config WSL2, chemin `C:\Users\othur\.wslconfig` -- fichier PARTAGE, slashs pour les chemins de swap |
 | `vmmem` / `VmmemWSL` | Deux noms selon la version de Windows ; le code ne cherche que `vmmem` (corrige en v2.5) |
 | `wisely -Status` | Dashboard integre : barre RAM, profil actif, 3 derniers historiques |
+| `wisely diagnose` | La commande d'entree du produit, planifiee au palier P2. Anciennement `wisely doctor`, renommee avant ecriture |
 | `Get-ProfileConfig` / `Import-Profiles` | Fonctions ciblees en priorite par les tests Pester |
-| Docs de fond | `PROBLEM` (le probleme), `VISION` (la capacite), `PRINCIPLES` (les arbitrages), `DOCTRINE-LECTURE` (le contrat de lecture), `ASSUMPTIONS` (l'incertitude), `ROADMAP` (l'ordre), `decisions/` (les ADR) |
+| Docs de fond | `PROBLEM` (le probleme), `VISION` (la capacite), `USE-CASES` (les situations), `PRINCIPLES` (les arbitrages), `DOCTRINE-LECTURE` (le contrat de lecture), `RESOURCE-MODEL` (ce que signifient les chiffres), `ASSUMPTIONS` (l'incertitude + journal de validation), `ROADMAP` (l'ordre), `decisions/` (les ADR), `audits/` (audits strategiques externes -- ne font pas foi) |
 
 ## Repos
 
@@ -34,7 +38,7 @@ Thuram (GitHub: Thurxm09), développeur solo — niveau débutant/intermédiaire
 - `throw`, jamais `exit`, dans les modules dot-sourcés
 - `git pull --rebase` en cas de divergence
 - Scope `$script:` préféré à `$Global:` pour la mémoïsation
-- Ordre de priorite (refonte du 2026-08-26, voir `docs/ROADMAP.md`) : v2.4 clot -- **prochaine priorite : v2.5 "Verite"** (corriger les mesures fausses avant toute nouvelle feature), puis v2.6 "Contrat" (doctrine de lecture in-distro), puis v3.0 "L'ecart". Regle d'ordonnancement : on ne construit ni diagnostic ni recommandation sur une mesure qui ment
+- Ordre de priorite (revise le 2026-08-27, voir `docs/ROADMAP.md`) : **prochaine priorite inchangee : P0 / v2.5 "Verite"** (corriger les mesures fausses avant toute nouvelle feature), puis P1 / v2.6 "Contrat" (lecture in-distro), puis P2 / v3.0 "Diagnostic" (`wisely diagnose`), puis **P3, barriere de validation bloquante**. Deux regles d'ordonnancement : on ne construit ni diagnostic ni recommandation sur une mesure qui ment ; et on ne construit pas au-dela d'une capacite qu'on n'a pas confrontee a un utilisateur
 - Aime comprendre le code en profondeur, pas juste livrer des features
 - Préfère avancer une feature à la fois, bien comprise, avant de passer à la suivante
 - Utilise des scripts bootstrap Python (ASCII-safe, réécriture complète, sortie `[OK]`/`[SKIP]`) comme mécanisme standard de livraison de fichiers générés

@@ -1,7 +1,16 @@
 # 0005 — Direction produit : la boucle fermée
 
-**Statut :** acceptée
+**Statut :** révisée par [0013](0013-adoption-audit-strategique-externe.md)
 **Date :** 2026-08-26
+
+> **Révision du 2026-08-27.** La direction posée ici — la boucle fermée, le switch
+> qui reçoit ses deux extrémités, la non-destruction comme invariant — est conservée
+> intacte. Ce que 0013 change est l'**altitude** de la formulation : la capacité
+> fondamentale n'est plus « relier ce que WSL2 consomme à ce qu'on l'autorise à
+> consommer », mais « transformer l'état réel des ressources WSL2 en décisions
+> explicables et en actions sûres ». L'écart devient la relation entre l'État observé
+> et la Politique de ressources, et non l'ontologie du produit. Le texte ci-dessous
+> n'est pas réécrit : il est la trace du raisonnement de 2026-08-26.
 
 ## Contexte
 

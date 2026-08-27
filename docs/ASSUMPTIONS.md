@@ -11,7 +11,7 @@
 > fait dans une décision produit tant que sa colonne « statut » indique
 > `non testée`.
 >
-> Statut : vivant, à réviser à chaque cycle. Dernière révision : 2026-08-26.
+> Statut : vivant, à réviser à chaque cycle. Dernière révision : 2026-08-27.
 
 ---
 
@@ -40,13 +40,21 @@ l'hypothèse est fausse ; l'incertitude, notre ignorance actuelle.
 | # | Hypothèse | Impact | Incertitude | Statut |
 |---|---|---|---|---|
 | **A1** | Quelqu'un d'autre que le mainteneur a ce problème assez fort pour installer un outil | Maximal | Maximale | non testée |
+| **A9** | Le diagnostic a plus de valeur que le switch | Maximal | Maximale | non testée |
 | **A2** | `autoMemoryReclaim` n'a pas déjà résolu la moitié « RAM » du problème fondateur | Fort | Forte | non testée |
-| **A5** | Le coût du `wsl --shutdown` est acceptable, et les gens changent de profil plus d'une fois | Fort | Forte | **testable immédiatement** |
-| **A3** | L'écart est mesurable assez précisément pour fonder une recommandation | Fort | Modérée | non testée |
+| **A5** | Le coût du `wsl --shutdown` est acceptable, et les gens rencontrent des problèmes de ressources assez souvent | Fort | Forte | **testable immédiatement** |
+| **A10** | L'attribution Windows → distribution → processus change réellement la décision de l'utilisateur | Fort | Forte | non testée |
+| **A11** | Une recommandation sourcée par la mesure suffit à déclencher une action | Fort | Forte | non testée |
+| **A3** | L'état des ressources est mesurable assez précisément pour fonder une recommandation | Fort | Modérée | non testée |
 | **A4** | Les utilisateurs acceptent qu'un outil Windows lise dans leur distribution Linux | Fort | Modérée | non testée |
 | **A6** | La douleur disque dépasse la douleur RAM | Modéré | Forte | non testée |
 | **A7** | Le public non-développeur est atteignable par un outil en ligne de commande | Modéré | Forte | non testée |
-| **A8** | Les utilisateurs multi-distributions (segment F) ont besoin d'une attribution par distribution, plutôt qu'un plafond unique WSL2 toutes distros confondues | Modéré | Forte | non testée |
+| **A8** | Les utilisateurs multi-distributions ont besoin d'une attribution par distribution, plutôt qu'un plafond unique WSL2 toutes distros confondues | Modéré | Forte | non testée |
+
+> **A9, A10 et A11 sont nées de l'adoption de l'audit d'août 2026**
+> ([0013](decisions/0013-adoption-audit-strategique-externe.md)). Ce sont
+> exactement les paris que cette adoption engage : elles doivent donc figurer ici,
+> et non être citées comme des acquis parce qu'une décision les suppose.
 
 ---
 
@@ -72,6 +80,32 @@ la catégorie est mal exécutée — ou que la douleur est réelle mais trop fai
 pour motiver l'installation d'un outil, les gens s'en accommodant.
 
 **Comment la tester.** Expérience E3 ci-dessous.
+
+### A9 — Le diagnostic a plus de valeur que le switch
+
+**Ce qu'elle affirme.** Comprendre pourquoi WSL2 consomme ce qu'il consomme est
+plus utile, plus souvent, que changer facilement de plafond.
+
+**Ce qui s'effondre si elle est fausse.** Le pivot stratégique du 2026-08-27. Si
+le switch reste le geste dominant, Wisely redevient un commutateur — meilleur que
+les autres, mais dans une catégorie que WSL Settings et plusieurs outils tiers
+occupent déjà.
+
+**Ce qui la rend plausible.** Personne n'écrit « mon plafond WSL2 est mal
+réglé » ; les gens écrivent « VmmemWSL consomme 9 Go », ce qui est une question
+d'attribution. Le volume d'articles écrits pour répondre à cette question est le
+seul signal de demande dont le projet dispose.
+
+**Ce qui la fragilise.** Un diagnostic se consomme une fois. Un outil qu'on lance
+une seule fois n'est pas un produit — mais c'est un signal, et c'est précisément
+ce que l'expérience E3 mesure.
+
+**Comment la tester.** Expérience E3, plus la mesure comparative E4.
+
+**Note importante :** cette hypothèse est prise **sans** être validée, et
+assumée comme telle. La décision 0013 est meilleure que ses alternatives quelle
+que soit la réponse — même si le switch domine, un outil qui explique ce qu'il
+mesure vaut mieux qu'un outil qui affiche des chiffres dont il ignore le sens.
 
 ### A2 — La plateforme n'a pas déjà résolu le problème
 
@@ -110,9 +144,17 @@ un outil de réglage initial, et toute la valeur bascule vers le diagnostic.
 **testable en dix minutes, avec des données déjà présentes sur la machine du
 mainteneur.**
 
+> **Reformulation 2026-08-27.** La question posée à l'origine — « à quelle
+> fréquence les gens changent-ils de profil ? » — mesure l'usage d'une
+> fonctionnalité, pas l'existence d'un marché. La bonne question est :
+> **« à quelle fréquence rencontrent-ils un problème de ressources WSL qu'ils ne
+> savent pas expliquer ou résoudre facilement ? »** Trois changements de profil
+> par an et quinze incidents non expliqués par mois racontent deux produits
+> complètement différents — et c'est le second chiffre qui décide.
+
 ---
 
-## Trois expériences à coût quasi nul
+## Les expériences
 
 ### E1 — Lire `data/history.json` · dix minutes · teste A5
 
@@ -122,7 +164,7 @@ leur répartition dans le temps, et la proportion de profils réellement utilis�
 **Comment lire le résultat :**
 
 - Des changements réguliers (plusieurs par semaine) confirment A5 : le geste vaut
-  son prix, le commutateur a un sens.
+  son prix, le commutateur a un sens — et A9 s'en trouve affaiblie.
 - Trois changements en un an infirment A5 de la manière la plus économique
   possible. Ce serait le résultat le plus important de toute l'analyse
   stratégique — et il est déjà sur le disque.
@@ -159,6 +201,56 @@ informatif qu'un outil adopté.
 
 **À ne pas confondre avec un lancement.** Ce n'est pas la distribution large,
 délibérément repoussée (voir `decisions/0009-distribution-apres-le-produit.md`).
+
+### E4 — Temps pour identifier la cause · teste A9 et A10
+
+Donner à quelqu'un une machine dont WSL2 consomme anormalement, et mesurer le
+**temps nécessaire pour identifier la cause probable** avec trois outillages :
+Gestionnaire des tâches seul, `htop` seul, Wisely.
+
+**Comment lire le résultat :** si Wisely ne réduit pas ce temps, la « jointure »
+Windows/Linux est techniquement élégante et commercialement faible. C'est une
+métrique produit forte parce qu'elle est comparative et qu'elle ne demande à
+personne son opinion.
+
+### E5 — Sortie brute contre sortie sourcée · teste A11
+
+Présenter deux formulations du même état :
+
+> « Ta consommation est de 7,3 Go. »
+
+puis
+
+> « Ta consommation est de 7,3 Go, dont 3,2 Go de cache, avec un pic de 5,9 Go
+> sur 14 jours ; voici pourquoi nous recommandons de ne pas augmenter le
+> plafond. »
+
+**Comment lire le résultat :** mesurer laquelle inspire assez confiance pour
+déclencher une action. Si la seconde n'apporte rien, le principe 10 est un coût
+sans bénéfice — ce qui serait une découverte majeure et contre-intuitive.
+
+---
+
+## Journal de validation
+
+> **Ce tableau existe pour empêcher le projet de remplacer les utilisateurs par
+> les documents.** Une hypothèse reste `non testée` tant qu'une ligne ci-dessous
+> ne porte pas un résultat. Le seuil de succès se fixe **avant** l'expérience,
+> jamais après : un seuil écrit après coup ne réfute rien.
+
+| Exp. | Hypothèse | Population | Métrique | Seuil de succès | Résultat | Décision | Date |
+|---|---|---|---|---|---|---|---|
+| **E1** | A5 | 1 (le mainteneur) — biais assumé | Nombre et répartition des entrées `SWITCH` de `data/history.json` | ≥ 1 changement/semaine en moyenne, et ≥ 2 profils réellement utilisés | *non menée* | — | — |
+| **E2** | A2 | 1 (le mainteneur), 1 semaine | Besoin ressenti de baisser le plafond, avec `autoMemoryReclaim=gradual` actif | Le besoin subsiste → A2 tient | *non menée* | — | — |
+| **E3** | A1, A9 | Utilisateurs externes, après P2 | Utilisations réelles de `wisely diagnose`, et réutilisations | À fixer avant publication — un seuil défini après coup ne réfute rien | *non menée* | — | — |
+| **E4** | A9, A10 | ≥ 5 personnes, 3 outillages comparés | Temps pour identifier la cause probable | Réduction ≥ 50 % face au meilleur des deux autres outillages | *non menée* | — | — |
+| **E5** | A11 | ≥ 5 personnes | Part qui déclenche l'action proposée | La sortie sourcée déclenche strictement plus que la brute | *non menée* | — | — |
+
+**Règle de tenue.** Chaque expérience menée remplit ses colonnes `Résultat`,
+`Décision` et `Date`, **y compris quand le résultat infirme l'hypothèse** — c'est
+même le cas le plus précieux. La colonne `Statut` du registre est mise à jour
+dans le même mouvement. Une expérience abandonnée est marquée comme telle avec
+son motif ; elle n'est pas effacée.
 
 ---
 

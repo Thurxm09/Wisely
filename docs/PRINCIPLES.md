@@ -8,7 +8,7 @@
 > quel que soit son attrait technique. Les conventions de code vivent dans
 > `CONTRIBUTING.md`, pas ici.
 >
-> Statut : vivant. Dernière révision : 2026-08-26.
+> Statut : vivant. Dernière révision : 2026-08-27.
 
 ---
 
@@ -17,10 +17,25 @@
 Repris de l'ancien `ROADMAP.md` §9, où ils étaient noyés dans un document qui
 faisait cinq métiers à la fois. Ils ont tenu et restent valides.
 
-### 1. Zéro configuration requise pour commencer
+### 1. Zéro configuration technique obligatoire pour obtenir la première valeur
 
 Un utilisateur qui installe l'outil doit pouvoir l'exécuter immédiatement, sans
 modifier aucun fichier. La personnalisation est possible, jamais obligatoire.
+
+> **Révision 2026-08-27.** La formulation d'origine — « zéro configuration requise
+> pour commencer » — entrait en collision frontale avec le consentement explicite
+> de la lecture invitée (`DOCTRINE-LECTURE.md` §2.5), qui est un geste demandé à
+> l'utilisateur avant toute valeur. Il faut distinguer deux choses que le mot
+> « configuration » confondait :
+>
+> | | Statut |
+> |---|---|
+> | **Configuration technique** — éditer un fichier, poser des valeurs, calibrer | À éviter. C'est le principe |
+> | **Consentement et contrôle** — autoriser une lecture, choisir une profondeur de diagnostic, révoquer | **Légitime, et souhaitable.** Un outil qui entre dans le Linux de quelqu'un doit demander |
+>
+> Ce ne sont pas des préférences à minimiser : ce sont des décisions que
+> l'utilisateur a le droit de prendre. Ce qui doit rester à zéro, c'est le travail
+> technique exigé **avant** la première réponse utile.
 
 > **Révision 2026-08-26.** Ce principe était en contradiction ouverte avec les
 > profils livrés : trois valeurs absolues en gigaoctets calibrées sur une machine
@@ -102,7 +117,7 @@ pas créés lui-même.
 > switch. Et `Test-WslConfigIntegrity` ne vérifie que les trois clés que Wisely
 > vient d'écrire — le filet de sécurité ne pouvait donc pas détecter la perte.
 
-### 9. Ne jamais mesurer ce qu'on ne peut pas attribuer
+### 9. Toute mesure porte sa portée, sa source, sa fraîcheur et sa confiance
 
 Une mesure doit pouvoir désigner ce qu'elle mesure. Si une grandeur ne peut pas
 être rattachée à sa cause, elle ne doit pas être affichée comme si elle l'était.
@@ -110,6 +125,29 @@ Une mesure doit pouvoir désigner ce qu'elle mesure. Si une grandeur ne peut pas
 Corollaire opérationnel : **une mesure qui échoue doit le dire**. Une métrique
 dégradée en `$null` silencieux est pire que pas de métrique du tout, parce
 qu'elle est indiscernable d'une valeur nulle légitime.
+
+> **Renforcement 2026-08-27.** « Attribuable ou non » est une distinction trop
+> grossière. Toute grandeur affichée appartient à **une** de quatre classes, et sa
+> classe est visible côté utilisateur :
+>
+> | Classe | Ce qu'on a le droit d'en dire |
+> |---|---|
+> | **Directe** | « C'est la valeur » |
+> | **Attribuée** | « C'est ce qui est rattachable à X », jamais « c'est ce que X consomme » |
+> | **Estimée** | « Estimation, sous telle hypothèse » — l'hypothèse est nommée |
+> | **Corrélée** | « Observé en même temps », jamais « causé par » |
+>
+> Deux règles dures en découlent, toutes deux issues de pièges réels :
+>
+> 1. **La somme des RSS n'est jamais présentée comme égale à la RAM consommée.**
+>    Les pages partagées sont comptées dans chaque processus qui les mappe. Toute
+>    vue d'attribution affiche sa ligne « non attribué ».
+> 2. **Il n'y a pas d'écart CPU.** `loadavg` n'est pas un pourcentage, `nproc` ne
+>    mesure aucun usage, et le CPU de la machine virtuelle côté Windows n'a pas la
+>    même sémantique que la charge invitée.
+>
+> Le détail par ressource vit dans `RESOURCE-MODEL.md`, qui est à ce principe ce
+> que `DOCTRINE-LECTURE.md` est au principe 12.
 
 > *Origine :* `ramDeltaGB` mesure la RAM libérée par l'arrêt de WSL2, puis
 > l'attribue au profil cible dans le rapport hebdomadaire. Le seuil d'alerte
@@ -149,18 +187,60 @@ qu'elle ne fera jamais.
 
 Voir `DOCTRINE-LECTURE.md`, écrit avant la ligne de code correspondante.
 
+### 13. Expliquer avant de recommander
+
+L'explication est un livrable en soi, pas la note de bas de page d'une
+recommandation. L'utilisateur doit pouvoir comprendre son état **même quand
+aucune action n'est recommandée** — et « tout va bien, voici pourquoi » est une
+réponse de plein droit.
+
+Ce principe complète le 10 sans le doubler : le 10 exige qu'une recommandation
+porte sa preuve ; le 13 exige que l'explication vaille sans recommandation.
+
+> *Origine :* l'ancienne boucle disait « observer → **comprendre** → décider ».
+> Ce mot rangeait le travail le plus difficile dans la tête de l'utilisateur, où
+> il n'était ni construit, ni testé, ni ratable. C'est exactement là que se trouve
+> la douleur : « Task Manager + WSL Settings + htop » donnent tous les chiffres,
+> et personne ne fait la jointure.
+
+### 14. La provenance est visible
+
+Toute clé de `.wslconfig` affichée indique si Wisely la gère ou non. Pas « qui a
+écrit cette ligne » — cette information n'est pas connue et ne doit pas être
+inventée — mais :
+
+```text
+memory              8GB       gérée par Wisely
+processors          8         gérée par Wisely
+networkingMode      mirrored  externe
+autoMemoryReclaim   gradual   externe
+```
+
+C'est la face lisible du principe 8. Le 8 garantit qu'on ne détruit pas ce qu'on
+ne gère pas ; le 14 le rend **vérifiable par l'utilisateur** au lieu d'exiger
+qu'il le croie. C'est ce qui rend la coexistence avec Docker Desktop, WSL
+Settings et une politique d'entreprise réellement crédible.
+
 ---
 
 ## Comment utiliser ces principes
 
 Devant une proposition, les questions dans l'ordre :
 
-1. S'exprime-t-elle comme une opération sur l'écart (`VISION.md`) ?
-2. Quelle case de la carte du problème remplit-elle, pour quel segment
-   (`PROBLEM.md`) ?
-3. Viole-t-elle un principe ci-dessus ? Lequel, et est-ce assumé et écrit ?
-4. Repose-t-elle sur une hypothèse non validée (`ASSUMPTIONS.md`) ? Si oui, la
+1. Sert-elle un des **quatre objets** — État, Cause, Politique, Action — pour un
+   **maillon nommé** de la boucle (`VISION.md`) ? Lequel ?
+2. Quelle case de la carte du problème remplit-elle (`PROBLEM.md` §3), et quelle
+   **situation** sert-elle (`USE-CASES.md`) ?
+3. Tombe-t-elle dans un des **non-buts** déclarés (`VISION.md`) ?
+4. Viole-t-elle un principe ci-dessus ? Lequel, et est-ce assumé et écrit ?
+5. Repose-t-elle sur une hypothèse non validée (`ASSUMPTIONS.md`) ? Si oui, la
    valider coûte-t-il moins cher que de construire ?
 
 Une réponse absente à la question 1 ou 2 est un signal d'arrêt, pas un détail à
 préciser plus tard.
+
+> **Note 2026-08-27.** La question 1 disait auparavant « s'exprime-t-elle comme
+> une opération sur l'écart ? ». Ce test a réellement servi — il a écarté le spike
+> Terminal.Gui, les hooks et `-Snapshot`. En requalifiant l'écart, il fallait le
+> remplacer par un filtre au moins aussi tranchant, et non le diluer. Voir
+> `decisions/0013-adoption-audit-strategique-externe.md`.

@@ -1,6 +1,11 @@
-# Wisely — WSL2 profile switcher
+# Wisely — WSL2 Resource Intelligence & Control
 
-> Gérez vos ressources WSL2 en un instant — profils mémoire, surveillance RAM en arrière-plan et rapports hebdomadaires, le tout depuis un menu interactif ou une seule commande.
+> **Comprendre WSL. Agir en confiance.**
+>
+> Wisely transforme l'état réel des ressources WSL2 en décisions explicables et en
+> actions sûres. Aujourd'hui, il livre le maillon « agir » : profils mémoire,
+> sauvegarde et rollback à chaque écriture, surveillance RAM en arrière-plan et
+> rapports, depuis un menu interactif ou une seule commande.
 
 ![Version](https://img.shields.io/badge/version-2.4.0-blue)
 ![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B-5391FE?logo=powershell&logoColor=white)
@@ -10,7 +15,7 @@
 
 ## Table des matières
 
-- [Wisely — WSL2 profile switcher](#wisely--wsl2-profile-switcher)
+- [Wisely — WSL2 Resource Intelligence \& Control](#wisely--wsl2-resource-intelligence--control)
   - [Table des matières](#table-des-matières)
   - [Pourquoi ce projet ?](#pourquoi-ce-projet-)
   - [Fonctionnalités](#fonctionnalités)
@@ -32,13 +37,22 @@
 
 ## Pourquoi ce projet ?
 
-Sur une machine de 16 Go de RAM, laisser WSL2 consommer 6 Go en permanence pour de la navigation web ou du travail léger est inutile et pénalisant. **Wisely** permet de basculer instantanément entre des profils mémoire adaptés à chaque usage, sans jamais éditer `.wslconfig` à la main.
+Depuis Windows, WSL2 est une boîte opaque : un seul processus agrège le noyau Linux, le cache et tous les processus invités. Depuis Linux, `htop` ignore jusqu'à l'existence du plafond imposé. **Personne ne fait la jointure** — et c'est pour cela qu'on ne sait ni pourquoi WSL2 consomme ce qu'il consomme, ni quelle action serait sûre.
+
+Wisely s'attaque à cette jointure. Il en livre aujourd'hui la moitié la plus difficile — **agir sans rien casser** :
 
 - ✅ Changement de profil en une commande ou via un menu interactif
 - ✅ Sauvegarde automatique et rollback instantané à chaque opération
+- ✅ Validation post-écriture, mode simulation, garde-fou avant d'interrompre WSL2
 - ✅ Surveillance RAM WSL2 en arrière-plan avec alertes natives Windows
 - ✅ Rapports d'utilisation hebdomadaires générés automatiquement
 - ✅ Entièrement extensible via un fichier JSON — aucune modification du code requise
+
+### Ce qui n'est pas encore livré
+
+Le projet est **transparent sur son état réel** : comprendre et expliquer viennent après agir. La commande de diagnostic `wisely diagnose`, la lecture à l'intérieur des distributions et l'attribution de la consommation sont planifiées, pas disponibles. Plusieurs mesures actuelles sont par ailleurs connues comme fausses et corrigées en priorité — voir [`docs/ROADMAP.md`](docs/ROADMAP.md).
+
+La direction du produit, ce qu'il ne deviendra jamais et pourquoi : [`docs/VISION.md`](docs/VISION.md).
 
 ---
 

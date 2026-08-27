@@ -28,7 +28,7 @@ réviser une seule sans toucher au reste.
 | [0002](0002-tests-sans-wsl2.md) | Stratégie de test entièrement sans WSL2 | acceptée | 2026-08-25 |
 | [0003](0003-powershell-5-et-7.md) | PowerShell 5.1 et 7+ en parallèle | acceptée | 2026-08-25 |
 | [0004](0004-gouvernance-organisation-github.md) | Organisation GitHub pour la gouvernance | en attente | 2026-08-25 |
-| [0005](0005-direction-boucle-fermee.md) | Direction produit : la boucle fermée | acceptée | 2026-08-26 |
+| [0005](0005-direction-boucle-fermee.md) | Direction produit : la boucle fermée | révisée | 2026-08-26 |
 | [0006](0006-profils-derives.md) | Profils dérivés plutôt qu'absolus | acceptée | 2026-08-26 |
 | [0007](0007-annulation-spike-terminal-gui.md) | Annulation du spike Terminal.Gui | acceptée | 2026-08-26 |
 | [0008](0008-lecture-in-distro.md) | Lecture dans la distribution, sous contrat | acceptée | 2026-08-26 |
@@ -36,3 +36,4 @@ réviser une seule sans toucher au reste.
 | [0010](0010-retrait-reclaim-optimize-vhd.md) | Retrait de `-Reclaim` sous sa forme `Optimize-VHD` | acceptée | 2026-08-26 |
 | [0011](0011-auto-switch-reporte.md) | Changement de profil automatique reporté | acceptée | 2026-08-26 |
 | [0012](0012-hooks-echec-par-regle.md) | Hooks : comportement d'échec choisi par règle | en attente | 2026-08-25 |
+| [0013](0013-adoption-audit-strategique-externe.md) | Adoption de l'audit stratégique externe d'août 2026 | acceptée | 2026-08-27 |
