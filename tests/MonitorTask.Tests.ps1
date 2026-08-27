@@ -8,8 +8,15 @@
 #  via l'operateur d'appel "&", sur une copie du script reelle placee
 #  sous $Global:WSLRoot/modules (le script derive ses chemins de
 #  $PSScriptRoot, pas de $Global:WSLRoot - voir AUDIT.md).
+#
+#  Depuis v2.5, le seuil d'alerte porte sur le plafond WSL2 configure
+#  dans .wslconfig (memory=), et non plus sur la RAM totale de la
+#  machine - voir docs/RESOURCE-MODEL.md section 3 (melange de portees) et
+#  docs/TASKS.md. Get-CimInstance/Win32_OperatingSystem n'est donc plus
+#  utilise par ce script.
 
 BeforeAll {
+    . "$PSScriptRoot/../modules/ProfileManager.ps1"
     . "$PSScriptRoot/TestHelpers.ps1"
 
     function script:Invoke-TestMonitorTask {
@@ -29,15 +36,11 @@ Describe "MonitorTask.ps1" {
 
     BeforeEach {
         $script:testRoot = New-TestWslRoot
-        # Get-CimInstance (module CimCmdlets) n'existe pas sur le runner
-        # Linux de la CI - meme piege que "wsl", stub avant de mocker.
-        if (-not (Get-Command Get-CimInstance -ErrorAction SilentlyContinue)) {
-            function script:Get-CimInstance { }
-        }
-        Mock Get-CimInstance { [PSCustomObject]@{ TotalVisibleMemorySize = 16000000 } }
+        Set-TestUserProfile -Path $script:testRoot
     }
 
     AfterEach {
+        Restore-TestUserProfile
         Remove-TestWslRoot -Path $script:testRoot
     }
 
@@ -47,13 +50,13 @@ Describe "MonitorTask.ps1" {
         Invoke-TestMonitorTask
 
         Test-Path (Get-TestCooldownPath) | Should -Be $false
-        Should -Invoke -CommandName Get-CimInstance -Times 0 -Exactly
     }
 
     It "detecte VmmemWSL quand vmmem est absent (Windows 11 recent)" {
+        New-TestWslConfig | Out-Null
         Mock Get-Process {
             if ($Name -contains "VmmemWSL") {
-                [PSCustomObject]@{ WorkingSet64 = 8000000000 }
+                [PSCustomObject]@{ WorkingSet64 = 3GB }
             } else {
                 $null
             }
@@ -64,16 +67,33 @@ Describe "MonitorTask.ps1" {
         Test-Path (Get-TestCooldownPath) | Should -Be $true
     }
 
-    It "n'ecrit pas de cooldown quand la RAM utilisee reste sous le seuil" {
-        Mock Get-Process { [PSCustomObject]@{ WorkingSet64 = 8000000000 } }
+    It "calcule le pourcentage par rapport au plafond WSL2 configure, pas a la RAM totale" {
+        # Plafond 4GB (fixture par defaut de New-TestWslConfig), 3GB utilises = 75%.
+        # Sur une machine a, disons, 32GB de RAM totale, 3GB ne represente que
+        # ~9% de la RAM physique - l'ancien calcul (RAM totale) ne se serait
+        # jamais declenche a un seuil de 80%. C'est exactement le bug corrige.
+        New-TestWslConfig -Content "[wsl2]`nmemory=4GB`nprocessors=3`n" | Out-Null
+        Mock Get-Process { [PSCustomObject]@{ WorkingSet64 = 3GB } }
+
+        Invoke-TestMonitorTask -ThresholdPct 70
+
+        Test-Path (Get-TestCooldownPath) | Should -Be $true
+    }
+
+    It "n'ecrit pas de cooldown quand l'usage reste sous le seuil du plafond" {
+        # 3GB / 4GB = 75%, sous un seuil de 80%.
+        New-TestWslConfig | Out-Null
+        Mock Get-Process { [PSCustomObject]@{ WorkingSet64 = 3GB } }
 
         Invoke-TestMonitorTask -ThresholdPct 80
 
         Test-Path (Get-TestCooldownPath) | Should -Be $false
     }
 
-    It "ecrit un cooldown horodate quand la RAM utilisee depasse le seuil" {
-        Mock Get-Process { [PSCustomObject]@{ WorkingSet64 = 8000000000 } }
+    It "ecrit un cooldown horodate quand l'usage depasse le seuil du plafond" {
+        # 3GB / 4GB = 75%, au-dessus d'un seuil de 40%.
+        New-TestWslConfig | Out-Null
+        Mock Get-Process { [PSCustomObject]@{ WorkingSet64 = 3GB } }
 
         Invoke-TestMonitorTask -ThresholdPct 40
 
@@ -84,7 +104,8 @@ Describe "MonitorTask.ps1" {
     }
 
     It "ne reecrit pas une alerte recente (cooldown actif)" {
-        Mock Get-Process { [PSCustomObject]@{ WorkingSet64 = 8000000000 } }
+        New-TestWslConfig | Out-Null
+        Mock Get-Process { [PSCustomObject]@{ WorkingSet64 = 3GB } }
         $cooldownPath = Get-TestCooldownPath
         $recentAlert = (Get-Date).AddMinutes(-5).ToString("yyyy-MM-dd HH:mm:ss")
         $recentAlert | Set-Content -Path $cooldownPath -Encoding ASCII
@@ -95,7 +116,8 @@ Describe "MonitorTask.ps1" {
     }
 
     It "declenche une nouvelle alerte si le cooldown precedent est expire" {
-        Mock Get-Process { [PSCustomObject]@{ WorkingSet64 = 8000000000 } }
+        New-TestWslConfig | Out-Null
+        Mock Get-Process { [PSCustomObject]@{ WorkingSet64 = 3GB } }
         $cooldownPath = Get-TestCooldownPath
         $oldAlert = (Get-Date).AddMinutes(-45).ToString("yyyy-MM-dd HH:mm:ss")
         $oldAlert | Set-Content -Path $cooldownPath -Encoding ASCII
@@ -106,7 +128,8 @@ Describe "MonitorTask.ps1" {
     }
 
     It "s'auto-repare quand le fichier cooldown est corrompu (illisible)" {
-        Mock Get-Process { [PSCustomObject]@{ WorkingSet64 = 8000000000 } }
+        New-TestWslConfig | Out-Null
+        Mock Get-Process { [PSCustomObject]@{ WorkingSet64 = 3GB } }
         $cooldownPath = Get-TestCooldownPath
         "pas-une-date-valide" | Set-Content -Path $cooldownPath -Encoding ASCII
 
@@ -119,13 +142,34 @@ Describe "MonitorTask.ps1" {
         (Get-Content (Get-TestErrorLogPath) -Raw) | Should -Match "cooldown"
     }
 
-    It "n'ecrit pas de cooldown et journalise l'erreur quand la mesure RAM (CIM) echoue" {
-        Mock Get-Process { [PSCustomObject]@{ WorkingSet64 = 8000000000 } }
-        Mock Get-CimInstance { throw "WMI indisponible" }
+    It "n'ecrit pas de cooldown et journalise l'erreur quand .wslconfig est absent" {
+        # Pas de New-TestWslConfig ici : aucun plafond connu, donc aucun
+        # pourcentage significatif calculable (principe 9 - une mesure qui
+        # echoue doit le dire, jamais se rabattre sur une supposition).
+        Mock Get-Process { [PSCustomObject]@{ WorkingSet64 = 3GB } }
 
         { Invoke-TestMonitorTask -ThresholdPct 40 } | Should -Not -Throw
 
         Test-Path (Get-TestCooldownPath) | Should -Be $false
-        (Get-Content (Get-TestErrorLogPath) -Raw) | Should -Match "Mesure RAM impossible"
+        (Get-Content (Get-TestErrorLogPath) -Raw) | Should -Match "[Pp]lafond"
+    }
+
+    It "n'ecrit pas de cooldown et journalise l'erreur quand .wslconfig n'a pas de cle memory=" {
+        New-TestWslConfig -Content "[wsl2]`nprocessors=3`n" | Out-Null
+        Mock Get-Process { [PSCustomObject]@{ WorkingSet64 = 3GB } }
+
+        { Invoke-TestMonitorTask -ThresholdPct 40 } | Should -Not -Throw
+
+        Test-Path (Get-TestCooldownPath) | Should -Be $false
+        (Get-Content (Get-TestErrorLogPath) -Raw) | Should -Match "[Pp]lafond"
+    }
+
+    It "accepte un plafond exprime en MB" {
+        New-TestWslConfig -Content "[wsl2]`nmemory=4096MB`nprocessors=3`n" | Out-Null
+        Mock Get-Process { [PSCustomObject]@{ WorkingSet64 = 3GB } }
+
+        Invoke-TestMonitorTask -ThresholdPct 40
+
+        Test-Path (Get-TestCooldownPath) | Should -Be $true
     }
 }

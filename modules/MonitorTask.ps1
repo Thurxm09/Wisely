@@ -12,24 +12,50 @@ function Write-MonitorTaskError {
     "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] $Message" | Add-Content $errorLog -Encoding ASCII
 }
 
+function Get-WslMemoryCeilingBytes {
+    <#
+    .SYNOPSIS
+        Lit le plafond memoire configure dans .wslconfig (memory=), en
+        octets. C'est la Politique au sens de RESOURCE-MODEL.md, la seule
+        portee valide pour un pourcentage d'usage WSL2 - la RAM totale de
+        la machine (portee host) n'est jamais le bon denominateur.
+        Retourne $null si .wslconfig est absent, illisible, ou si la cle
+        memory= est absente ou dans un format non reconnu (entier suivi
+        de GB ou MB) - jamais une supposition a la place d'une mesure
+        (principe 9).
+    #>
+    $configPath = Join-Path $env:USERPROFILE ".wslconfig"
+    if (-not (Test-Path $configPath)) { return $null }
+    try {
+        $line = Get-Content $configPath -ErrorAction Stop |
+                Where-Object { $_ -match "^memory=" } |
+                Select-Object -First 1
+    } catch {
+        return $null
+    }
+    if (-not $line) { return $null }
+    $value = $line -replace "^memory=", ""
+    if ($value -match "^(\d+)\s*GB$")  { return [int64]$Matches[1] * 1GB }
+    if ($value -match "^(\d+)\s*MB$")  { return [int64]$Matches[1] * 1MB }
+    return $null
+}
+
 # "vmmem" sur les versions plus anciennes de Windows, "VmmemWSL" sur
 # Windows 11 recent - les deux noms sont acceptes (v2.5, voir
 # RESOURCE-MODEL.md).
 $vmmem = Get-Process -Name "VmmemWSL", "vmmem" -ErrorAction SilentlyContinue | Select-Object -First 1
 if (-not $vmmem) { exit 0 }
 
-try {
-    $os        = Get-CimInstance Win32_OperatingSystem
-    $totalKB   = $os.TotalVisibleMemorySize
-    $usedByWsl = [math]::Round($vmmem.WorkingSet64 / 1KB, 0)
-    $pct       = [math]::Round($usedByWsl / $totalKB * 100, 0)
-} catch {
-    # Sans cette mesure, on ne sait pas si le seuil est depasse - on
-    # journalise et on s'arrete plutot que de planter silencieusement a
-    # chaque execution planifiee (voir AUDIT.md, dette de resilience v2.3).
-    Write-MonitorTaskError "Mesure RAM impossible : $_"
+$ceilingBytes = Get-WslMemoryCeilingBytes
+if (-not $ceilingBytes) {
+    # Sans plafond connu, aucun pourcentage n'a de sens - on journalise et
+    # on s'arrete plutot que de deviner ou de planter silencieusement a
+    # chaque execution planifiee (voir AUDIT.md, dette de resilience v2.3 ;
+    # RESOURCE-MODEL.md, ne jamais melanger les portees).
+    Write-MonitorTaskError "Plafond WSL2 introuvable ou illisible dans .wslconfig - alerte ignoree"
     exit 0
 }
+$pct = [math]::Round($vmmem.WorkingSet64 / $ceilingBytes * 100, 0)
 
 if ($pct -lt $ThresholdPct) { exit 0 }
 
@@ -51,13 +77,13 @@ if (Test-Path $cooldownFile) {
 
 (Get-Date -Format "yyyy-MM-dd HH:mm:ss") | Set-Content $cooldownFile -Encoding ASCII
 
-$usedGB  = [math]::Round($vmmem.WorkingSet64 / 1GB, 1)
-$totalGB = [math]::Round($totalKB / 1MB, 1)
-$appId   = "{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe"
+$usedGB    = [math]::Round($vmmem.WorkingSet64 / 1GB, 1)
+$ceilingGB = [math]::Round($ceilingBytes / 1GB, 1)
+$appId     = "{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe"
 
 $xml = "<toast><visual><binding template='ToastGeneric'>" +
        "<text>WSL2 - Alerte memoire</text>" +
-       "<text>RAM : $pct% utilise ($usedGB GB / $totalGB GB)</text>" +
+       "<text>RAM : $pct% du plafond utilise ($usedGB GB / $ceilingGB GB)</text>" +
        "<text>Pensez a switcher vers un profil plus leger.</text>" +
        "</binding></visual></toast>"
 
