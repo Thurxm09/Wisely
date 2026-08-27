@@ -4,7 +4,7 @@
 
 | Terme | Signification |
 |-------|---------------|
-| Wisely | Nom du projet — définitif. Les mentions résiduelles de `wsl-switch` (notamment sur le site) sont des vestiges à corriger, pas un nom alternatif |
+| Wisely | Nom du projet — définitif, pas un nom alternatif. Ancien nom de travail : `wsl-switch` (aucune mention résiduelle trouvée dans le code ou le site à ce jour — vérifié le 2026-08-27) |
 | Les quatre objets | Le vocabulaire du produit : **État** (quel est l'état réel ?), **Cause** (pourquoi ?), **Politique** (qu'est-ce qui est permis ?), **Action** (que peut-on faire sans danger ?). Voir `VISION.md` |
 | La boucle | Le modèle produit : observer → **expliquer** → recommander → agir → vérifier. Wisely ne détient historiquement que le maillon « agir ». « Expliquer » est un maillon nommé depuis le 2026-08-27 : c'est un livrable, pas un sous-produit |
 | **L'écart** | La relation entre l'**État** observé et la **Politique** de ressources : la distance entre ce que WSL2 consomme et ce qu'on l'autorise à consommer. **Requalifié le 2026-08-27** : modèle interne puissant pour les ressources à plafond configurable (mémoire, CPU exposé, swap), il n'est plus l'ontologie du produit — il ne dit rien du cache, de l'I/O ou du disque, et masque que 8 Go consommés ne sont pas 8 Go nécessaires. Voir `decisions/0013-...` |
@@ -23,7 +23,7 @@
 |-------|---------------|
 | `.wslconfig` | Fichier de configuration globale de WSL2, dans le profil utilisateur Windows. **Fichier partagé** : il peut contenir des réglages posés par l'utilisateur, Docker Desktop, WSL Settings ou une politique d'entreprise. Les chemins de swap utilisent des slashs (`C:/Temp/wsl-swap.vhdx`) |
 | `wsl.conf` | Configuration **par distribution**, à l'intérieur de Linux. Wisely n'y touche pas |
-| `vmmem` / `VmmemWSL` | Processus Windows agrégeant toute la consommation WSL2. **Deux noms selon la version de Windows** : le code ne cherche aujourd'hui que `vmmem`, ce qui rend l'observation inopérante sur Windows 11 récent (corrigé en v2.5) |
+| `vmmem` / `VmmemWSL` | Processus Windows agrégeant toute la consommation WSL2. **Deux noms selon la version de Windows** : le code ne cherchait auparavant que `vmmem`, ce qui rendait l'observation inopérante sur Windows 11 récent. `Get-VmmemStats` (`Monitor.ps1`) cherche désormais les deux noms — **corrigé en P0 / v2.5** |
 | `autoMemoryReclaim` | Réglage `.wslconfig` (`gradual` / `dropcache`) rendant à Windows la mémoire cache inactive. Pas actif par défaut. Répond en partie au grief fondateur du projet — voir hypothèse A2. **Change la signification de la mesure mémoire, pas seulement sa valeur** : aucune recommandation de plafond ne se formule sans indiquer son état |
 | `MemAvailable` / `MemFree` | Deux champs de `/proc/meminfo` régulièrement confondus. `MemFree` est presque toujours bas et ce n'est **pas** un problème — Linux utilise la RAM libre comme cache. `MemAvailable` est le bon chiffre pour « reste-t-il de la marge ? » |
 | RSS | Mémoire résidente d'un processus, **pages partagées incluses**. La somme des RSS peut donc dépasser la mémoire réellement occupée : elle n'est jamais présentée comme la consommation totale (`RESOURCE-MODEL.md` §4.4) |
