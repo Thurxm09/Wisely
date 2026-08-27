@@ -2,6 +2,13 @@
 
 ## Non publie
 
+### Securite -- injection possible via la cle d'un profil (post P0/v2.5)
+
+- **`Test-ProfileDefinition` validait tous les champs interpoles dans `.wslconfig` sauf la cle du profil elle-meme.** Depuis les correctifs P0/v2.5 "identite du profil actif" et "ecriture non destructive", cette cle est ecrite telle quelle dans une section `[wisely]` de `.wslconfig`. Une cle important un `\r\n` (via `Import-Profiles`, ou affichee/transmise telle quelle par le menu interactif) pouvait injecter une section ou une cle `.wslconfig` arbitraire au switch suivant -- y compris `[wsl2]`/`kernelCommandLine`, sur un fichier de config systeme Windows que `wsl.exe` utilise reellement
+- `Test-ProfileDefinition` rejette desormais toute cle contenant `\r`/`\n`, avec le meme mecanisme que les autres champs deja proteges. Couvre `New-CustomProfile` et `Import-Profiles` sans toucher a leurs appelants (point de passage unique depuis v2.3-C-1, `docs/AUDIT.md`)
+- Trouve lors d'une revue de code post-fusion du palier P0/v2.5. Developpe en TDD : nouveaux tests sur `Import-Profiles` et `New-CustomProfile`. Suite complete : 180 tests, 0 echec, aucune regression
+- Detail complet : `docs/AUDIT.md` (v2.5-C-1)
+
 ### v2.5 "Verite" -- cinquieme correctif, cycle termine (ecriture non destructive de .wslconfig)
 
 - **`.wslconfig` n'est plus jamais reecrit entierement, seulement fusionne.** Nouvelle primitive `Set-IniSectionKeys` (`modules/ProfileManager.ps1`) : remplace ou ajoute les cles gerees dans une section INI nommee, sans toucher au reste -- toute autre cle, tout autre commentaire, toute autre section (`autoMemoryReclaim`, `sparseVhd`, `nestedVirtualization`, `[experimental]`, poses par l'utilisateur, Docker Desktop ou WSL Settings) sont preserves tels quels. `ConvertTo-WslConfigContent` l'utilise pour `[wsl2]` (les cinq cles gerees) et pour `[wisely]` (le marqueur d'identite du correctif precedent)

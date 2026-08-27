@@ -244,6 +244,22 @@ Describe "Import-Profiles" {
             { Import-Profiles -Path $script:importSource } | Should -Throw "*swappiness*"
         }
 
+        It "leve une exception quand la cle d'un profil contient une injection de nouvelle ligne" {
+            # La cle est ecrite telle quelle dans .wslconfig par
+            # ConvertTo-WslConfigContent (section [wisely], profile=<cle>) et
+            # affichee telle quelle par le menu interactif (wisely.ps1,
+            # Show-InteractiveMenu) - une cle avec `r`n permettrait d'injecter
+            # une section ou une cle arbitraire dans .wslconfig au prochain
+            # switch. Test-ProfileDefinition validait deja tous les autres
+            # champs interpoles pour ce risque, jamais la cle elle-meme.
+            $config = Get-ValidProfilesConfig
+            $maliciousKey = "web`r`n[wsl2]`r`nmemory=999GB"
+            $config.profiles[$maliciousKey] = $config.profiles.web
+            $config | ConvertTo-Json -Depth 10 | Set-Content -Path $script:importSource -Encoding UTF8
+
+            { Import-Profiles -Path $script:importSource } | Should -Throw "*cle*"
+        }
+
         It "ne modifie pas profiles.json quand la validation echoue" {
             $config = Get-ValidProfilesConfig
             $config.profiles.web.memory = "pasunememoire"
@@ -1197,6 +1213,10 @@ Describe "New-CustomProfile" {
 
     It "leve une exception quand le nombre de CPU depasse les CPU logiques disponibles" {
         { New-CustomProfile -Key "gaming" -Memory "8GB" -Processors 99 } | Should -Throw "*CPU invalide*"
+    }
+
+    It "leve une exception quand la cle contient une injection de nouvelle ligne" {
+        { New-CustomProfile -Key "gaming`r`n[wsl2]`r`nmemory=999GB" -Memory "8GB" -Processors 2 } | Should -Throw "*cle*"
     }
 
     It "cree un profil avec la forme attendue quand les parametres sont valides" {
