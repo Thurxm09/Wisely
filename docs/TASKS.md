@@ -30,7 +30,7 @@ refute rien.
 
 - [ ] **Upgrade RAM 32GB (2x8GB DDR4-2666 SO-DIMM)** - materiel, a l'etude. Note : rendra les trois profils absolus livres denues de sens, ce que v3.1 corrige a la racine
 - [ ] **Extension SSD** - slot M.2 confirme libre, a l'etude
-- [ ] **Resynchroniser le depot `wisely-site`** - publie la v2.0.0, un changelog arrete la, et une commande d'installation `wsl-switch` qui n'existe plus. Prerequis de v4.0, passe dediee
+- [ ] **Resynchroniser le depot `wisely-site`** - son changelog (`src/content/changelog.ts`) s'arrete a l'entree v2.0.0 alors que Wisely est a v2.4.0/P0-v2.5 (verifie le 2026-08-27 ; aucune mention residuelle de `wsl-switch` trouvee, deja nettoyee). Prerequis de v4.0, passe dediee
 
 ## Done
 
