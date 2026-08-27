@@ -297,7 +297,7 @@ les décisions de retrait ne se rejouent pas.
 | Profils métier `web` / `data` / `base` | **REMOVE** | Noms trop prescriptifs, valeurs calibrées sur une seule machine. Remplacés en P7. |
 | Cascade organisation / équipe | **DEFER** | Problème de distribution sans utilisateurs. Dépend de A1. |
 | Auto-switch contextuel | **DEFER** | [0011](decisions/0011-auto-switch-reporte.md). Dépend de A5. |
-| Hooks `pre` / `post-switch` | **DEFER** | Ne sert aucun des quatre objets. [0012](decisions/0012-hooks-echec-par-regle.md) |
+| Hooks `pre` / `post-switch` | **DEFER** | Point d'extension générique : ne compte pas comme réponse valide à la question 1 du filtre (`VISION.md`), et aucun besoin utilisateur ne l'appuie — principe 6. [0012](decisions/0012-hooks-echec-par-regle.md) |
 | PowerShell Gallery, Winget | **DEFER** | Déplacé en P9. [0009](decisions/0009-distribution-apres-le-produit.md) |
 | Resource Evidence Graph | **DEFER** | Superstructure sur des données qui n'existent pas et un produit sans utilisateur. À rouvrir après P3. [0013](decisions/0013-adoption-audit-strategique-externe.md) |
 | `ARCHITECTURE.md` | **DEFER** | Sans code correspondant, ce serait un dessin. À écrire quand P2 rend l'architecture réelle. |

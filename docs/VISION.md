@@ -131,14 +131,34 @@ Une capacité fondamentale se reconnaît à ce qu'elle sait dire non. Devant tou
 proposition, dans cet ordre :
 
 1. **Sert-elle un des quatre objets** — État, Cause, Politique, Action — pour un
-   **maillon nommé** de la boucle ? Lequel ?
+   **maillon nommé** de la boucle ? Lequel ? Un mécanisme générique — un point
+   d'extension, un hook, une simple substitution d'interface — qui pourrait
+   servir n'importe quel objet selon ce que l'utilisateur y brancherait **ne
+   compte pas** comme réponse valide : la fonctionnalité doit servir un objet
+   par elle-même, pas par ce qu'on pourrait un jour y ajouter.
 2. **Quelle case** de la carte du problème (`PROBLEM.md` §3) remplit-elle, et
    **quelle situation** de `USE-CASES.md` sert-elle ?
 3. **Tombe-t-elle dans un non-but** déclaré ci-dessous ?
 
 Une réponse absente à la question 1 ou 2 est un **signal d'arrêt**, pas un détail
-à préciser plus tard. C'est ce test qui a écarté le spike Terminal.Gui, les hooks
-et `-Snapshot` ; il doit continuer à pouvoir le faire.
+à préciser plus tard.
+
+> **Ce filtre est nécessaire, pas suffisant — vérifié par rejeu le 2026-08-27.**
+> La phrase qui figurait ici affirmait que ce test avait à lui seul écarté le
+> spike Terminal.Gui, les hooks et `-Snapshot`. Rejouées à froid contre le texte
+> littéral des trois questions, ces trois exclusions passent en réalité les
+> questions 1 à 3 sans effort — un menu réécrit sert toujours l'objet Action, un
+> hook générique peut être présenté comme servant n'importe quel objet selon ce
+> qu'on y met. Elles ont été écartées ailleurs : par le principe 6 de
+> `PRINCIPLES.md` (aucun besoin utilisateur documenté — voir
+> [0007](decisions/0007-annulation-spike-terminal-gui.md) et
+> [0012](decisions/0012-hooks-echec-par-regle.md)), et le rapport hebdomadaire
+> actuel par le principe 9 (la mesure qu'il affiche est fausse). La clause
+> anti-contournement ajoutée à la question 1 ci-dessus ferme une partie de cet
+> écart, mais ne le ferme pas entièrement. Conclusion opérationnelle : passer ce
+> filtre ne veut jamais dire « donc on construit » — les questions 4 et 5 de
+> `PRINCIPLES.md` ne sont pas un prolongement optionnel, c'est là que la plupart
+> des rejets réels se décident.
 
 ---
 
