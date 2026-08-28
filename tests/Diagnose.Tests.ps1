@@ -113,6 +113,9 @@ Describe "Get-DistroVhdxInfo - localisation registre + taille fichier (jamais `$
         $fakeBasePath = Join-Path ([System.IO.Path]::GetTempPath()) ("wisely-vhdx-missing-" + [guid]::NewGuid().ToString("N"))
 
         Mock Test-Path -ParameterFilter { $Path -eq $script:lxssRoot } -MockWith { $true }
+        Mock Test-Path -ParameterFilter { $Path -ne $script:lxssRoot } -MockWith {
+            [System.IO.File]::Exists($Path) -or [System.IO.Directory]::Exists($Path)
+        }
         Mock Get-ChildItem -ParameterFilter { $Path -eq $script:lxssRoot } -MockWith {
             @([PSCustomObject]@{ PSPath = "HKCU:\...\Lxss\{fake-guid}" })
         }
@@ -134,6 +137,9 @@ Describe "Get-DistroVhdxInfo - localisation registre + taille fichier (jamais `$
 
         try {
             Mock Test-Path -ParameterFilter { $Path -eq $script:lxssRoot } -MockWith { $true }
+            Mock Test-Path -ParameterFilter { $Path -ne $script:lxssRoot } -MockWith {
+                [System.IO.File]::Exists($Path) -or [System.IO.Directory]::Exists($Path)
+            }
             Mock Get-ChildItem -ParameterFilter { $Path -eq $script:lxssRoot } -MockWith {
                 @([PSCustomObject]@{ PSPath = "HKCU:\...\Lxss\{fake-guid}" })
             }

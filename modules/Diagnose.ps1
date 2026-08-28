@@ -83,7 +83,7 @@ function Get-WslConfigRawKeys {
         Ne retourne jamais $null : liste vide si le fichier est absent.
     #>
     $path = Get-WslConfigPath
-    if (-not (Test-Path $path)) { return @() }
+    if (-not (Test-Path $path)) { return ,@() }
 
     $lines = Get-Content $path -Encoding UTF8
     $inSection = $false
@@ -98,7 +98,7 @@ function Get-WslConfigRawKeys {
             $keys.Add($matches[1])
         }
     }
-    return @($keys)
+    return ,@($keys)
 }
 
 function Get-AutoMemoryReclaimStatus {
