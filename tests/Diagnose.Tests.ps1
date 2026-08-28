@@ -58,7 +58,7 @@ Describe "Get-WslConfigRawKeys" {
 
     It "retourne un tableau vide (jamais `$null) quand .wslconfig est absent" {
         $result = Get-WslConfigRawKeys
-        $result | Should -Not -Be $null
+        ($null -eq $result) | Should -Be $false
         @($result).Count | Should -Be 0
     }
 
