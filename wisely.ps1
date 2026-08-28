@@ -17,6 +17,9 @@
 #  .\wisely.ps1 -Consent grant     -> autoriser la lecture in-distro (desactivee par defaut)
 #  .\wisely.ps1 -Consent status    -> voir l'etat du consentement
 #  .\wisely.ps1 -GuestInfo         -> memoire in-distro (MemAvailable / Cached)
+#  .\wisely.ps1 -Diagnose          -> diagnostic complet (etat/cause/danger/action)
+#  .\wisely.ps1 -Diagnose -Explain <cle> -> explique une cle .wslconfig non geree par Wisely
+#  .\wisely.ps1 -Diagnose -History -> historique des switchs, attribuable ou ecarte
 #
 # ============================================================
 
@@ -44,7 +47,9 @@ param(
     [switch]$Quiet,
     [string]$Consent    = "",
     [switch]$GuestInfo,
-    [string]$Distro     = ""
+    [string]$Distro     = "",
+    [switch]$Diagnose,
+    [string]$Explain    = ""
 )
 # Note : $Verbose/$Quiet sont des switches "maison", pas le parametre commun
 # -Verbose de [CmdletBinding()]. Ce script reste volontairement une fonction
@@ -59,6 +64,7 @@ $Global:WSLRoot = $PSScriptRoot
 . (Join-Path $PSScriptRoot "modules\Logger.ps1")
 . (Join-Path $PSScriptRoot "modules\Monitor.ps1")
 . (Join-Path $PSScriptRoot "modules\GuestReader.ps1")
+. (Join-Path $PSScriptRoot "modules\Diagnose.ps1")
 
 # ---- Mode silencieux (-Quiet) ----------------------------------------
 # Redefinit Write-Host pour ne laisser passer que les messages d'erreur
@@ -544,6 +550,14 @@ if ($Clean) {
 }
 if ($Report)  { & (Join-Path $PSScriptRoot "modules\WeeklyReport.ps1"); exit }
 if ($Rollback) { Invoke-Rollback; exit }
+if ($Diagnose) {
+    try {
+        if ($Explain -ne "") { Show-DiagnoseExplain -Key $Explain }
+        elseif ($History)    { Show-DiagnoseHistory }
+        else                 { Show-DiagnoseReport -Report (Get-DiagnoseReport -Distro $Distro) }
+    } catch { Write-Host "ERREUR : $_" -ForegroundColor Red; exit 1 }
+    exit
+}
 if ($History)  { Show-SwitchHistory; exit }
 if ($Export)   { Export-Profiles; exit }
 

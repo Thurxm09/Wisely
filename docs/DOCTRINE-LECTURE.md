@@ -85,6 +85,11 @@ Les commandes de découverte côté Windows — `wsl --list --verbose`,
 invitées et ne relèvent pas de ce contrat, mais sont listées ici pour que le
 tableau des accès soit complet.
 
+La localisation et la taille du VHDX de la distribution active
+(registre `Lxss\{GUID}\BasePath`, puis taille de `ext4.vhdx`) relèvent de
+la même catégorie : une lecture de métadonnées côté Windows, jamais une
+lecture invitée, jamais une ouverture du contenu du fichier.
+
 ### 2.4 Ce que Wisely ne lira jamais
 
 Cette liste est aussi contraignante que la précédente. Elle n'est pas indicative.
