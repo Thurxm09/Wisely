@@ -151,6 +151,19 @@ Au-delà de ce qui est lu, la façon dont c'est lu engage aussi.
 - **Fréquence bornée.** Les lectures ont lieu sur demande explicite ou à
   l'intervalle d'échantillonnage configuré. Wisely ne sonde pas en continu.
 
+**Risque résiduel connu : fenêtre entre la vérification et l'exécution.**
+Le contrôle « déjà en cours d'exécution » ci-dessus et l'invocation réelle
+de `wsl -d <distro> -- <commande>` ne sont pas atomiques : rien n'empêche
+la distribution de s'arrêter entre les deux. Si cela arrive, `wsl -d` la
+redémarre implicitement pour exécuter la commande — le démarrage à l'insu
+de l'utilisateur que l'engagement ci-dessus cherche justement à éviter,
+sauf que la fenêtre est de l'ordre de la milliseconde et déclenchée par un
+arrêt externe, pas par une décision de Wisely. Aucun verrou inter-processus
+n'existe côté WSL pour fermer cette fenêtre. Accepté comme risque résiduel
+plutôt que corrigé : le coût d'un redémarrage occasionnel dans cette fenêtre
+est jugé bien inférieur à celui d'une lecture qui échouerait dès qu'une
+autre commande WSL s'exécute en parallèle.
+
 ---
 
 ## 4. Comment vérifier que ce contrat est tenu
