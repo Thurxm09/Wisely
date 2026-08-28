@@ -14,6 +14,9 @@
 #  .\wisely.ps1 -Export            -> exporter profils
 #  .\wisely.ps1 -Import path.json  -> importer profils
 #  .\wisely.ps1 -Watch             -> dashboard temps reel (Ctrl+C pour quitter)
+#  .\wisely.ps1 -Consent grant     -> autoriser la lecture in-distro (desactivee par defaut)
+#  .\wisely.ps1 -Consent status    -> voir l'etat du consentement
+#  .\wisely.ps1 -GuestInfo         -> memoire in-distro (MemAvailable / Cached)
 #
 # ============================================================
 
@@ -38,7 +41,10 @@ param(
     [int]$Interval     = 3,
     [switch]$Version,
     [switch]$Verbose,
-    [switch]$Quiet
+    [switch]$Quiet,
+    [string]$Consent    = "",
+    [switch]$GuestInfo,
+    [string]$Distro     = ""
 )
 # Note : $Verbose/$Quiet sont des switches "maison", pas le parametre commun
 # -Verbose de [CmdletBinding()]. Ce script reste volontairement une fonction
@@ -52,6 +58,7 @@ $Global:WSLRoot = $PSScriptRoot
 . (Join-Path $PSScriptRoot "modules\ProfileManager.ps1")
 . (Join-Path $PSScriptRoot "modules\Logger.ps1")
 . (Join-Path $PSScriptRoot "modules\Monitor.ps1")
+. (Join-Path $PSScriptRoot "modules\GuestReader.ps1")
 
 # ---- Mode silencieux (-Quiet) ----------------------------------------
 # Redefinit Write-Host pour ne laisser passer que les messages d'erreur
@@ -393,6 +400,65 @@ function Show-InteractiveMenu {
     } while ($true)
 }
 
+# ---- Lecture in-distro (P1/v2.6) -------------------------------------
+
+function Show-GuestReadConsentStatus {
+    <#
+    .SYNOPSIS
+        Affiche l'etat courant du consentement a la lecture in-distro
+        et les commandes couvertes par la liste fermee.
+    #>
+    $state = Get-GuestReadConsentState
+    $color = switch ($state) {
+        "granted" { "Green" }
+        "revoked" { "Yellow" }
+        default   { "DarkGray" }
+    }
+    Write-Host ""
+    Write-Host "  Consentement lecture in-distro : $state" -ForegroundColor $color
+    if ($state -ne "granted") {
+        Write-Host "  Pour activer : .\wisely.ps1 -Consent grant" -ForegroundColor DarkGray
+    }
+    Write-Host "  Commandes couvertes (liste fermee) : $((Get-GuestReadCommandKeys) -join ', ')" -ForegroundColor DarkGray
+    Write-Host ""
+}
+
+function Show-GuestMemInfo {
+    <#
+    .SYNOPSIS
+        Affiche la memoire in-distro (MemAvailable = marge reelle,
+        distinct de Cached = recuperable, pas de la consommation),
+        docs/RESOURCE-MODEL.md SS4.3.
+    #>
+    param([string]$Distro = "")
+
+    if ($Distro -eq "") {
+        $activeSessions = Get-WslActiveSessions
+        if ($activeSessions.Count -eq 0) {
+            Write-Host "  Aucune distribution WSL2 active. Wisely ne demarre jamais une distribution arretee." -ForegroundColor Red
+            return
+        }
+        if ($activeSessions.Count -gt 1) {
+            Write-Host "  Plusieurs distributions actives : $($activeSessions -join ', ')" -ForegroundColor Red
+            Write-Host "  Precise avec -Distro <nom>." -ForegroundColor DarkGray
+            return
+        }
+        $Distro = $activeSessions[0]
+    }
+
+    $rawOutput = Invoke-GuestRead -CommandKey "MemInfo" -Distro $Distro
+    $mem = ConvertFrom-MemInfo -RawOutput $rawOutput
+
+    Write-Host ""
+    Write-Host "  Memoire in-distro ($Distro)" -ForegroundColor Cyan
+    Write-Host ("  " + ("-" * 40)) -ForegroundColor DarkGray
+    Write-Host "  MemTotal      : $($mem.MemTotalGB) GB" -ForegroundColor Gray
+    Write-Host "  MemAvailable  : $($mem.MemAvailableGB) GB  (marge reelle)" -ForegroundColor Green
+    Write-Host "  Cached        : $($mem.CachedGB) GB  (recuperable, pas de la consommation)" -ForegroundColor DarkGray
+    Write-Host "  MemFree       : $($mem.MemFreeGB) GB" -ForegroundColor DarkGray
+    Write-Host ""
+}
+
 # ---- Point d'entree -------------------------------------------------
 
 if ($Status) {
@@ -433,6 +499,19 @@ if ($Monitor -ne "") {
         "status" { Get-MonitorStatus; exit }
         default  { Write-Host "Usage : -Monitor start|stop|status" -ForegroundColor Red; exit 1 }
     }
+}
+if ($Consent -ne "") {
+    switch ($Consent.ToLower()) {
+        "grant"  { Set-GuestReadConsentState -State "granted"; Show-GuestReadConsentStatus; exit }
+        "revoke" { Set-GuestReadConsentState -State "revoked"; Show-GuestReadConsentStatus; exit }
+        "status" { Show-GuestReadConsentStatus; exit }
+        default  { Write-Host "Usage : -Consent grant|revoke|status" -ForegroundColor Red; exit 1 }
+    }
+}
+if ($GuestInfo) {
+    try   { Show-GuestMemInfo -Distro $Distro }
+    catch { Write-Host "ERREUR : $_" -ForegroundColor Red; exit 1 }
+    exit
 }
 if ($Clean) {
     $reportsDir  = Join-Path $PSScriptRoot "data\reports"

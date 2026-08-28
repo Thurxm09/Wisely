@@ -24,7 +24,7 @@ function Write-SwitchLog {
     .SYNOPSIS
         Enregistre un événement dans l'historique JSON.
     .PARAMETER Action
-        Type d'action : SWITCH | ROLLBACK | CUSTOM | IMPORT | EXPORT
+        Type d'action : SWITCH | ROLLBACK | CUSTOM | IMPORT | EXPORT | CONSENT
     .PARAMETER ProfileKey
         Clé du profil concerné (ex: "web", "data")
     .PARAMETER Details
@@ -83,7 +83,11 @@ function Write-SwitchLog {
         $history = $history[($history.Count - $maxEntries)..($history.Count - 1)]
     }
 
-    $history | ConvertTo-Json -Depth 5 | Set-Content $historyPath -Encoding UTF8
+    # -AsArray : sans ce flag, ConvertTo-Json ecrit un objet nu (pas [ ]) quand
+    # $history ne contient qu'une seule entree (ex. tout premier evenement
+    # historise sur une installation neuve), ce qui viole le type "array" de
+    # schemas/history.schema.json.
+    $history | ConvertTo-Json -Depth 5 -AsArray | Set-Content $historyPath -Encoding UTF8
 }
 
 function Show-SwitchHistory {

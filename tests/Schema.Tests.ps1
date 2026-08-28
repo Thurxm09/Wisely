@@ -153,6 +153,26 @@ Describe "profiles.schema.json - settings" {
         $json = script:New-TestDoc -Settings @{ unknownSetting = "oops" }
         Test-AgainstSchema -Json $json -ErrorAction SilentlyContinue | Should -Be $false
     }
+
+    It "valide guestReadConsent = 'granted'" {
+        $json = script:New-TestDoc -Settings @{ guestReadConsent = "granted" }
+        Test-AgainstSchema -Json $json | Should -Be $true
+    }
+
+    It "valide guestReadConsent = 'revoked'" {
+        $json = script:New-TestDoc -Settings @{ guestReadConsent = "revoked" }
+        Test-AgainstSchema -Json $json | Should -Be $true
+    }
+
+    It "rejette guestReadConsent hors enum" {
+        $json = script:New-TestDoc -Settings @{ guestReadConsent = "unset" }
+        Test-AgainstSchema -Json $json -ErrorAction SilentlyContinue | Should -Be $false
+    }
+
+    It "rejette guestReadConsent d'un type invalide (booleen)" {
+        $json = script:New-TestDoc -Settings @{ guestReadConsent = $true }
+        Test-AgainstSchema -Json $json -ErrorAction SilentlyContinue | Should -Be $false
+    }
 }
 
 Describe "history.schema.json" {
@@ -173,6 +193,18 @@ Describe "history.schema.json" {
             Write-SwitchLog -Action "SWITCH" -ProfileKey "web" -Details "4GB, 3 CPU" -RestartSeconds 2.3
             Write-SwitchLog -Action "ROLLBACK" -ProfileKey "web" -Details "restaure"
             Write-SwitchLog -Action "EXPORT" -Details "C:/export.json"
+
+            $json = Get-Content (Get-HistoryPath) -Raw
+            Test-AgainstHistorySchema -Json $json | Should -Be $true
+        } finally {
+            Remove-TestWslRoot -Path $testRoot
+        }
+    }
+
+    It "valide une entree CONSENT reelle produite par Write-SwitchLog" {
+        $testRoot = New-TestWslRoot
+        try {
+            Write-SwitchLog -Action "CONSENT" -Details "guestReadConsent=granted"
 
             $json = Get-Content (Get-HistoryPath) -Raw
             Test-AgainstHistorySchema -Json $json | Should -Be $true

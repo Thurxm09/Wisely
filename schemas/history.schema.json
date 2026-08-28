@@ -19,7 +19,7 @@
         },
         "action": {
           "type": "string",
-          "enum": ["SWITCH", "ROLLBACK", "CUSTOM", "IMPORT", "EXPORT"]
+          "enum": ["SWITCH", "ROLLBACK", "CUSTOM", "IMPORT", "EXPORT", "CONSENT"]
         },
         "profile": {
           "type": "string"
