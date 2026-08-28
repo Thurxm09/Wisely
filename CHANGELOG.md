@@ -2,6 +2,8 @@
 
 ## Non publie
 
+## v3.0.0 - 2026-08-28
+
 ### P2 / v3.0 "Diagnostic" -- une seule commande pour expliquer l'etat complet
 
 - **`wisely -Diagnose`** : premiere commande d'entree du produit (anciennement nommee de travail `wisely doctor`, renommee avant ecriture -- `docs/CLAUDE.md`). Repond, dans l'ordre impose par `docs/ROADMAP.md`, a que se passe-t-il / pourquoi / est-ce dangereux / que puis-je faire / est-ce que ca vaut le coup de changer quelque chose : validite du `.wslconfig`, etat d'`autoMemoryReclaim`, `sparseVhd`, taille du VHDX, distributions actives, plafond RAM/processeurs rapporte a la RAM hote, et l'etat du consentement de lecture invitee (P1). Chaque grandeur affichee porte sa portee/classe/confiance conformement au contrat de `docs/RESOURCE-MODEL.md` §3 -- aucune ligne n'est affichee sans l'entree qui la decrit
