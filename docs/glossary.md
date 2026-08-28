@@ -12,7 +12,7 @@
 | Classe de mesure | **Directe**, **attribuée**, **estimée** ou **corrélée**. Propriété de la mesure, visible côté utilisateur. Une mesure attribuée dit « ce qui est rattachable à X », jamais « ce que X consomme » (`RESOURCE-MODEL.md`) |
 | Portée (`scope`) | `host`, `vm`, `distro`, `process` ou `policy`. Mélanger deux portées sans le dire est le bug qui a rendu l'alerte RAM indéclenchable |
 | Provenance | Pour chaque clé de `.wslconfig` : « gérée par Wisely » ou « externe ». Face lisible du principe 8, posée par le principe 14 |
-| `wisely diagnose` | La commande d'entrée du produit, planifiée au palier P2. **Anciennement `wisely doctor`**, renommée avant écriture le 2026-08-27 : le nom annonce la valeur plutôt qu'une catégorie d'outil |
+| `wisely diagnose` | La commande d'entrée du produit, livrée au palier P2 (`wisely -Diagnose`, `-Explain`, `-History`). **Anciennement `wisely doctor`**, renommée avant écriture le 2026-08-27 : le nom annonce la valeur plutôt qu'une catégorie d'outil |
 | Barrière de validation | Le palier P3 de `ROADMAP.md`, **bloquant** : aucun palier au-delà ne démarre avant que quelqu'un d'autre que le mainteneur se soit servi de l'outil |
 | Doctrine de lecture | Le contrat définissant ce que Wisely lit dans une distribution Linux et ce qu'il ne lira jamais (`DOCTRINE-LECTURE.md`) |
 | Profil dérivé | Un profil exprimé comme une politique résolue sur la machine réelle (« laisser 8 Go à Windows ») plutôt qu'en gigaoctets absolus. Planifié v3.1, voir `decisions/0006-profils-derives.md` |

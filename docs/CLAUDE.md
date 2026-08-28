@@ -21,7 +21,7 @@ Thuram (GitHub: Thurxm09), développeur solo — niveau débutant/intermédiaire
 | `.wslconfig` | Config WSL2, chemin `C:\Users\othur\.wslconfig` -- fichier PARTAGE, slashs pour les chemins de swap |
 | `vmmem` / `VmmemWSL` | Deux noms selon la version de Windows ; le code cherchait auparavant seulement `vmmem`, corrige en P0/v2.5 -- `Get-Process -Name "VmmemWSL", "vmmem"` desormais |
 | `wisely -Status` | Dashboard integre : barre RAM, profil actif, 3 derniers historiques |
-| `wisely diagnose` | La commande d'entree du produit, planifiee au palier P2. Anciennement `wisely doctor`, renommee avant ecriture |
+| `wisely diagnose` | La commande d'entree du produit, livree au palier P2 (`wisely -Diagnose`, `-Explain`, `-History`). Anciennement `wisely doctor`, renommee avant ecriture |
 | `Get-ProfileConfig` / `Import-Profiles` | Fonctions ciblees en priorite par les tests Pester |
 | Docs de fond | `PROBLEM` (le probleme), `VISION` (la capacite), `USE-CASES` (les situations), `PRINCIPLES` (les arbitrages), `DOCTRINE-LECTURE` (le contrat de lecture), `RESOURCE-MODEL` (ce que signifient les chiffres), `ASSUMPTIONS` (l'incertitude + journal de validation), `ROADMAP` (l'ordre), `decisions/` (les ADR), `audits/` (audits strategiques externes -- ne font pas foi) |
 
@@ -38,7 +38,7 @@ Thuram (GitHub: Thurxm09), développeur solo — niveau débutant/intermédiaire
 - `throw`, jamais `exit`, dans les modules dot-sourcés
 - `git pull --rebase` en cas de divergence
 - Scope `$script:` préféré à `$Global:` pour la mémoïsation
-- Ordre de priorite (revise le 2026-08-27, voir `docs/ROADMAP.md`) : **P0 / v2.5 "Verite" livree** (les cinq correctifs de mesures fausses, une PR par correctif) et **P1 / v2.6 "Contrat" livree** (lecture in-distro sous consentement explicite, `modules/GuestReader.ps1`) -- **prochaine priorite : P2 / v3.0 "Diagnostic"** (`wisely diagnose`), puis **P3, barriere de validation bloquante**. Deux regles d'ordonnancement : on ne construit ni diagnostic ni recommandation sur une mesure qui ment ; et on ne construit pas au-dela d'une capacite qu'on n'a pas confrontee a un utilisateur
+- Ordre de priorite (revise le 2026-08-27, voir `docs/ROADMAP.md`) : **P0 / v2.5 "Verite" livree** (les cinq correctifs de mesures fausses, une PR par correctif), **P1 / v2.6 "Contrat" livree** (lecture in-distro sous consentement explicite, `modules/GuestReader.ps1`) et **P2 / v3.0 "Diagnostic" livree** (`wisely -Diagnose`/`-Explain`/`-History`, `modules/Diagnose.ps1`) -- **prochaine priorite : P3, barriere de validation bloquante**. Deux regles d'ordonnancement : on ne construit ni diagnostic ni recommandation sur une mesure qui ment ; et on ne construit pas au-dela d'une capacite qu'on n'a pas confrontee a un utilisateur
 - Aime comprendre le code en profondeur, pas juste livrer des features
 - Préfère avancer une feature à la fois, bien comprise, avant de passer à la suivante
 - Utilise des scripts bootstrap Python (ASCII-safe, réécriture complète, sortie `[OK]`/`[SKIP]`) comme mécanisme standard de livraison de fichiers générés

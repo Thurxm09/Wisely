@@ -50,7 +50,7 @@ Wisely s'attaque à cette jointure. Il en livre aujourd'hui la moitié la plus d
 
 ### Ce qui n'est pas encore livré
 
-Le projet est **transparent sur son état réel** : comprendre et expliquer viennent après agir. La commande de diagnostic `wisely diagnose`, la lecture à l'intérieur des distributions et l'attribution de la consommation sont planifiées, pas disponibles. Plusieurs mesures actuelles sont par ailleurs connues comme fausses et corrigées en priorité — voir [`docs/ROADMAP.md`](docs/ROADMAP.md).
+Le projet est **transparent sur son état réel** : comprendre et expliquer viennent après agir. `wisely -Diagnose` et la lecture à l'intérieur des distributions sont livrées. Reste planifiée : l'attribution complète de la consommation par distribution et l'historique de la consommation réelle (au-delà des switchs). Plusieurs mesures actuelles sont par ailleurs connues comme fausses et corrigées en priorité — voir [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 La direction du produit, ce qu'il ne deviendra jamais et pourquoi : [`docs/VISION.md`](docs/VISION.md).
 
@@ -155,6 +155,12 @@ wisely -Watch -Interval 5       # Rafraîchi toutes les 5s au lieu de 3s par dé
 wisely -Consent grant           # Autoriser la lecture dans la distribution WSL2 (désactivé par défaut)
 wisely -Consent status          # Afficher l'état du consentement
 wisely -GuestInfo               # Mémoire de la distribution active : MemAvailable vs Cached
+
+# ── Diagnostic ──────────────────────────────────────────────────────────
+wisely -Diagnose                    # Diagnostic complet : état, cause, danger, action, faut-il changer
+wisely -Diagnose -Distro <nom>      # Cible une distribution précise
+wisely -Diagnose -Explain <clé>     # Explique une clé .wslconfig non gérée par Wisely
+wisely -Diagnose -History           # Historique des switchs : attribuable ou écarté, et pourquoi
 
 # ── Reporting ───────────────────────────────────────────────────────────
 wisely -Report                  # Générer un rapport d'utilisation maintenant
@@ -352,7 +358,9 @@ Wisely/
 │   ├── Logger.ps1              ← Historique JSON
 │   ├── Monitor.ps1             ← Contrôle de la tâche planifiée Windows
 │   ├── MonitorTask.ps1         ← Script exécuté par le Planificateur de tâches
-│   └── WeeklyReport.ps1        ← Génération des rapports hebdomadaires
+│   ├── WeeklyReport.ps1        ← Génération des rapports hebdomadaires
+│   ├── GuestReader.ps1         ← Lecture in-distro sous consentement (liste fermée de commandes)
+│   └── Diagnose.ps1            ← wisely -Diagnose / -Explain / -History (état, cause, danger, action)
 └── data/
     ├── profiles.json           ← Définition des profils (source de vérité)
     ├── history.json            ← Généré automatiquement (non versionné)

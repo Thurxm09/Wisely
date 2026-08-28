@@ -286,7 +286,10 @@ dans les deux sens.
 
 Côté Windows, hors contrat de lecture invitée : énumération WSL
 (`wsl --list --verbose`, `wsl --list --running --quiet`, `wsl --version`),
-processus de la machine virtuelle (§4.2), et `Win32_OperatingSystem` (§4.1).
+processus de la machine virtuelle (§4.2), `Win32_OperatingSystem` (§4.1),
+et localisation + taille du VHDX de la distribution active (registre
+`HKCU:\...\Lxss\{GUID}\BasePath`, puis taille du fichier `ext4.vhdx` à cet
+emplacement — jamais son contenu, jamais son ouverture).
 
 ---
 

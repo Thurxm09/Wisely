@@ -6,6 +6,7 @@
 BeforeAll {
     . "$PSScriptRoot/../modules/ProfileManager.ps1"
     . "$PSScriptRoot/../modules/Logger.ps1"
+    . "$PSScriptRoot/../modules/GuestReader.ps1"
     . "$PSScriptRoot/TestHelpers.ps1"
 
     # Definie ici (scope script, pas dans un simple "function" au niveau
@@ -441,6 +442,78 @@ Describe "Confirm-WslShutdown" {
 
         Confirm-WslShutdown | Should -Be $false
         Should -Invoke -CommandName Read-Host -Times 0 -Exactly
+    }
+
+    It "annonce les process les plus attribues quand le consentement est accorde et que la lecture invitee reussit" {
+        Mock Get-WslActiveSessions { @("Ubuntu") }
+        Mock Test-WiselyNonInteractive { $false }
+        Mock Get-GuestReadConsentState { "granted" }
+        Mock Invoke-GuestRead { "RSS COMM`n500000 python3`n200000 node" }
+        Mock Read-Host { "o" }
+
+        $allOutput = @(Confirm-WslShutdown 6>&1)
+        $returnValue = $allOutput | Where-Object { $_ -is [bool] }
+        $textOutput  = ($allOutput | Where-Object { $_ -isnot [bool] }) -join "`n"
+
+        $returnValue | Should -Be $true
+        $textOutput | Should -Match "Ce qui va etre interrompu dans 'Ubuntu'"
+        $textOutput | Should -Match "python3"
+    }
+
+    It "degrade proprement au message generique quand Invoke-GuestRead leve une exception malgre le consentement accorde" {
+        Mock Get-WslActiveSessions { @("Ubuntu") }
+        Mock Test-WiselyNonInteractive { $false }
+        Mock Get-GuestReadConsentState { "granted" }
+        Mock Invoke-GuestRead { throw "boom invite" }
+        Mock Read-Host { "o" }
+
+        { Confirm-WslShutdown } | Should -Not -Throw
+        Confirm-WslShutdown | Should -Be $true
+    }
+
+    It "affiche une suggestion d'activation du consentement quand il n'est pas accorde" {
+        Mock Get-WslActiveSessions { @("Ubuntu") }
+        Mock Test-WiselyNonInteractive { $false }
+        Mock Get-GuestReadConsentState { "unset" }
+        Mock Invoke-GuestRead { throw "ne doit pas etre appele" }
+        Mock Read-Host { "o" }
+
+        $output = Confirm-WslShutdown *>&1 | Out-String
+
+        $output | Should -Match "Detail des process non disponible"
+        $output | Should -Match "wisely -Consent grant"
+        Should -Invoke -CommandName Invoke-GuestRead -Times 0 -Exactly
+    }
+}
+
+Describe "Get-DistroTopProcesses" {
+
+    It "parse la sortie ps triee et retourne les N processus les plus attribues, RssGB arrondi" {
+        $raw = "RSS COMM`n500000 python3`n200000 node`n100000 bash"
+
+        $result = @(Get-DistroTopProcesses -RawOutput $raw -Top 2)
+
+        $result.Count | Should -Be 2
+        $result[0].Comm | Should -Be "python3"
+        $result[0].RssGB | Should -Be ([math]::Round(500000 / 1MB, 2))
+        $result[1].Comm | Should -Be "node"
+    }
+
+    It "ignore les lignes qui ne correspondent pas au format attendu" {
+        $raw = "RSS COMM`n500000 python3`nligne-invalide-sans-nombre`n200000 node"
+
+        $result = @(Get-DistroTopProcesses -RawOutput $raw -Top 5)
+
+        $result.Count | Should -Be 2
+        ($result.Comm) | Should -Not -Contain "invalide"
+    }
+
+    It "retourne un tableau vide quand seule la ligne d'entete est presente" {
+        $raw = "RSS COMM"
+
+        $result = @(Get-DistroTopProcesses -RawOutput $raw -Top 5)
+
+        $result.Count | Should -Be 0
     }
 }
 

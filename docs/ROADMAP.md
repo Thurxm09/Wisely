@@ -108,7 +108,7 @@ correctifs sont livrés (`decisions/`, `CHANGELOG.md`).
 le met en œuvre. `RESOURCE-MODEL.md` en est le pendant sémantique, également
 écrit d'avance : les deux listes de commandes restent identiques (vérifié par
 un test de dérive doc/code). Les quatre livrables sont couverts ; prochaine
-priorité d'implémentation : **P2 · v3.0 — Diagnostic**, ci-dessous.
+priorité d'implémentation : **P3 — Barrière de validation**, ci-dessous.
 
 1. Implémentation de la liste fermée de commandes, comme constante unique, avec
    le test Pester qui interdit toute invocation hors liste.
@@ -126,10 +126,11 @@ priorité d'implémentation : **P2 · v3.0 — Diagnostic**, ci-dessous.
 
 ---
 
-### P2 · v3.0 — Diagnostic
+### P2 · v3.0 — Diagnostic · livrée
 
 **Le produit devient lui-même.** C'est ici qu'« expliquer » cesse d'être un mot
-et devient une commande.
+et devient une commande. Les trois livrables sont couverts ; prochaine priorité
+d'implémentation : **P3 — Barrière de validation**, ci-dessous.
 
 **Prérequis :** `RESOURCE-MODEL.md` fait foi. Aucune grandeur ne s'affiche sans y
 avoir son entrée — portée, source, classe, confiance.

@@ -438,13 +438,48 @@ function Get-WslActiveSessions {
     }
 }
 
+function Get-DistroTopProcesses {
+    <#
+    .SYNOPSIS
+        Parse la sortie de "ps -eo rss,comm --sort=-rss" (deja triee par
+        empreinte memoire decroissante) et retourne les N processus les
+        plus attribues. Isole de Confirm-WslShutdown pour rester testable
+        sans mock de Invoke-GuestRead. N'invente rien : une ligne qui ne
+        correspond pas au format attendu est ignoree plutot que de
+        produire une entree partielle.
+    #>
+    param(
+        [Parameter(Mandatory)][string]$RawOutput,
+        [int]$Top = 5
+    )
+    $processes = [System.Collections.Generic.List[PSCustomObject]]::new()
+    foreach ($line in ($RawOutput -split "`n" | Select-Object -Skip 1)) {
+        if ($line -match '^\s*(\d+)\s+(\S+)') {
+            $processes.Add([PSCustomObject]@{
+                Comm  = $Matches[2]
+                RssGB = [math]::Round([double]$Matches[1] / 1MB, 2)
+            })
+        }
+    }
+    return @($processes | Select-Object -First $Top)
+}
+
 function Confirm-WslShutdown {
     <#
     .SYNOPSIS
         Verifie qu'aucune distribution WSL2 active ne sera interrompue
         sans confirmation avant un "wsl --shutdown". Retourne $true si le
-        shutdown peut se poursuivre, $false sinon.
+        shutdown peut se poursuivre, $false sinon. Sous consentement de
+        lecture invitee accorde (P1, modules/GuestReader.ps1), tente
+        d'annoncer precisement ce qui va etre interrompu - les processus
+        les plus attribues par distribution active - plutot que la seule
+        liste des distributions (PRINCIPLES.md, principe 11 : "annoncer
+        le cout avant de le faire payer").
+    .PARAMETER TopProcessCount
+        Nombre de processus les plus attribues affiches par distribution.
     #>
+    param([int]$TopProcessCount = 5)
+
     $activeSessions = Get-WslActiveSessions
     if ($activeSessions.Count -eq 0) {
         return $true
@@ -456,6 +491,34 @@ function Confirm-WslShutdown {
         Write-Host "    - $distro" -ForegroundColor Yellow
     }
     Write-Host "  Un arret force peut interrompre des process en cours et corrompre des fichiers non sauvegardes." -ForegroundColor Yellow
+
+    # Degradation propre a deux niveaux : consentement absent/revoque ->
+    # message + suggestion ci-dessous ; consentement accorde mais lecture
+    # invitee en echec (distro sans process listable, timeout...) -> capture
+    # locale, silence (Write-Verbose seulement), jamais d'echec de la
+    # confirmation elle-meme. Get-GuestReadConsentState peut lever si
+    # profiles.json est absent/corrompu - traite comme "unset".
+    $consent = "unset"
+    try { $consent = Get-GuestReadConsentState } catch { Write-Verbose "Lecture du consentement impossible : $_" }
+
+    if ($consent -eq "granted") {
+        foreach ($distro in $activeSessions) {
+            try {
+                $rawOutput = Invoke-GuestRead -CommandKey "ProcRss" -Distro $distro
+                $topProcs  = Get-DistroTopProcesses -RawOutput $rawOutput -Top $TopProcessCount
+                if ($topProcs.Count -gt 0) {
+                    Write-Host "  Ce qui va etre interrompu dans '$distro' (par empreinte memoire) :" -ForegroundColor Yellow
+                    foreach ($p in $topProcs) {
+                        Write-Host "    - $($p.Comm) ($($p.RssGB) Go)" -ForegroundColor Gray
+                    }
+                }
+            } catch {
+                Write-Verbose "Detail des process de '$distro' indisponible avant l'arret : $_"
+            }
+        }
+    } else {
+        Write-Host "  Detail des process non disponible (consentement de lecture invitee : $consent) - activez-le avec : wisely -Consent grant" -ForegroundColor DarkGray
+    }
 
     if (Test-WiselyNonInteractive) {
         Write-Host "  Session non-interactive detectee - relancez avec -Force pour continuer malgre tout." -ForegroundColor Red
