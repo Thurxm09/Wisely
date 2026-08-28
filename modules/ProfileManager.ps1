@@ -201,6 +201,19 @@ function Get-LatestBackup {
 }
 
 function Invoke-Rollback {
+    <#
+    .SYNOPSIS
+        Restaure le dernier backup de .wslconfig. Passe par le meme
+        garde-fou de sessions actives que Set-WslProfile
+        (Confirm-WslShutdown) avant d'arreter WSL2 - un rollback interrompt
+        les distributions actives exactement comme un switch de profil, il
+        n'y a pas de raison de le dispenser du garde-fou (voir AUDIT.md).
+    .PARAMETER Force
+        Ignore le garde-fou et arrete WSL2 sans confirmation, meme si des
+        sessions sont actives.
+    #>
+    param([switch]$Force)
+
     $latest = Get-LatestBackup
     if ($null -eq $latest) {
         Write-Host ""
@@ -208,6 +221,16 @@ function Invoke-Rollback {
         Write-Host ""
         return
     }
+
+    $forcedActiveSessions = @()
+    if ($Force) {
+        $forcedActiveSessions = Get-WslActiveSessions
+    } elseif (-not (Confirm-WslShutdown)) {
+        Write-Host "  Rollback annule (session(s) WSL2 active(s), confirmation refusee)." -ForegroundColor Yellow
+        Write-Host ""
+        return
+    }
+
     Write-Host ""
     Write-Host "  Rollback en cours..." -ForegroundColor Yellow
     Write-Host "  Restauration depuis : $($latest.Name)" -ForegroundColor Gray
@@ -219,7 +242,12 @@ function Invoke-Rollback {
     $restored = Get-ActiveProfile
     Write-Host "  Profil restaure : $($restored.name) ($($restored.memory) / $($restored.processors) CPU)" -ForegroundColor Cyan
     Write-Host ""
-    Write-SwitchLog -Action "ROLLBACK" -ProfileKey $restored.key -Details "Restaure depuis $($latest.Name)"
+
+    $details = "Restaure depuis $($latest.Name)"
+    if ($forcedActiveSessions.Count -gt 0) {
+        $details += ", Force (sessions actives ignorees : $($forcedActiveSessions -join ', '))"
+    }
+    Write-SwitchLog -Action "ROLLBACK" -ProfileKey $restored.key -Details $details
 }
 
 # ---- Generation & application ---------------------------------------
@@ -549,6 +577,15 @@ function Set-WslProfile {
     } catch {
         throw "Validation du profil '$Key' echouee : $_"
     }
+
+    # Calcul initial uniquement pour l'affichage -DryRun (qui n'ecrit
+    # jamais rien, donc sans risque de course). Recalcule apres le
+    # garde-fou plus bas : Confirm-WslShutdown peut bloquer indefiniment
+    # sur Read-Host, et .wslconfig est un fichier partage qui peut avoir
+    # ete modifie par un tiers (utilisateur, Docker Desktop, WSL Settings)
+    # pendant l'attente - ecrire par-dessus ce changement concurrent avec
+    # un $oldContent perime l'ecraserait silencieusement (principe 8 : ne
+    # jamais detruire ce qu'on ne gere pas).
     $oldContent = if (Test-Path (Get-WslConfigPath)) { Get-Content (Get-WslConfigPath) -Raw -Encoding UTF8 } else { "" }
     $content = ConvertTo-WslConfigContent -ProfileDef $profileDef -ProfileKey $Key -ExistingContent $oldContent
 
@@ -574,6 +611,12 @@ function Set-WslProfile {
         return
     }
 
+    # Recalcul juste avant l'ecriture (voir commentaire plus haut) : capture
+    # l'etat reel de .wslconfig au moment ou on s'appret a le fusionner et
+    # l'ecrire, pas celui d'avant l'attente de confirmation.
+    $oldContent = if (Test-Path (Get-WslConfigPath)) { Get-Content (Get-WslConfigPath) -Raw -Encoding UTF8 } else { "" }
+    $content = ConvertTo-WslConfigContent -ProfileDef $profileDef -ProfileKey $Key -ExistingContent $oldContent
+
     Backup-WslConfig
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
     Write-Host ""
@@ -588,7 +631,7 @@ function Set-WslProfile {
 
     if (-not (Test-WslConfigIntegrity)) {
         Write-Host "  ERREUR : .wslconfig invalide apres ecriture. Rollback automatique." -ForegroundColor Red
-        Invoke-Rollback
+        Invoke-Rollback -Force
         return
     }
 

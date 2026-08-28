@@ -56,18 +56,20 @@ Describe "Get-WslConfigRawKeys" {
         Restore-TestUserProfile
     }
 
-    It "retourne un tableau vide (jamais `$null) quand .wslconfig est absent" {
+    It "retourne une table vide (jamais `$null) quand .wslconfig est absent" {
         $result = Get-WslConfigRawKeys
         ($null -eq $result) | Should -Be $false
-        @($result).Count | Should -Be 0
+        $result.Count | Should -Be 0
     }
 
-    It "extrait les cles de la section [wsl2] uniquement" {
+    It "extrait cle -> valeur brute de la section [wsl2] uniquement" {
         New-TestWslConfig -Content "[wsl2]`nmemory=4GB`nautoMemoryReclaim=gradual`n[experimental]`nsparseVhd=true`n"
         $keys = Get-WslConfigRawKeys
-        $keys | Should -Contain "memory"
-        $keys | Should -Contain "autoMemoryReclaim"
-        $keys | Should -Not -Contain "sparseVhd"
+        $keys.Contains("memory") | Should -Be $true
+        $keys["memory"] | Should -Be "4GB"
+        $keys.Contains("autoMemoryReclaim") | Should -Be $true
+        $keys["autoMemoryReclaim"] | Should -Be "gradual"
+        $keys.Contains("sparseVhd") | Should -Be $false
     }
 }
 
@@ -233,6 +235,50 @@ Cached:          1500000 kB
         $result = Get-DiagnoseMemoryAttribution -Distro "Ubuntu-22.04"
         $result.Available | Should -Be $false
         $result.Reason | Should -Match "boom invite"
+    }
+}
+
+Describe "Get-DiagnoseReport - enums fermes (RESOURCE-MODEL.md SS2-3)" {
+
+    BeforeEach {
+        $script:testRoot = New-TestWslRoot
+        Set-TestUserProfile -Path $script:testRoot
+        New-TestProfilesJson -Config (script:New-TestConfig)
+        Clear-ProfileConfigCache
+        Enable-WslMocks
+        Mock Get-GuestReadConsentState { "unset" }
+    }
+
+    AfterEach {
+        Restore-TestUserProfile
+        Remove-TestWslRoot -Path $script:testRoot
+    }
+
+    It "chaque ligne du rapport porte un Scope dans l'enum ferme de RESOURCE-MODEL.md SS3 (Portees)" {
+        $report = Get-DiagnoseReport
+        foreach ($line in $report.Lines) {
+            $line.Scope | Should -BeIn @("host", "vm", "distro", "process", "policy")
+        }
+    }
+
+    It "chaque ligne du rapport porte une Class dans l'enum ferme de RESOURCE-MODEL.md SS2 (taxonomie)" {
+        $report = Get-DiagnoseReport
+        foreach ($line in $report.Lines) {
+            $line.Class | Should -BeIn @("directe", "attribuee", "estimee", "correlee")
+        }
+    }
+
+    It "chaque ligne du rapport porte une Confidence dans l'enum ferme de RESOURCE-MODEL.md SS3 (Niveaux de confiance)" {
+        $report = Get-DiagnoseReport
+        foreach ($line in $report.Lines) {
+            $line.Confidence | Should -BeIn @("haute", "moyenne", "basse")
+        }
+    }
+
+    It "Get-WslCeilingInfo.Scope vaut 'host' (jamais l'ancienne chaine malformee 'GLOBAL - ...')" {
+        $ceiling = Get-WslCeilingInfo
+        $ceiling.Scope | Should -Be "host"
+        $ceiling.ScopeNote | Should -Match "pas par-distribution"
     }
 }
 

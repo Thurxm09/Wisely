@@ -79,26 +79,29 @@ function Get-WslConfigRawKeys {
     <#
     .SYNOPSIS
         Lit .wslconfig et retourne les cles brutes presentes dans la
-        section [wsl2], pour distinguer gerees/connues/inconnues.
-        Ne retourne jamais $null : liste vide si le fichier est absent.
+        section [wsl2], cle -> valeur brute (chaine), pour distinguer
+        gerees/connues/inconnues et permettre de brancher explicitement
+        sur la valeur d'une cle (ex. sparseVhd) plutot que sa seule
+        presence. Ne retourne jamais $null : table vide si le fichier
+        est absent.
     #>
     $path = Get-WslConfigPath
-    if (-not (Test-Path $path)) { return ,@() }
+    $keys = [ordered]@{}
+    if (-not (Test-Path $path)) { return $keys }
 
     $lines = Get-Content $path -Encoding UTF8
     $inSection = $false
-    $keys = [System.Collections.Generic.List[string]]::new()
     foreach ($line in $lines) {
         $trimmed = $line.Trim()
         if ($trimmed -match '^\[.+\]$') {
             $inSection = ($trimmed -eq "[wsl2]")
             continue
         }
-        if ($inSection -and $trimmed -match '^([A-Za-z0-9_]+)\s*=') {
-            $keys.Add($matches[1])
+        if ($inSection -and $trimmed -match '^([A-Za-z0-9_]+)\s*=\s*(.*)$') {
+            $keys[$matches[1]] = $matches[2].Trim()
         }
     }
-    return ,@($keys)
+    return $keys
 }
 
 function Get-AutoMemoryReclaimStatus {
@@ -127,8 +130,10 @@ function Get-WslCeilingInfo {
     .SYNOPSIS
         Plafond RAM/CPU configure dans .wslconfig, rapporte a la RAM
         totale de l'hote (Win32_OperatingSystem, deja autorise -
-        docs/RESOURCE-MODEL.md SS4.1). Le plafond est GLOBAL, pas
-        par-distribution (docs/USE-CASES.md S4) - le dit explicitement.
+        docs/RESOURCE-MODEL.md SS4.1). Scope suit l'enum ferme de
+        docs/RESOURCE-MODEL.md SS3 ("host" : le plafond s'applique a la
+        machine Windows entiere) ; ScopeNote precise que ce n'est pas
+        par-distribution (docs/USE-CASES.md S4).
     #>
     $wslConfig = Get-WslConfigPath
     $memory = $null
@@ -159,7 +164,8 @@ function Get-WslCeilingInfo {
         ProcessorsCeiling = if ($processors) { $processors } else { "non configure" }
         HostTotalRamGB    = $hostTotalGB
         RatioOfHostPct    = $ratioPct
-        Scope             = "GLOBAL - s'applique a toutes les distributions, pas par-distribution"
+        Scope             = "host"
+        ScopeNote         = "s'applique a toutes les distributions, pas par-distribution"
     }
 }
 
@@ -325,17 +331,27 @@ function Get-DiagnoseReport {
     })
 
     $reclaim = Get-AutoMemoryReclaimStatus
+    $reclaimSummary = $script:KnownWslConfigKeys["autoMemoryReclaim"].Summary
     $lines.Add([PSCustomObject]@{
         Question = "que se passe-t-il"; Label = "autoMemoryReclaim"
-        Value    = $reclaim.Value
+        Value    = "$($reclaim.Value) -- $reclaimSummary"
         Unit = ""; Scope = $reclaim.Scope; Class = "directe"; Confidence = "haute"; Source = ".wslconfig"
     })
 
     $rawKeys = Get-WslConfigRawKeys
-    $sparseVhdPresent = "sparseVhd" -in $rawKeys
+    $sparseVhdValue = if ($rawKeys.Contains("sparseVhd")) { $rawKeys["sparseVhd"] } else { $null }
+    $sparseVhdDisplay = if ($null -eq $sparseVhdValue) {
+        "absente"
+    } elseif ($sparseVhdValue -eq "true") {
+        "activee"
+    } elseif ($sparseVhdValue -eq "false") {
+        "desactivee"
+    } else {
+        "presente avec valeur non reconnue ($sparseVhdValue)"
+    }
     $lines.Add([PSCustomObject]@{
         Question = "que se passe-t-il"; Label = "sparseVhd"
-        Value    = if ($sparseVhdPresent) { "presente dans .wslconfig (regime non determine - hors perimetre P2)" } else { "absente" }
+        Value    = $sparseVhdDisplay
         Unit = ""; Scope = "policy"; Class = "directe"; Confidence = "haute"; Source = ".wslconfig"
     })
 
@@ -363,7 +379,7 @@ function Get-DiagnoseReport {
     } else { "" }
     $lines.Add([PSCustomObject]@{
         Question = "pourquoi"; Label = "Plafond RAM (.wslconfig)"
-        Value    = "$($ceiling.MemoryCeiling)$ceilingDetail"
+        Value    = "$($ceiling.MemoryCeiling)$ceilingDetail -- $($ceiling.ScopeNote)"
         Unit = ""; Scope = $ceiling.Scope; Class = "directe"; Confidence = "haute"; Source = ".wslconfig + Win32_OperatingSystem"
     })
 

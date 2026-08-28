@@ -549,7 +549,7 @@ if ($Clean) {
     exit
 }
 if ($Report)  { & (Join-Path $PSScriptRoot "modules\WeeklyReport.ps1"); exit }
-if ($Rollback) { Invoke-Rollback; exit }
+if ($Rollback) { Invoke-Rollback -Force:$Force; exit }
 if ($Diagnose) {
     try {
         if ($Explain -ne "") { Show-DiagnoseExplain -Key $Explain }
@@ -611,7 +611,7 @@ do {
             $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
         }
         "rollback" {
-            Invoke-Rollback
+            Invoke-Rollback -Force:$Force
             Write-Host "  Appuyez sur Entree pour continuer..." -ForegroundColor DarkGray
             $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
         }

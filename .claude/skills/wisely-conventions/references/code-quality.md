@@ -114,7 +114,7 @@ Respecte la regle deja etablie dans "Carte d'architecture" : aucun couplage entr
 
 ### Reutilisation
 
-Avant de creer une nouvelle fonction, verifie que `Get-ProfileConfig`, `Get-ActiveProfile`, `Set-WslProfile`, `Test-ProfileDefinition`, `Resolve-ProfilePaths`, `Get-AvailableRamGB` (dans `ProfileManager.ps1`), ou l'equivalent dans `Logger.ps1`/`Monitor.ps1`, ne couvrent pas deja le besoin. Duplique uniquement si la duplication reduit reellement un risque (pas pour economiser un appel de fonction).
+Avant de creer une nouvelle fonction, verifie que `Get-ProfileConfig`, `Get-ActiveProfile`, `Set-WslProfile`, `Test-ProfileDefinition`, `Resolve-ProfilePaths` (dans `ProfileManager.ps1`), ou l'equivalent dans `Logger.ps1`/`Monitor.ps1`, ne couvrent pas deja le besoin. Duplique uniquement si la duplication reduit reellement un risque (pas pour economiser un appel de fonction).
 
 ### Compatibilite avec l'existant
 

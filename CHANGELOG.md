@@ -2,6 +2,8 @@
 
 ## Non publie
 
+## v3.0.0 - 2026-08-28
+
 ### P2 / v3.0 "Diagnostic" -- une seule commande pour expliquer l'etat complet
 
 - **`wisely -Diagnose`** : premiere commande d'entree du produit (anciennement nommee de travail `wisely doctor`, renommee avant ecriture -- `docs/CLAUDE.md`). Repond, dans l'ordre impose par `docs/ROADMAP.md`, a que se passe-t-il / pourquoi / est-ce dangereux / que puis-je faire / est-ce que ca vaut le coup de changer quelque chose : validite du `.wslconfig`, etat d'`autoMemoryReclaim`, `sparseVhd`, taille du VHDX, distributions actives, plafond RAM/processeurs rapporte a la RAM hote, et l'etat du consentement de lecture invitee (P1). Chaque grandeur affichee porte sa portee/classe/confiance conformement au contrat de `docs/RESOURCE-MODEL.md` §3 -- aucune ligne n'est affichee sans l'entree qui la decrit
@@ -16,6 +18,8 @@
 - **Validation dans cette session** : comme pour P1, `Invoke-Pester`/`Invoke-ScriptAnalyzer` n'ont pas pu etre executes ici -- PowerShell Gallery reste bloque par la politique reseau sortante de cet environnement (403 confirme sur le tunnel du proxy, `Register-PSRepository -Default` ne resout aucun depot). Substitue par verification syntaxique AST (`[System.Management.Automation.Language.Parser]::ParseFile`) sur tous les fichiers modifies/crees, et par une relecture croisee manuelle, ligne a ligne, de chaque assertion de `tests/Diagnose.Tests.ps1` contre l'implementation reelle (`modules/Diagnose.ps1`, `modules/GuestReader.ps1`, `modules/ProfileManager.ps1`), y compris le calcul arithmetique complet du cas nominal d'attribution memoire. La CI execute la suite Pester/ScriptAnalyzer complete au push -- a confirmer verte avant fusion
 - Dernier livrable de P2 / v3.0 "Diagnostic" avant P3, barriere de validation bloquante (`docs/ROADMAP.md`)
 
+## v2.6.0 - 2026-08-28
+
 ### P1 / v2.6 "Contrat" -- premiere lecture in-distro, sous consentement explicite
 
 - **Nouveau module `modules/GuestReader.ps1`** : premiere capacite de Wisely a lire *dans* une distribution WSL2 deja demarree, plutot que de se limiter a ce que Windows expose (`vmmem`/`VmmemWSL`, `.wslconfig`). Perimetre deja autorise par ecrit dans `docs/DOCTRINE-LECTURE.md` et `docs/decisions/0008-lecture-in-distro.md`, jamais implemente jusqu'ici
@@ -29,12 +33,9 @@
 - **Validation dans cette session** : `Invoke-Pester`/`Invoke-ScriptAnalyzer` n'ont pas pu etre executes ici -- PowerShell Gallery (`www.powershellgallery.com`) est bloque par la politique reseau sortante de cet environnement (403 confirme sur le tunnel du proxy). Substitue par verification syntaxique AST (`[System.Management.Automation.Language.Parser]::ParseFile`, ce que fait le syntax-check de la CI), validation `Test-Json` de `schemas/profiles.schema.json`/`schemas/history.schema.json` (documents reels et synthetiques), et scripts de verification fonctionnelle manuels executant le code reel (non mocke, hors `Get-WslActiveSessions`) contre une racine isolee. La CI execute la suite Pester/ScriptAnalyzer complete au push
 - Premier des quatre livrables de P1 / v2.6 "Contrat" (`docs/ROADMAP.md`)
 
-### Securite -- injection possible via la cle d'un profil (post P0/v2.5)
+## v2.5.0 - 2026-08-27
 
-- **`Test-ProfileDefinition` validait tous les champs interpoles dans `.wslconfig` sauf la cle du profil elle-meme.** Depuis les correctifs P0/v2.5 "identite du profil actif" et "ecriture non destructive", cette cle est ecrite telle quelle dans une section `[wisely]` de `.wslconfig`. Une cle important un `\r\n` (via `Import-Profiles`, ou affichee/transmise telle quelle par le menu interactif) pouvait injecter une section ou une cle `.wslconfig` arbitraire au switch suivant -- y compris `[wsl2]`/`kernelCommandLine`, sur un fichier de config systeme Windows que `wsl.exe` utilise reellement
-- `Test-ProfileDefinition` rejette desormais toute cle contenant `\r`/`\n`, avec le meme mecanisme que les autres champs deja proteges. Couvre `New-CustomProfile` et `Import-Profiles` sans toucher a leurs appelants (point de passage unique depuis v2.3-C-1, `docs/AUDIT.md`)
-- Trouve lors d'une revue de code post-fusion du palier P0/v2.5. Developpe en TDD : nouveaux tests sur `Import-Profiles` et `New-CustomProfile`. Suite complete : 180 tests, 0 echec, aucune regression
-- Detail complet : `docs/AUDIT.md` (v2.5-C-1)
+### P0 / v2.5 "Verite" -- cinq correctifs de mesures fausses
 
 ### v2.5 "Verite" -- cinquieme correctif, cycle termine (ecriture non destructive de .wslconfig)
 
@@ -78,7 +79,29 @@
 - Developpe en TDD : deux tests Pester ecrits et verifies en echec avant le correctif, dans `tests/Monitor.Tests.ps1` et `tests/MonitorTask.Tests.ps1`
 - Premier des cinq correctifs de P0 / v2.5 "Verite" (`docs/TASKS.md`) ; les quatre autres restent a faire
 
-### Adoption de l'audit strategique externe d'aout 2026
+### Securite -- injection possible via la cle d'un profil (post P0/v2.5)
+
+- **`Test-ProfileDefinition` validait tous les champs interpoles dans `.wslconfig` sauf la cle du profil elle-meme.** Depuis les correctifs P0/v2.5 "identite du profil actif" et "ecriture non destructive", cette cle est ecrite telle quelle dans une section `[wisely]` de `.wslconfig`. Une cle important un `\r\n` (via `Import-Profiles`, ou affichee/transmise telle quelle par le menu interactif) pouvait injecter une section ou une cle `.wslconfig` arbitraire au switch suivant -- y compris `[wsl2]`/`kernelCommandLine`, sur un fichier de config systeme Windows que `wsl.exe` utilise reellement
+- `Test-ProfileDefinition` rejette desormais toute cle contenant `\r`/`\n`, avec le meme mecanisme que les autres champs deja proteges. Couvre `New-CustomProfile` et `Import-Profiles` sans toucher a leurs appelants (point de passage unique depuis v2.3-C-1, `docs/AUDIT.md`)
+- Trouve lors d'une revue de code post-fusion du palier P0/v2.5. Developpe en TDD : nouveaux tests sur `Import-Profiles` et `New-CustomProfile`. Suite complete : 180 tests, 0 echec, aucune regression
+- Detail complet : `docs/AUDIT.md` (v2.5-C-1)
+
+## v2.4.0 - 2026-08-27
+
+### v2.4 - Garde-fou shutdown & refondation documentaire
+
+- Garde-fou WSL2 actif avant `wsl --shutdown` : `Get-WslActiveSessions` et `Confirm-WslShutdown` dans `ProfileManager.ps1`, avec flag `-Force` pour l'usage script/automatise et `Test-WiselyNonInteractive` pour les sessions sans entree utilisateur
+- Refondation de l'architecture documentaire : un document par question - `docs/PROBLEM.md` (le probleme, independamment de toute solution), `docs/VISION.md` (la capacite fondamentale), `docs/PRINCIPLES.md` (les criteres d'arbitrage), `docs/DOCTRINE-LECTURE.md` (contrat de lecture dans la distribution Linux, ecrit avant l'implementation), `docs/ASSUMPTIONS.md` (registre des hypotheses non validees)
+- `docs/decisions/` : 12 ADR dates et revisables, remplacant le paragraphe monolithique de decisions strategiques de l'ancien ROADMAP
+- `docs/ROADMAP.md` reduit a son seul metier (les versions et leur ordre) ; positionnement, principes et decisions deplaces dans les documents dedies
+- **Spike Terminal.Gui annule** (et non reporte) : aucun probleme utilisateur adosse, justifie par un document lui-meme perime - voir `docs/decisions/0007-annulation-spike-terminal-gui.md`
+- Suppression de `docs/wisely.md` (instantane fige redondant) et du guide TUIStudio (perime) ; l'expose technologique est archive dans `docs/archive/` avec un avertissement
+- `docs/refondation-wisely.html` : document de travail de l'analyse strategique (six directions comparees, cartographie du probleme, etat de l'art verifie, roadmap reclassee, hypotheses a valider), conserve comme trace du raisonnement
+- `docs/glossary.md`, `docs/CLAUDE.md` et le skill `wisely-conventions` resynchronises sur la nouvelle structure
+
+> Aucun changement de code de production dans la partie documentaire de cette version.
+
+### v2.4 - Adoption de l'audit strategique externe d'aout 2026
 
 - **Direction produit revisee** : la capacite fondamentale devient *transformer l'etat reel des ressources WSL2 en decisions explicables et en actions sures*. Categorie : WSL2 Resource Intelligence & Control. Promesse : *Comprendre WSL. Agir en confiance.* Voir `docs/decisions/0013-adoption-audit-strategique-externe.md`, qui revise 0005 sans l'annuler
 - **L'ecart requalifie** : il devient la relation entre l'Etat observe et la Politique de ressources, modele interne des ressources a plafond configurable, et cesse d'etre l'ontologie du produit. Motif : il ne modelise ni le cache, ni l'I/O, ni le disque, et il masque que 8 Go consommes ne sont pas 8 Go necessaires
@@ -93,21 +116,6 @@
 - `README.md`, `docs/glossary.md`, `docs/CLAUDE.md`, `docs/TASKS.md` et le skill `wisely-conventions` resynchronises
 
 > Aucun changement de code de production. La priorite d'implementation reste **P0 / v2.5 "Verite"**, inchangee : on ne construit ni diagnostic ni recommandation sur une mesure qui ment.
-
-## v2.4.0 - 2026-08-26
-
-### v2.4 - Garde-fou shutdown & refondation documentaire
-
-- Garde-fou WSL2 actif avant `wsl --shutdown` : `Get-WslActiveSessions` et `Confirm-WslShutdown` dans `ProfileManager.ps1`, avec flag `-Force` pour l'usage script/automatise et `Test-WiselyNonInteractive` pour les sessions sans entree utilisateur
-- Refondation de l'architecture documentaire : un document par question - `docs/PROBLEM.md` (le probleme, independamment de toute solution), `docs/VISION.md` (la capacite fondamentale), `docs/PRINCIPLES.md` (les criteres d'arbitrage), `docs/DOCTRINE-LECTURE.md` (contrat de lecture dans la distribution Linux, ecrit avant l'implementation), `docs/ASSUMPTIONS.md` (registre des hypotheses non validees)
-- `docs/decisions/` : 12 ADR dates et revisables, remplacant le paragraphe monolithique de decisions strategiques de l'ancien ROADMAP
-- `docs/ROADMAP.md` reduit a son seul metier (les versions et leur ordre) ; positionnement, principes et decisions deplaces dans les documents dedies
-- **Spike Terminal.Gui annule** (et non reporte) : aucun probleme utilisateur adosse, justifie par un document lui-meme perime - voir `docs/decisions/0007-annulation-spike-terminal-gui.md`
-- Suppression de `docs/wisely.md` (instantane fige redondant) et du guide TUIStudio (perime) ; l'expose technologique est archive dans `docs/archive/` avec un avertissement
-- `docs/refondation-wisely.html` : document de travail de l'analyse strategique (six directions comparees, cartographie du probleme, etat de l'art verifie, roadmap reclassee, hypotheses a valider), conserve comme trace du raisonnement
-- `docs/glossary.md`, `docs/CLAUDE.md` et le skill `wisely-conventions` resynchronises sur la nouvelle structure
-
-> Aucun changement de code de production dans la partie documentaire de cette version.
 
 ## v2.3.0 - 2026-08-25
 
