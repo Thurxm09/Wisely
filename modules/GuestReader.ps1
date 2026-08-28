@@ -132,7 +132,7 @@ function Invoke-GuestProcess {
         } else {
             $result.TimedOut = $true
             $result.Error    = "Timeout apres ${TimeoutMs}ms."
-            try { $process.Kill() } catch { }
+            try { $process.Kill() } catch { Write-Verbose "Echec de l'arret force du processus en timeout (deja termine ?) : $_" }
         }
     } catch {
         $result.Error = "Echec du lancement de '$FilePath' : $_"

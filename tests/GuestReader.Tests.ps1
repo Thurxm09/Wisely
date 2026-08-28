@@ -224,7 +224,6 @@ Describe "Invoke-GuestRead - integration (Invoke-GuestProcess mocke)" {
 
     It "construit exactement '-d <distro> -- cat /proc/meminfo' pour MemInfo" {
         Mock Invoke-GuestProcess {
-            param($FilePath, $ArgumentList, $TimeoutMs)
             return [PSCustomObject]@{ Success = $true; Output = "MemTotal:  8000000 kB"; Error = ""; ExitCode = 0; TimedOut = $false }
         }
         Invoke-GuestRead -CommandKey "MemInfo" -Distro "Ubuntu-22.04" | Out-Null
