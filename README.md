@@ -151,6 +151,11 @@ wisely -Monitor status          # Vérifier l'état du monitoring
 wisely -Watch                   # Dashboard temps réel (RAM/CPU vmmem, profil actif, dernière alerte)
 wisely -Watch -Interval 5       # Rafraîchi toutes les 5s au lieu de 3s par défaut (Ctrl+C pour quitter)
 
+# ── Lecture in-distro (sous consentement) ───────────────────────────────
+wisely -Consent grant           # Autoriser la lecture dans la distribution WSL2 (désactivé par défaut)
+wisely -Consent status          # Afficher l'état du consentement
+wisely -GuestInfo               # Mémoire de la distribution active : MemAvailable vs Cached
+
 # ── Reporting ───────────────────────────────────────────────────────────
 wisely -Report                  # Générer un rapport d'utilisation maintenant
 

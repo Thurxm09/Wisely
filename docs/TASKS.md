@@ -4,10 +4,9 @@
 
 ## Active
 
-P0 / v2.5 "Verite" est termine (voir Done ci-dessous). Prochain palier :
-P1 / v2.6 "Contrat" (`ROADMAP.md`) - implementation de `DOCTRINE-LECTURE.md`
-(liste fermee de commandes, consentement explicite, degradation propre,
-premiere lecture `/proc/meminfo`). Pas encore decoupe en taches unitaires ici.
+P0 / v2.5 "Verite" et P1 / v2.6 "Contrat" sont termines (voir Done ci-dessous).
+Prochain palier : P2 / v3.0 "Diagnostic" (`ROADMAP.md`). Pas encore decoupe en
+taches unitaires ici.
 
 ## Experiences a mener (hors code)
 
@@ -34,6 +33,7 @@ refute rien.
 
 ## Done
 
+- [x] ~~P1 / v2.6 "Contrat" - premiere lecture in-distro sous consentement explicite~~ (2026-08-28 - nouveau `modules/GuestReader.ps1` : liste fermee de six commandes invite (`MemInfo`, `LoadAvg`, `Uptime`, `DiskRoot`, `Nproc`, `ProcRss`), identique a `DOCTRINE-LECTURE.md`/`RESOURCE-MODEL.md` et verifiee par un test de derive doc/code ; consentement `settings.guestReadConsent` a trois etats (`unset`/`granted`/`revoked`), desactive par defaut, pilotable via `wisely -Consent grant|revoke|status`, journalise dans l'historique ; degradation propre (jamais de `$null` silencieux) pour cle hors liste, consentement refuse, ou distribution absente/non demarree ; `wisely -GuestInfo` distingue `MemAvailableGB` de `CachedGB`. Correctif incident : `Write-SwitchLog` (`Logger.ps1`) collabait un historique a une seule entree en objet JSON nu au lieu d'un tableau (`-AsArray` ajoute). Detail complet : `CHANGELOG.md`)
 - [x] ~~P0 / v2.5 "Verite" - corriger les mesures fausses avant toute nouvelle fonctionnalite~~ (2026-08-27 - cinq correctifs : detection `VmmemWSL` en plus de `vmmem` ; seuil d'alerte rapporte au plafond `.wslconfig` plutot qu'a la RAM totale (`Get-CimInstance` retire de `MonitorTask.ps1`) ; `ramDeltaGB` retire (mesure non attribuable, pas corrige - le vrai remplacement est planifie P6) ; identite du profil actif marquee dans une section `[wisely]` de `.wslconfig` plutot que devinee par egalite de memoire ; ecriture de `.wslconfig` non destructive via `Set-IniSectionKeys`, qui fusionne les cles gerees sans toucher aux cles et sections non gerees (autoMemoryReclaim, sparseVhd, `[experimental]`, etc.) - debloque la situation S5 et les contextes Docker Desktop et poste d'entreprise. Chaque correctif developpe en TDD, une PR par correctif. Detail complet : `CHANGELOG.md`)
 - [x] ~~Injection possible via la cle d'un profil dans `.wslconfig`~~ (2026-08-27 - trouve en revue de code post-fusion de P0/v2.5 : `Test-ProfileDefinition` validait tous les champs interpoles dans `.wslconfig` sauf la cle du profil elle-meme, ecrite telle quelle depuis les deux derniers correctifs P0/v2.5. Rejette desormais toute cle contenant `\r`/`\n`. Voir `AUDIT.md` v2.5-C-1, `CHANGELOG.md`)
 

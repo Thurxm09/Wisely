@@ -70,8 +70,7 @@ refondation documentaire de 2026-08-26, révisée le 2026-08-27 par
 
 **La version qui rend les mesures honnêtes.** Elle n'a ajouté aucune
 fonctionnalité visible, et c'était la plus importante de la séquence. Les cinq
-correctifs sont livrés (`decisions/`, `CHANGELOG.md`) ; **prochaine priorité
-d'implémentation : P1 · v2.6 — Contrat**, ci-dessous.
+correctifs sont livrés (`decisions/`, `CHANGELOG.md`).
 
 1. **Détection du processus WSL2.** `Get-Process -Name "vmmem"` ne trouve rien sur
    Windows 11 récent, où le processus s'appelle `VmmemWSL`. Toute la couche
@@ -103,11 +102,13 @@ d'implémentation : P1 · v2.6 — Contrat**, ci-dessous.
 
 ---
 
-### P1 · v2.6 — Contrat
+### P1 · v2.6 — Contrat · livrée
 
-**La doctrine avant le code.** `DOCTRINE-LECTURE.md` est déjà écrit ; ce cycle le
-met en œuvre. `RESOURCE-MODEL.md` en est le pendant sémantique, également écrit
-d'avance : les deux listes de commandes doivent rester identiques.
+**La doctrine avant le code.** `DOCTRINE-LECTURE.md` était déjà écrit ; ce cycle
+le met en œuvre. `RESOURCE-MODEL.md` en est le pendant sémantique, également
+écrit d'avance : les deux listes de commandes restent identiques (vérifié par
+un test de dérive doc/code). Les quatre livrables sont couverts ; prochaine
+priorité d'implémentation : **P2 · v3.0 — Diagnostic**, ci-dessous.
 
 1. Implémentation de la liste fermée de commandes, comme constante unique, avec
    le test Pester qui interdit toute invocation hors liste.
