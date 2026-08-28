@@ -16,6 +16,8 @@
 - **Validation dans cette session** : comme pour P1, `Invoke-Pester`/`Invoke-ScriptAnalyzer` n'ont pas pu etre executes ici -- PowerShell Gallery reste bloque par la politique reseau sortante de cet environnement (403 confirme sur le tunnel du proxy, `Register-PSRepository -Default` ne resout aucun depot). Substitue par verification syntaxique AST (`[System.Management.Automation.Language.Parser]::ParseFile`) sur tous les fichiers modifies/crees, et par une relecture croisee manuelle, ligne a ligne, de chaque assertion de `tests/Diagnose.Tests.ps1` contre l'implementation reelle (`modules/Diagnose.ps1`, `modules/GuestReader.ps1`, `modules/ProfileManager.ps1`), y compris le calcul arithmetique complet du cas nominal d'attribution memoire. La CI execute la suite Pester/ScriptAnalyzer complete au push -- a confirmer verte avant fusion
 - Dernier livrable de P2 / v3.0 "Diagnostic" avant P3, barriere de validation bloquante (`docs/ROADMAP.md`)
 
+## v2.6.0 - 2026-08-28
+
 ### P1 / v2.6 "Contrat" -- premiere lecture in-distro, sous consentement explicite
 
 - **Nouveau module `modules/GuestReader.ps1`** : premiere capacite de Wisely a lire *dans* une distribution WSL2 deja demarree, plutot que de se limiter a ce que Windows expose (`vmmem`/`VmmemWSL`, `.wslconfig`). Perimetre deja autorise par ecrit dans `docs/DOCTRINE-LECTURE.md` et `docs/decisions/0008-lecture-in-distro.md`, jamais implemente jusqu'ici
