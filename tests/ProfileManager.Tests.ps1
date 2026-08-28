@@ -997,6 +997,55 @@ Describe "Invoke-Rollback" {
     }
 }
 
+Describe "Invoke-Rollback - garde-fou session WSL2 active" {
+
+    BeforeEach {
+        Clear-ProfileConfigCache
+        $script:testRoot = New-TestWslRoot
+        Set-TestUserProfile -Path $script:testRoot
+        Enable-WslMocks -RunningDistros @("Ubuntu")
+        $dir = Get-BackupDir
+        New-Item -ItemType Directory -Path $dir -Force | Out-Null
+        Set-Content -Path (Join-Path $dir "wslconfig_20260101_000000.backup") -Value "[wsl2]`nmemory=6GB`n" -Encoding UTF8
+    }
+
+    AfterEach {
+        Restore-TestUserProfile
+        Remove-TestWslRoot -Path $script:testRoot
+    }
+
+    It "n'appelle jamais wsl --shutdown et ne restaure rien quand la confirmation est refusee" {
+        Mock Test-WiselyNonInteractive { $false }
+        Mock Read-Host { "n" }
+
+        { Invoke-Rollback } | Should -Not -Throw
+
+        Should -Invoke -CommandName wsl -ParameterFilter { $args -contains "--shutdown" } -Times 0 -Exactly
+        Test-Path (Get-WslConfigPath) | Should -Be $false
+    }
+
+    It "ignore les sessions actives, restaure le backup et journalise la mention Force avec -Force" {
+        Invoke-Rollback -Force
+
+        Should -Invoke -CommandName wsl -ParameterFilter { $args -contains "--shutdown" } -Times 1 -Exactly
+        (Get-Content (Get-WslConfigPath) -Raw) | Should -Match "memory=6GB"
+        $history = @(Get-Content (Get-HistoryPath) -Raw | ConvertFrom-Json)
+        $history[-1].action | Should -Be "ROLLBACK"
+        $history[-1].details | Should -Match "Force"
+        $history[-1].details | Should -Match "Ubuntu"
+    }
+
+    It "n'affiche pas de demande de confirmation quand aucune session n'est active (comportement inchange)" {
+        Enable-WslMocks
+        Mock Read-Host { "o" }
+
+        { Invoke-Rollback } | Should -Not -Throw
+
+        Should -Invoke -CommandName wsl -ParameterFilter { $args -contains "--shutdown" } -Times 1 -Exactly
+        Should -Invoke -CommandName Read-Host -Times 0 -Exactly
+    }
+}
+
 Describe "Get-ProfileConfig cache" {
 
     BeforeEach {
