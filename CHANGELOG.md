@@ -78,7 +78,22 @@
 - Developpe en TDD : deux tests Pester ecrits et verifies en echec avant le correctif, dans `tests/Monitor.Tests.ps1` et `tests/MonitorTask.Tests.ps1`
 - Premier des cinq correctifs de P0 / v2.5 "Verite" (`docs/TASKS.md`) ; les quatre autres restent a faire
 
-### Adoption de l'audit strategique externe d'aout 2026
+## v2.4.0 - 2026-08-27
+
+### v2.4 - Garde-fou shutdown & refondation documentaire
+
+- Garde-fou WSL2 actif avant `wsl --shutdown` : `Get-WslActiveSessions` et `Confirm-WslShutdown` dans `ProfileManager.ps1`, avec flag `-Force` pour l'usage script/automatise et `Test-WiselyNonInteractive` pour les sessions sans entree utilisateur
+- Refondation de l'architecture documentaire : un document par question - `docs/PROBLEM.md` (le probleme, independamment de toute solution), `docs/VISION.md` (la capacite fondamentale), `docs/PRINCIPLES.md` (les criteres d'arbitrage), `docs/DOCTRINE-LECTURE.md` (contrat de lecture dans la distribution Linux, ecrit avant l'implementation), `docs/ASSUMPTIONS.md` (registre des hypotheses non validees)
+- `docs/decisions/` : 12 ADR dates et revisables, remplacant le paragraphe monolithique de decisions strategiques de l'ancien ROADMAP
+- `docs/ROADMAP.md` reduit a son seul metier (les versions et leur ordre) ; positionnement, principes et decisions deplaces dans les documents dedies
+- **Spike Terminal.Gui annule** (et non reporte) : aucun probleme utilisateur adosse, justifie par un document lui-meme perime - voir `docs/decisions/0007-annulation-spike-terminal-gui.md`
+- Suppression de `docs/wisely.md` (instantane fige redondant) et du guide TUIStudio (perime) ; l'expose technologique est archive dans `docs/archive/` avec un avertissement
+- `docs/refondation-wisely.html` : document de travail de l'analyse strategique (six directions comparees, cartographie du probleme, etat de l'art verifie, roadmap reclassee, hypotheses a valider), conserve comme trace du raisonnement
+- `docs/glossary.md`, `docs/CLAUDE.md` et le skill `wisely-conventions` resynchronises sur la nouvelle structure
+
+> Aucun changement de code de production dans la partie documentaire de cette version.
+
+### v2.4 - Adoption de l'audit strategique externe d'aout 2026
 
 - **Direction produit revisee** : la capacite fondamentale devient *transformer l'etat reel des ressources WSL2 en decisions explicables et en actions sures*. Categorie : WSL2 Resource Intelligence & Control. Promesse : *Comprendre WSL. Agir en confiance.* Voir `docs/decisions/0013-adoption-audit-strategique-externe.md`, qui revise 0005 sans l'annuler
 - **L'ecart requalifie** : il devient la relation entre l'Etat observe et la Politique de ressources, modele interne des ressources a plafond configurable, et cesse d'etre l'ontologie du produit. Motif : il ne modelise ni le cache, ni l'I/O, ni le disque, et il masque que 8 Go consommes ne sont pas 8 Go necessaires
@@ -93,21 +108,6 @@
 - `README.md`, `docs/glossary.md`, `docs/CLAUDE.md`, `docs/TASKS.md` et le skill `wisely-conventions` resynchronises
 
 > Aucun changement de code de production. La priorite d'implementation reste **P0 / v2.5 "Verite"**, inchangee : on ne construit ni diagnostic ni recommandation sur une mesure qui ment.
-
-## v2.4.0 - 2026-08-26
-
-### v2.4 - Garde-fou shutdown & refondation documentaire
-
-- Garde-fou WSL2 actif avant `wsl --shutdown` : `Get-WslActiveSessions` et `Confirm-WslShutdown` dans `ProfileManager.ps1`, avec flag `-Force` pour l'usage script/automatise et `Test-WiselyNonInteractive` pour les sessions sans entree utilisateur
-- Refondation de l'architecture documentaire : un document par question - `docs/PROBLEM.md` (le probleme, independamment de toute solution), `docs/VISION.md` (la capacite fondamentale), `docs/PRINCIPLES.md` (les criteres d'arbitrage), `docs/DOCTRINE-LECTURE.md` (contrat de lecture dans la distribution Linux, ecrit avant l'implementation), `docs/ASSUMPTIONS.md` (registre des hypotheses non validees)
-- `docs/decisions/` : 12 ADR dates et revisables, remplacant le paragraphe monolithique de decisions strategiques de l'ancien ROADMAP
-- `docs/ROADMAP.md` reduit a son seul metier (les versions et leur ordre) ; positionnement, principes et decisions deplaces dans les documents dedies
-- **Spike Terminal.Gui annule** (et non reporte) : aucun probleme utilisateur adosse, justifie par un document lui-meme perime - voir `docs/decisions/0007-annulation-spike-terminal-gui.md`
-- Suppression de `docs/wisely.md` (instantane fige redondant) et du guide TUIStudio (perime) ; l'expose technologique est archive dans `docs/archive/` avec un avertissement
-- `docs/refondation-wisely.html` : document de travail de l'analyse strategique (six directions comparees, cartographie du probleme, etat de l'art verifie, roadmap reclassee, hypotheses a valider), conserve comme trace du raisonnement
-- `docs/glossary.md`, `docs/CLAUDE.md` et le skill `wisely-conventions` resynchronises sur la nouvelle structure
-
-> Aucun changement de code de production dans la partie documentaire de cette version.
 
 ## v2.3.0 - 2026-08-25
 
