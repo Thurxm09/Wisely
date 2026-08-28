@@ -29,12 +29,9 @@
 - **Validation dans cette session** : `Invoke-Pester`/`Invoke-ScriptAnalyzer` n'ont pas pu etre executes ici -- PowerShell Gallery (`www.powershellgallery.com`) est bloque par la politique reseau sortante de cet environnement (403 confirme sur le tunnel du proxy). Substitue par verification syntaxique AST (`[System.Management.Automation.Language.Parser]::ParseFile`, ce que fait le syntax-check de la CI), validation `Test-Json` de `schemas/profiles.schema.json`/`schemas/history.schema.json` (documents reels et synthetiques), et scripts de verification fonctionnelle manuels executant le code reel (non mocke, hors `Get-WslActiveSessions`) contre une racine isolee. La CI execute la suite Pester/ScriptAnalyzer complete au push
 - Premier des quatre livrables de P1 / v2.6 "Contrat" (`docs/ROADMAP.md`)
 
-### Securite -- injection possible via la cle d'un profil (post P0/v2.5)
+## v2.5.0 - 2026-08-27
 
-- **`Test-ProfileDefinition` validait tous les champs interpoles dans `.wslconfig` sauf la cle du profil elle-meme.** Depuis les correctifs P0/v2.5 "identite du profil actif" et "ecriture non destructive", cette cle est ecrite telle quelle dans une section `[wisely]` de `.wslconfig`. Une cle important un `\r\n` (via `Import-Profiles`, ou affichee/transmise telle quelle par le menu interactif) pouvait injecter une section ou une cle `.wslconfig` arbitraire au switch suivant -- y compris `[wsl2]`/`kernelCommandLine`, sur un fichier de config systeme Windows que `wsl.exe` utilise reellement
-- `Test-ProfileDefinition` rejette desormais toute cle contenant `\r`/`\n`, avec le meme mecanisme que les autres champs deja proteges. Couvre `New-CustomProfile` et `Import-Profiles` sans toucher a leurs appelants (point de passage unique depuis v2.3-C-1, `docs/AUDIT.md`)
-- Trouve lors d'une revue de code post-fusion du palier P0/v2.5. Developpe en TDD : nouveaux tests sur `Import-Profiles` et `New-CustomProfile`. Suite complete : 180 tests, 0 echec, aucune regression
-- Detail complet : `docs/AUDIT.md` (v2.5-C-1)
+### P0 / v2.5 "Verite" -- cinq correctifs de mesures fausses
 
 ### v2.5 "Verite" -- cinquieme correctif, cycle termine (ecriture non destructive de .wslconfig)
 
@@ -77,6 +74,13 @@
 - **Detection VmmemWSL** : `Get-Process -Name "vmmem"` ne trouvait rien sur Windows 11 recent, ou le processus s'appelle `VmmemWSL` -- toute la couche d'observation (`wisely -Watch`, l'alerte de `MonitorTask.ps1`) etait silencieusement inoperante sur ces machines. Les deux noms sont desormais acceptes (`Get-Process -Name "VmmemWSL", "vmmem"`). `modules/Monitor.ps1` (`Get-VmmemStats`), `modules/MonitorTask.ps1`
 - Developpe en TDD : deux tests Pester ecrits et verifies en echec avant le correctif, dans `tests/Monitor.Tests.ps1` et `tests/MonitorTask.Tests.ps1`
 - Premier des cinq correctifs de P0 / v2.5 "Verite" (`docs/TASKS.md`) ; les quatre autres restent a faire
+
+### Securite -- injection possible via la cle d'un profil (post P0/v2.5)
+
+- **`Test-ProfileDefinition` validait tous les champs interpoles dans `.wslconfig` sauf la cle du profil elle-meme.** Depuis les correctifs P0/v2.5 "identite du profil actif" et "ecriture non destructive", cette cle est ecrite telle quelle dans une section `[wisely]` de `.wslconfig`. Une cle important un `\r\n` (via `Import-Profiles`, ou affichee/transmise telle quelle par le menu interactif) pouvait injecter une section ou une cle `.wslconfig` arbitraire au switch suivant -- y compris `[wsl2]`/`kernelCommandLine`, sur un fichier de config systeme Windows que `wsl.exe` utilise reellement
+- `Test-ProfileDefinition` rejette desormais toute cle contenant `\r`/`\n`, avec le meme mecanisme que les autres champs deja proteges. Couvre `New-CustomProfile` et `Import-Profiles` sans toucher a leurs appelants (point de passage unique depuis v2.3-C-1, `docs/AUDIT.md`)
+- Trouve lors d'une revue de code post-fusion du palier P0/v2.5. Developpe en TDD : nouveaux tests sur `Import-Profiles` et `New-CustomProfile`. Suite complete : 180 tests, 0 echec, aucune regression
+- Detail complet : `docs/AUDIT.md` (v2.5-C-1)
 
 ## v2.4.0 - 2026-08-27
 
