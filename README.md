@@ -7,7 +7,7 @@
 > sauvegarde et rollback à chaque écriture, surveillance RAM en arrière-plan et
 > rapports, depuis un menu interactif ou une seule commande.
 
-![Version](https://img.shields.io/badge/version-2.4.0-blue)
+![Version](https://img.shields.io/badge/version-3.0.0-blue)
 ![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B-5391FE?logo=powershell&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D4?logo=windows&logoColor=white)
 ![WSL](https://img.shields.io/badge/WSL-2-orange?logo=linux&logoColor=white)
@@ -20,6 +20,7 @@
   - [Pourquoi ce projet ?](#pourquoi-ce-projet-)
   - [Fonctionnalités](#fonctionnalités)
   - [Prérequis](#prérequis)
+  - [Essayer sans installer](#essayer-sans-installer)
   - [Installation](#installation)
   - [Démarrage rapide](#démarrage-rapide)
   - [Référence des commandes](#référence-des-commandes)
@@ -84,6 +85,22 @@ La direction du produit, ce qu'il ne deviendra jamais et pourquoi : [`docs/VISIO
 - **PowerShell 5.1** ou supérieur (inclus dans Windows)
 - Droits d'exécution de scripts PowerShell pour l'utilisateur courant
 - **Droits administrateur** requis pour la commande `Set-ExecutionPolicy` (étape 2 de l'installation) ; dans un environnement d'entreprise, cette politique peut déjà être définie par votre DSI
+
+---
+
+## Essayer sans installer
+
+Aucun engagement : `wisely -Diagnose` (et ses variantes `-Explain`/`-History`) est
+**entièrement lecture seule** — il ne touche jamais votre `.wslconfig`, n'écrit
+rien sur disque, et ne requiert aucune installation permanente.
+
+```powershell
+git clone https://github.com/Thurxm09/Wisely.git
+cd Wisely
+pwsh ./wisely.ps1 -Diagnose
+```
+
+Un retour d'expérience (bon ou mauvais) est bienvenu via une [issue GitHub](https://github.com/Thurxm09/Wisely/issues/new).
 
 ---
 

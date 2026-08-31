@@ -4,9 +4,48 @@
 
 ## Active
 
-P0 / v2.5 "Verite" et P1 / v2.6 "Contrat" sont termines (voir Done ci-dessous).
-Prochain palier : P2 / v3.0 "Diagnostic" (`ROADMAP.md`). Pas encore decoupe en
-taches unitaires ici.
+P0 / v2.5 "Verite", P1 / v2.6 "Contrat" et P2 / v3.0 "Diagnostic" sont
+termines (voir Done ci-dessous). Palier en cours : **P3 - barriere de
+validation bloquante** (`ROADMAP.md`) - aucun palier au-dela ne demarre avant
+qu'elle soit franchie. Priorite immediate : E3, seule chose qui ne depend que
+du mainteneur pour demarrer (E4/E5 ont besoin de >= 5 testeurs deja
+recrutes).
+
+### P3 / E3 - Publier `wisely diagnose` seul
+
+Constat verifie par lecture du code : `-Diagnose`/`-Explain`/`-History` sont
+deja 100% lecture seule (aucun `Set-Content`/`Out-File`/`Add-Content` dans
+`modules/Diagnose.ps1` ; le seul chemin d'ecriture de toute la chaine
+dot-sourcee, `Set-GuestReadConsentState` dans `GuestReader.ps1`, n'est
+declenche que par `-Consent grant/revoke`, jamais par `-Diagnose`). Aucune
+extraction/bundling n'est donc necessaire pour respecter la promesse
+"zero engagement" d'E3 - construire un script autonome a part serait un
+travail de distribution premature, deja differe a P9
+(`decisions/0009-distribution-apres-le-produit.md`).
+
+Point a documenter (pas un bug) : `-History` appelle `Get-ProfileConfig`
+(`modules/ProfileManager.ps1:24-39`), qui leve une erreur si
+`data/profiles.json` est absent. Sans incidence si le testeur recupere le
+repo complet (le fichier est livre dedans) - a dire explicitement dans les
+instructions de test.
+
+- [x] Fixer le seuil de succes d'E3 **avant** publication (regle du journal
+      de validation, `ASSUMPTIONS.md` - un seuil fixe apres coup ne refute
+      rien) : >= 5 essais distincts rapportes et >= 1 reutilisation, sous 4
+      semaines apres publication (voir `ASSUMPTIONS.md`, ligne E3)
+- [x] Section "Essayer sans installer" dans `README.md` : clone + `pwsh
+      ./wisely.ps1 -Diagnose`, avec la garantie explicite lecture seule
+- [ ] Choisir le canal de publication et rediger le post (r/WSL en premier
+      choix - audience la plus directement concernee, meilleur test de A1 ;
+      r/PowerShell en complement ; Show HN en reserve)
+- [ ] Publier (action du mainteneur, pas de Claude)
+- [ ] Mecanisme de mesure minimal, sans telemetrie silencieuse (coherent
+      avec `guestReadConsent`) : GitHub Insights (etoiles/forks/clones) + une
+      issue GitHub dediee au retour d'experience (Discussions n'est pas
+      active sur ce repo - verifie le 2026-08-31, https://github.com/Thurxm09/Wisely/discussions
+      renvoie 404 ; activable dans Settings si prefere aux issues plus tard)
+- [ ] Consigner le resultat dans le journal de validation d'`ASSUMPTIONS.md`
+      (ligne E3) a la date fixee - que le seuil soit atteint ou non
 
 ## Experiences a mener (hors code)
 
