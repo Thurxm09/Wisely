@@ -35,9 +35,24 @@ instructions de test.
       semaines apres publication (voir `ASSUMPTIONS.md`, ligne E3)
 - [x] Section "Essayer sans installer" dans `README.md` : clone + `pwsh
       ./wisely.ps1 -Diagnose`, avec la garantie explicite lecture seule
-- [ ] Choisir le canal de publication et rediger le post (r/WSL en premier
-      choix - audience la plus directement concernee, meilleur test de A1 ;
-      r/PowerShell en complement ; Show HN en reserve)
+- [x] Choisir le canal de publication et rediger le post : **X + Bluesky**
+      retenus (r/WSL2 verifie restreint le 2026-08-31 - publication reservee
+      aux membres approuves par la moderation, inutilisable pour demarrer
+      l'experience immediatement). r/PowerShell reste une option secondaire
+      valide (subreddit public, aucune restriction connue) ; Show HN en
+      reserve. Format different de Reddit : post court plutot qu'explication
+      detaillee (X : 280 caracteres, URL raccourcie a 23 caracteres via
+      t.co ; Bluesky : 300 caracteres, URL complete comptee). Texte retenu,
+      verifie dans les deux budgets (269/280 sur X, 281/300 sur Bluesky) :
+
+      > WSL2 hides why vmmem eats your RAM. I built wisely diagnose: one
+      > read-only command that explains .wslconfig validity, cache vs real
+      > usage, VHDX size. No install, no writes.
+      >
+      > git clone https://github.com/Thurxm09/Wisely && cd Wisely && pwsh
+      > ./wisely.ps1 -Diagnose
+      >
+      > Feedback welcome
 - [ ] Publier (action du mainteneur, pas de Claude)
 - [ ] Mecanisme de mesure minimal, sans telemetrie silencieuse (coherent
       avec `guestReadConsent`) : GitHub Insights (etoiles/forks/clones) + une
