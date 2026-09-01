@@ -53,7 +53,9 @@ instructions de test.
       > ./wisely.ps1 -Diagnose
       >
       > Feedback welcome
-- [ ] Publier (action du mainteneur, pas de Claude)
+- [x] Publier (action du mainteneur, pas de Claude) : poste sur X et Bluesky
+      le 2026-09-01 (texte retenu ci-dessus). Fenetre de 4 semaines ouverte
+      jusqu'au 2026-09-29 (voir `ASSUMPTIONS.md`, ligne E3)
 - [ ] Mecanisme de mesure minimal, sans telemetrie silencieuse (coherent
       avec `guestReadConsent`) : GitHub Insights (etoiles/forks/clones) + une
       issue GitHub dediee au retour d'experience (Discussions n'est pas
