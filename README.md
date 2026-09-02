@@ -13,6 +13,8 @@
 ![WSL](https://img.shields.io/badge/WSL-2-orange?logo=linux&logoColor=white)
 ![License](https://img.shields.io/badge/License-GPL--v3-blue)
 
+🌐 **Site : [wisely-site-beta.vercel.app](https://wisely-site-beta.vercel.app)**
+
 ## Table des matières
 
 - [Wisely — WSL2 Resource Intelligence \& Control](#wisely--wsl2-resource-intelligence--control)
