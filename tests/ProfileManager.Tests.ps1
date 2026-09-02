@@ -1151,6 +1151,14 @@ Describe "New-SnapshotProfile" {
         $script:testRoot = New-TestWslRoot
         Set-TestUserProfile -Path $script:testRoot
         New-TestProfilesJson -Config (Get-ValidProfilesConfig) | Out-Null
+        # Test-ProfileDefinition (appelee depuis New-SnapshotProfile, meme
+        # garantie que New-CustomProfile/Import-Profiles) verifie le nombre
+        # de CPU via Get-CimInstance - absente sur le runner Linux de la
+        # CI, meme piege que "wsl".
+        if (-not (Get-Command Get-CimInstance -ErrorAction SilentlyContinue)) {
+            function script:Get-CimInstance { }
+        }
+        Mock Get-CimInstance { [PSCustomObject]@{ NumberOfLogicalProcessors = 8 } }
     }
 
     AfterEach {
@@ -1200,6 +1208,13 @@ Describe "New-SnapshotProfile" {
         $history = @(Get-Content (Get-HistoryPath) -Raw | ConvertFrom-Json)
         $entry = $history | Where-Object { $_.profile -eq $key }
         $entry.action | Should -Be "CUSTOM"
+    }
+
+    It "passe par Test-ProfileDefinition : rejette un profil actif dont le nombre de CPU depasse les processeurs logiques disponibles" {
+        New-TestWslConfig -Content "[wsl2]`nmemory=4GB`nprocessors=999`n"
+        Mock Get-Process { @([PSCustomObject]@{ ProcessName = "test"; WorkingSet64 = 100MB }) }
+
+        { New-SnapshotProfile } | Should -Throw "*nombre de CPU invalide*"
     }
 }
 

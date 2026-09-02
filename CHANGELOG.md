@@ -2,6 +2,12 @@
 
 ## Non publie
 
+### Audit v3.0 -- GuestReader/Diagnose, premiere passe sur les modules P1/P2
+
+- Nouvelle passe d'audit couvrant `modules/GuestReader.ps1` et `modules/Diagnose.ps1`, jamais audites jusqu'ici (livres apres l'audit v2.3). Six constats trouves et corriges, detail complet dans `docs/AUDIT.md` (section "Audit v3.0") : `Invoke-GuestProcess` ne gerait pas l'encodage UTF-16LE de `wsl.exe` (critique -- corrompait silencieusement la sortie des six commandes invite de P1) ; `Show-DiagnoseHistory` plantait sur une entree d'historique sans `action`/`profile` ; `Get-WslCeilingInfo` ignorait les valeurs `memory=...MB` ; `-Explain` sans `-Diagnose` etait ignore en silence au lieu d'un message d'usage explicite ; `Show-DiagnoseExplain` sensible a la casse ; `New-SnapshotProfile` contournait `Test-ProfileDefinition`
+- Developpe avec extension de `tests/Diagnose.Tests.ps1` et `tests/ProfileManager.Tests.ps1` (nouveaux cas couvrant chaque correctif)
+- **Validation dans cette session** : aucun runtime `pwsh` disponible dans ce sandbox (contrairement aux sessions precedentes) -- ni Pester ni verification syntaxique AST possibles. Verification par relecture manuelle stricte de chaque diff. A confirmer avec `Invoke-Pester ./tests` sur une machine disposant de `pwsh`
+
 ## v3.0.0 - 2026-08-28
 
 ### P2 / v3.0 "Diagnostic" -- une seule commande pour expliquer l'etat complet

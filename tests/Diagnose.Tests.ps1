@@ -280,6 +280,19 @@ Describe "Get-DiagnoseReport - enums fermes (RESOURCE-MODEL.md SS2-3)" {
         $ceiling.Scope | Should -Be "host"
         $ceiling.ScopeNote | Should -Match "pas par-distribution"
     }
+
+    It "Get-WslCeilingInfo calcule RatioOfHostPct pour une valeur memory= en MB, pas seulement en GB" {
+        New-TestWslConfig -Content "[wsl2]`nmemory=4096MB`n"
+        if (-not (Get-Command Get-CimInstance -ErrorAction SilentlyContinue)) {
+            function script:Get-CimInstance { }
+        }
+        Mock Get-CimInstance { [PSCustomObject]@{ TotalVisibleMemorySize = 16 * 1MB } }
+
+        $ceiling = Get-WslCeilingInfo
+        $ceiling.MemoryCeiling  | Should -Be "4096MB"
+        $ceiling.HostTotalRamGB | Should -Be 16
+        $ceiling.RatioOfHostPct | Should -Be 25
+    }
 }
 
 Describe "Show-DiagnoseExplain - les 3 branches (geree / connue non geree / inconnue)" {
@@ -304,6 +317,16 @@ Describe "Show-DiagnoseExplain - les 3 branches (geree / connue non geree / inco
     It "cle inconnue : message explicite 'non reconnue', jamais inventee" {
         $output = (Show-DiagnoseExplain -Key "cleInexistanteXyz" 6>&1 | Out-String)
         $output | Should -Match "n'est pas reconnue"
+    }
+
+    It "lookup insensible a la casse : une cle geree tapee en majuscules est quand meme reconnue" {
+        $output = (Show-DiagnoseExplain -Key "MEMORY" 6>&1 | Out-String)
+        $output | Should -Match "geree par Wisely"
+    }
+
+    It "lookup insensible a la casse : une cle connue non geree tapee en majuscules est quand meme reconnue" {
+        $output = (Show-DiagnoseExplain -Key "AUTOMEMORYRECLAIM" 6>&1 | Out-String)
+        $output | Should -Match "n'est pas geree par Wisely"
     }
 }
 
@@ -363,6 +386,11 @@ Describe "Show-DiagnoseHistory - degradation propre" {
         Set-Content -Path (Get-HistoryPath) -Value "[]" -Encoding UTF8
         $output = (Show-DiagnoseHistory 6>&1 | Out-String)
         $output | Should -Match "Historique vide"
+    }
+
+    It "n'echoue pas sur une entree valide en JSON mais sans action/profile (edition manuelle, entree legacy)" {
+        Set-Content -Path (Get-HistoryPath) -Value '[{"timestamp":"2026-09-01 10:00:00"}]' -Encoding UTF8
+        { Show-DiagnoseHistory } | Should -Not -Throw
     }
 }
 
