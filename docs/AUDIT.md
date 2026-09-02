@@ -1076,3 +1076,106 @@ if ($Key -match "[`r`n]") {
 
 Développé en TDD : nouveau test sur `Import-Profiles` (clé important `\r\n[wsl2]\r\nmemory=999GB` — construite via l'indexeur de hashtable, `Add-Member` sur un hashtable n'étant pas serialisé par `ConvertTo-Json` de la même façon qu'une propriété native, piège découvert en écrivant le test) et sur `New-CustomProfile`. Suite complète : 180 tests, 0 échec, aucune régression.
 
+
+---
+
+## Audit v3.0 (GuestReader / Diagnose, jamais couverts par une passe precedente) — 2026-09-02
+
+> Les audits precedents (v2.0, v2.3, v2.5-C-1 ci-dessus) n'ont jamais couvert `modules/GuestReader.ps1` (livre en P1/v2.6, apres l'audit v2.3) ni `modules/Diagnose.ps1` (livre en P2/v3.0, le plus recent module du repo). Cette passe cible ces deux modules en priorite, plus une relecture croisee de `wisely.ps1` et des workflows CI pour tout ce que les audits precedents n'auraient pas couvert. Methode : trois agents d'investigation en parallele (GuestReader/Diagnose ; wisely.ps1 + modules deja audites, en recoupement ; schemas/workflows/coherence doc-code), chaque constat retenu re-verifie manuellement, ligne par ligne, avant correction.
+
+### 🔴 Critique
+
+---
+
+#### v3.0-C-1 — `Invoke-GuestProcess` ne gerait pas l'encodage UTF-16LE de la sortie de `wsl.exe`
+
+**Fichier :** `modules/GuestReader.ps1`
+**Statut :** ✅ Corrige
+
+**Probleme initial :** `wsl.exe` emet sa sortie en UTF-16LE quand stdout/stderr sont redirigees (bug WSL bien documente, pas un choix de Wisely). Le code contournait deja ce probleme ailleurs pour le meme executable (`Get-WslActiveSessions`, `modules/ProfileManager.ps1` : `($_ -replace "\`0", "")` sur la sortie de `wsl --list --running`), mais `Invoke-GuestProcess` — le seul point de lancement de `wsl` pour les six commandes invite de P1 (MemInfo, LoadAvg, Uptime, DiskRoot, Nproc, ProcRss) — decodait `ReadToEndAsync()` avec l'encodage par defaut, produisant des chaines truffees de NUL. Consequence verifiee : `ConvertFrom-MemInfo` levait "Champ requis absent de /proc/meminfo" et `Get-DiagnoseMemoryAttribution` (P2) rapportait silencieusement "indisponible" alors que la commande WSL avait reellement reussi. Aucun test ne couvrait ce chemin : les tests `Invoke-GuestProcess` existants invoquent `pwsh.exe`/`powershell.exe`, jamais `wsl.exe`.
+
+**Correction appliquee :** `StandardOutputEncoding`/`StandardErrorEncoding` fixes a `[System.Text.Encoding]::Unicode` uniquement quand `$FilePath` designe `wsl` (comparaison sur le nom de fichier sans extension, insensible a la casse) — pour ne pas casser les tests existants qui invoquent la fonction avec un autre executable dont la sortie est deja en UTF-8/ASCII normal.
+
+### 🟠 Important
+
+---
+
+#### v3.0-I-1 — `Show-DiagnoseHistory` plantait sur une entree d'historique sans `action`/`profile`
+
+**Fichier :** `modules/Diagnose.ps1`
+**Statut :** ✅ Corrige
+
+**Probleme initial :** `PadRight()` etait appele directement sur `$entry.action`/`$entry.profile` sans protection contre `$null`, alors que `Get-DiagnoseHistoryClassification` (appelee juste avant, meme fonction) tolere deja une entree partielle. Une entree valide en JSON mais sans `action`/`profile` (edition manuelle, entree legacy) faisait planter toute la vue `wisely -Diagnose -History` avec une erreur d'appel de methode sur une valeur nulle — a l'oppose du principe explicite de la fonction ("plutot qu'un rapport silencieusement clairseme").
+
+**Correction appliquee :** interpolation en chaine avant `PadRight` (`"$($entry.action)"` / `"$($entry.profile)"`) — un `$null` interpole devient `""`, plus de plantage. Nouveau test dans `tests/Diagnose.Tests.ps1` couvrant une entree sans ces deux champs.
+
+---
+
+#### v3.0-I-2 — `Get-WslCeilingInfo` ignorait silencieusement les valeurs `memory=...MB`
+
+**Fichier :** `modules/Diagnose.ps1`
+**Statut :** ✅ Corrige
+
+**Probleme initial :** le regex de calcul du ratio host (`RatioOfHostPct`) ne reconnaissait que les valeurs entieres en Go (`^(\d+)GB$`). Un `.wslconfig` avec `memory=4096MB` (syntaxe WSL2 valide) faisait disparaitre silencieusement le pourcentage de RAM hote, alors que `MemoryCeiling` continuait d'afficher "4096MB" — degradation partielle incoherente, sans aucune indication a l'utilisateur.
+
+**Correction appliquee :** regex etendu a `^(\d+)(GB|MB)$`, conversion en Go avant le calcul du ratio. Nouveau test avec une valeur en MB et `Get-CimInstance` mocke.
+
+---
+
+#### v3.0-I-3 — `-Explain` sans `-Diagnose` etait ignore en silence, contrairement aux autres flags mal utilises
+
+**Fichier :** `wisely.ps1`
+**Statut :** ✅ Corrige
+
+**Probleme initial :** `$Explain` n'etait lu que dans le bloc `if ($Diagnose)`. Taper `wisely -Explain <cle>` en oubliant `-Diagnose` traversait tous les blocs de dispatch sans y correspondre et atterrissait silencieusement dans le menu interactif — contrairement a `-Monitor`/`-Consent`, qui repondent tous deux par un message d'usage explicite et un code de sortie non nul en cas de mauvais usage.
+
+**Correction appliquee :** garde explicite ajoutee avant le bloc `-Diagnose`, au meme niveau que les autres dispatches top-level : `-Explain` sans `-Diagnose` affiche desormais "Usage : -Diagnose -Explain <cle>" et sort en erreur.
+
+### 🟡 Mineur
+
+---
+
+#### v3.0-S-1 — `Show-DiagnoseExplain` : lookup de cle sensible a la casse
+
+**Fichier :** `modules/Diagnose.ps1`
+**Statut :** ✅ Corrige
+
+**Probleme initial :** la cle passee a `-Explain` etait comparee telle quelle aux listes fermees de cles `.wslconfig`, sans normalisation — contrairement a `-Consent`/`-Monitor`, qui normalisent en minuscules avant dispatch. `wisely -Diagnose -Explain AUTOMEMORYRECLAIM` repondait "n'est pas reconnue" alors que la cle existe, juste en majuscules.
+
+**Correction appliquee :** recherche insensible a la casse dans les deux listes fermees. Deux nouveaux tests (cle geree et cle connue non geree, toutes deux tapees en majuscules).
+
+---
+
+#### v3.0-S-2 — `New-SnapshotProfile` contournait `Test-ProfileDefinition`
+
+**Fichier :** `modules/ProfileManager.ps1`
+**Statut :** ✅ Corrige
+
+**Probleme initial :** ecrivait un nouveau profil dans `profiles.json` sans passer par `Test-ProfileDefinition`, alors que `New-CustomProfile` et `Import-Profiles` l'appellent tous les deux — cassant, pour ce troisieme point d'entree, l'invariant documente en commentaire ("tout profil qui entre dans le systeme ... passe par la meme validation", voir v2.3-C-1 ci-dessus). Risque pratique faible (les valeurs proviennent d'un profil actif deja valide a sa creation), mais sans garantie ni test.
+
+**Correction appliquee :** `Test-ProfileDefinition` appelee avant l'ecriture, comme dans `New-CustomProfile`. Nouveau test verifiant le rejet d'un profil actif dont le nombre de CPU depasse les processeurs logiques disponibles.
+
+### Ecarte apres verification (pas de correction)
+
+- **Dispatch `wisely.ps1` : flags top-level mutuellement exclusifs sans validation** (ex. `wisely -Status -Diagnose` execute silencieusement seulement `-Status`) — reel, mais restructurer les ~15 blocs `if/exit` sequentiels est le changement le plus a risque de cette passe ; ne casse rien, ignore juste un flag surnumeraire. Propose comme suivi separe et delibere.
+- **`Report.Distro` (`Diagnose.ps1`) porte l'argument brut `-Distro`, pas le distro resolu** — verifie : aucun code ne lit `Report.Distro` aujourd'hui. Sans effet observable.
+- **`Show-DiagnoseHistory -Last` jamais expose en CLI** — cablage requerrait un nouveau flag `-Last` sur `wisely.ps1` : une fonctionnalite, pas un correctif.
+- **`docs/ROADMAP.md` verdicts `REMOVE` sur Import/Export/`-Snapshot`/rapport hebdo alors qu'ils restent livres et documentes** — relu en contexte : ce tableau est une classification prospective ("a faire plus tard", deux entrees pointent vers un ADR), pas une affirmation sur l'etat actuel. Pas une derive documentaire.
+- **`.github/workflows/powershell.yml` : pin `microsoft/psscriptanalyzer-action` sans commentaire de version** (seul pin des 7 workflows sans `# vX.Y.Z`, convention T-9) — verification du tag correspondant au SHA impossible depuis ce sandbox (pas d'acces reseau au depot tiers hors du perimetre de session). Non corrige plutot que d'inventer un numero de version non verifie.
+
+### Contrainte de validation de cette session
+
+Contrairement aux sessions precedentes (v2.6, v3.0 ci-dessus), qui avaient `pwsh` mais pas d'acces a PowerShell Gallery, **cette session n'a aucun runtime `pwsh` installe** (`which pwsh` echoue) — ni execution de la suite Pester, ni meme verification syntaxique AST possibles ici. Verification faite par relecture manuelle stricte de chaque diff (coherence des accolades, portee des variables, correspondance avec le comportement des tests existants deja lus en detail) et par recoupement avec un contournement deja valide en production pour le meme probleme (v3.0-C-1). Nouveaux cas de test Pester ecrits pour v3.0-I-1, v3.0-I-2, v3.0-S-1 et v3.0-S-2, suivant le style des tests existants, mais **non executes** — a confirmer avec `Invoke-Pester ./tests` sur une machine disposant de `pwsh`.
+
+### Recapitulatif — Audit v3.0
+
+| # | Finding | Fichier | Priorite | Statut |
+|---|---------|---------|----------|--------|
+| v3.0-C-1 | `wsl.exe` UTF-16LE non gere dans `Invoke-GuestProcess` | GuestReader.ps1 | 🔴 Critique | ✅ Corrige |
+| v3.0-I-1 | `Show-DiagnoseHistory` plantait sur entree sans action/profile | Diagnose.ps1 | 🟠 Important | ✅ Corrige |
+| v3.0-I-2 | `Get-WslCeilingInfo` ignorait `memory=...MB` | Diagnose.ps1 | 🟠 Important | ✅ Corrige |
+| v3.0-I-3 | `-Explain` sans `-Diagnose` ignore en silence | wisely.ps1 | 🟠 Important | ✅ Corrige |
+| v3.0-S-1 | `Show-DiagnoseExplain` sensible a la casse | Diagnose.ps1 | 🟡 Mineur | ✅ Corrige |
+| v3.0-S-2 | `New-SnapshotProfile` contournait `Test-ProfileDefinition` | ProfileManager.ps1 | 🟡 Mineur | ✅ Corrige |
+
+*Audit realise sur `main`/`claude/bonjour-4x687t`, portant sur l'integralite du depot avec un focus sur les modules P1/P2 jamais audites. Verification : relecture manuelle ligne a ligne (pas d'execution Pester possible dans ce sandbox — voir "Contrainte de validation" ci-dessus).*

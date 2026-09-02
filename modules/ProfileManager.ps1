@@ -738,6 +738,7 @@ function New-SnapshotProfile {
         swapFile    = "%TEMP%/wisely-swap.vhdx"
         swappiness  = 10
     }
+    Test-ProfileDefinition -ProfileDef $newProfile -Key $key
     $config.profiles | Add-Member -MemberType NoteProperty -Name $key -Value $newProfile -Force
     $config | ConvertTo-Json -Depth 10 | Set-Content (Get-ProfilesPath) -Encoding UTF8
     Clear-ProfileConfigCache

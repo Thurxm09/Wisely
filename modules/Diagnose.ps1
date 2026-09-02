@@ -155,8 +155,9 @@ function Get-WslCeilingInfo {
     }
 
     $ratioPct = $null
-    if ($memory -match '^(\d+)GB$' -and $null -ne $hostTotalGB -and $hostTotalGB -gt 0) {
-        $ratioPct = [math]::Round(([double]$matches[1] / $hostTotalGB) * 100, 0)
+    if ($memory -match '^(\d+)(GB|MB)$' -and $null -ne $hostTotalGB -and $hostTotalGB -gt 0) {
+        $memoryGB = if ($matches[2] -eq "MB") { [double]$matches[1] / 1024 } else { [double]$matches[1] }
+        $ratioPct = [math]::Round(($memoryGB / $hostTotalGB) * 100, 0)
     }
 
     return [PSCustomObject]@{
@@ -475,11 +476,13 @@ function Show-DiagnoseExplain {
     param([Parameter(Mandatory)][string]$Key)
 
     Write-Host ""
-    if ($Key -in $script:WiselyManagedWslConfigKeys) {
+    $managedMatch = $script:WiselyManagedWslConfigKeys | Where-Object { $_ -ieq $Key } | Select-Object -First 1
+    $knownMatch   = @($script:KnownWslConfigKeys.Keys) | Where-Object { $_ -ieq $Key } | Select-Object -First 1
+    if ($null -ne $managedMatch) {
         Write-Host "  '$Key' est geree par Wisely." -ForegroundColor Green
         Write-Host "  Voir l'affichage normal (wisely -Status, ou le profil actif) pour sa valeur courante." -ForegroundColor DarkGray
-    } elseif ($script:KnownWslConfigKeys.Contains($Key)) {
-        $info = $script:KnownWslConfigKeys[$Key]
+    } elseif ($null -ne $knownMatch) {
+        $info = $script:KnownWslConfigKeys[$knownMatch]
         Write-Host "  '$Key' n'est pas geree par Wisely." -ForegroundColor Yellow
         Write-Host "  $($info.Summary)" -ForegroundColor Gray
         if ($info.CoveredByWslSettings) {
@@ -567,7 +570,7 @@ function Show-DiagnoseHistory {
         $cls   = Get-DiagnoseHistoryClassification -Entry $entry -KnownProfileKeys $knownProfileKeys
         $label = if ($cls.Attributable) { "attribuable" } else { "ecarte ($($cls.Reason))" }
         $color = if ($cls.Attributable) { "Green" } else { "DarkGray" }
-        Write-Host "  $($entry.timestamp)  $($entry.action.PadRight(10)) $($entry.profile.PadRight(11)) $label" -ForegroundColor $color
+        Write-Host "  $($entry.timestamp)  $("$($entry.action)".PadRight(10)) $("$($entry.profile)".PadRight(11)) $label" -ForegroundColor $color
     }
 
     Write-Host ("  " + ("-" * 60)) -ForegroundColor DarkGray

@@ -550,6 +550,10 @@ if ($Clean) {
 }
 if ($Report)  { & (Join-Path $PSScriptRoot "modules\WeeklyReport.ps1"); exit }
 if ($Rollback) { Invoke-Rollback -Force:$Force; exit }
+if ($Explain -ne "" -and -not $Diagnose) {
+    Write-Host "Usage : -Diagnose -Explain <cle>" -ForegroundColor Red
+    exit 1
+}
 if ($Diagnose) {
     try {
         if ($Explain -ne "") { Show-DiagnoseExplain -Key $Explain }

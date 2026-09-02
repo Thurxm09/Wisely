@@ -112,6 +112,18 @@ function Invoke-GuestProcess {
     $psi.UseShellExecute        = $false
     $psi.CreateNoWindow         = $true
 
+    # wsl.exe emet sa sortie en UTF-16LE quand stdout/stderr sont
+    # redirigees (pas un terminal) - meme contournement que
+    # Get-WslActiveSessions (ProfileManager.ps1) pour "wsl --list", mais
+    # applique ici a l'encodage plutot qu'en nettoyage post-hoc de NUL.
+    # Limite a "wsl" : les tests Pester invoquent cette fonction avec
+    # $script:SelfExe (pwsh/powershell), dont la sortie est deja en
+    # UTF-8/ASCII normal - forcer l'Unicode partout la corromprait.
+    if ([System.IO.Path]::GetFileNameWithoutExtension($FilePath) -ieq "wsl") {
+        $psi.StandardOutputEncoding = [System.Text.Encoding]::Unicode
+        $psi.StandardErrorEncoding  = [System.Text.Encoding]::Unicode
+    }
+
     $process = $null
     try {
         $process = [System.Diagnostics.Process]::new()
