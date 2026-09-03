@@ -351,6 +351,20 @@ minutes a un problème réel, pas une curiosité. Un taux nul avec des retours
 positifs est une contradiction utile — et signalerait de la politesse plutôt que
 du besoin.
 
+**Pourquoi E6 ne recycle pas le protocole Niveau B du site.** Un volontaire E6 a par
+construction déjà utilisé `wisely diagnose` — c'est ce que la case du formulaire
+présuppose. Le protocole Niveau B de `wisely-site`
+(`docs/validation/protocoles/niveau-b-test-qualitatif.md`) élimine explicitement ce
+profil : sa cinquième question de screener est « As-tu déjà entendu parler d'un outil
+appelé Wisely ? *(une réponse positive écarte le participant)* » (§1), et sa règle de
+conduite centrale précise « Ne jamais expliquer Wisely avant l'exposition initiale. —
+C'est la seule chose que la session mesure. Elle ne se rejoue pas. » (§3). Un testeur
+E6 a déjà eu son exposition initiale ; la rejouer ne mesurerait rien. Écart secondaire,
+qui aurait de toute façon rendu la fusion intenable : le formulaire de recrutement E6
+annonce « accepteriez-vous 20 minutes d'échange ? », alors que le déroulé Niveau B seul
+est titré « Déroulé — 25 minutes » (§4) — sans compter le screener et le consentement
+qui le précèdent. Les deux programmes de validation restent donc délibérément séparés.
+
 ### E4 — Temps pour identifier la cause · teste A9 et A10
 
 Donner à quelqu'un une machine dont WSL2 consomme anormalement, et mesurer le
@@ -392,7 +406,7 @@ sans bénéfice — ce qui serait une découverte majeure et contre-intuitive.
 | **E1** | A5 | 1 (le mainteneur) — biais assumé | Nombre et répartition des entrées `SWITCH` de `data/history.json` | ≥ 1 changement/semaine en moyenne, et ≥ 2 profils réellement utilisés | *non menée* | — | — |
 | **E2** | A2 | 1 (le mainteneur), 1 semaine | Besoin ressenti de baisser le plafond, avec `autoMemoryReclaim=gradual` actif | Le besoin subsiste → A2 tient | *non menée* | — | — |
 | **E3a** | A1, A9 | Utilisateurs externes, après P2 | Utilisations réelles de `wisely diagnose`, et réutilisations | ≥ 5 essais distincts rapportés (étoile, fork, ou retour explicite) et ≥ 1 réutilisation rapportée, sous 4 semaines après publication | **arrêtée — non concluante.** Publiée sur X et Bluesky le 2026-09-01. Exposition mesurée : 6 vues cumulées (X : 6, Bluesky : 0) ; état du dépôt à J+2 : 1 étoile, 0 fork, 0 issue. Dénominateur insuffisant pour interpréter un résultat nul | **Arrêt avant terme.** A1 et A9 restent `non testées` : aucun statut n'est déduit d'E3a. Cause identifiée : ni chaîne de mesure de l'exposition, ni chemin de retour utilisable au moment de la publication. Les deux sont construits, puis E3b est lancée | 2026-09-03 |
-| **E3b** | A1, A9 | Utilisateurs externes, canaux de `RECRUITMENT.md` §2 | Idem E3a, plus le dénominateur d'exposition | **Validité** (sans quoi le résultat n'est pas interprétable) : ≥ 300 impressions cumulées et ≥ 40 visites uniques de la page testeurs. **Succès** : ≥ 5 essais distincts rapportés et ≥ 1 réutilisation, sous 4 semaines | **en cours** — canal 1/4 lancé : commentaire posté sur `microsoft/WSL#4166` le 2026-09-03 | — | 2026-09-03 |
+| **E3b** | A1, A9 | Utilisateurs externes, canaux de `RECRUITMENT.md` §2 | Idem E3a, plus le dénominateur d'exposition | **Validité** (sans quoi le résultat n'est pas interprétable) : ≥ 300 impressions cumulées et ≥ 40 visites uniques de la page testeurs. **Succès** : ≥ 5 essais distincts rapportés et ≥ 1 réutilisation, sous 4 semaines | **en cours** — canal 1/4 lancé : commentaire posté sur `microsoft/WSL#4166` le 2026-09-03. Chiffres bruts datés : voir « Relevé hebdomadaire de l'entonnoir d'exposition » ci-dessous | — | 2026-09-03 |
 | **E4** | A9, A10 | ≥ 5 personnes, 3 outillages comparés | Temps pour identifier la cause probable | Réduction ≥ 50 % face au meilleur des deux autres outillages | *non menée* | — | — |
 | **E5** | A11 | ≥ 5 personnes | Part qui déclenche l'action proposée | La sortie sourcée déclenche strictement plus que la brute | *non menée* | — | — |
 | **E6** | A9, A10, A11, A12, A13 | Répondants aux formulaires de retour | Nombre de volontaires pour 20 min d'échange, et leur part parmi les répondants | ≥ 5 volontaires effectivement disponibles, dont ≥ 2 du persona P1 | *non menée* | — | — |
@@ -402,6 +416,17 @@ sans bénéfice — ce qui serait une découverte majeure et contre-intuitive.
 même le cas le plus précieux. La colonne `Statut` du registre est mise à jour
 dans le même mouvement. Une expérience abandonnée est marquée comme telle avec
 son motif ; elle n'est pas effacée.
+
+### Relevé hebdomadaire de l'entonnoir d'exposition (E3b)
+
+`RECRUITMENT.md` §6 exige un relevé chaque lundi des quatre étages de la chaîne
+de mesure ; le tableau ci-dessus est structuré par expérience, pas par semaine,
+et n'a pas de colonne pour une série datée. Les chiffres bruts vivent ici,
+un seul endroit :
+
+| Date | Impressions cumulées (tous canaux) | Visites cumulées `/beta` | Clones + vues uniques GitHub (14 j glissants) | Retours déclarés cumulés | Notes |
+|---|---|---|---|---|---|
+| 2026-09-03 | 6 | — | — | 0 | Relevé de lancement, avant activation du canal 1/4 (`microsoft/WSL#4166`) |
 
 ---
 

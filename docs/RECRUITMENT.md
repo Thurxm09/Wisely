@@ -5,8 +5,10 @@
 > aborder, et comment mesure-t-on ce qui se passe ensuite ?
 >
 > Ce document ne contient **ni hypothèses** (`ASSUMPTIONS.md`), **ni priorités**
-> (`ROADMAP.md`), **ni protocoles de session** (dossier de validation du dépôt
-> `wisely-site`), **ni critères de périmètre produit** (`VISION.md`). Il les cite,
+> (`ROADMAP.md`), **ni protocoles de session pour les hypothèses du site**
+> (dossier de validation du dépôt `wisely-site`) — les protocoles propres aux
+> expériences CLI, comme E4 et E5, vivent dans `docs/validation/protocoles/` de
+> ce dépôt —, **ni critères de périmètre produit** (`VISION.md`). Il les cite,
 > il ne les redit pas.
 >
 > Il existe parce que `ASSUMPTIONS.md` sait dire *quoi* mesurer et *à quel seuil*,
@@ -504,5 +506,6 @@ ce que son retour a produit, et ne revient pas.
 `ASSUMPTIONS.md` (les hypothèses, les expériences, le journal) ·
 `ROADMAP.md` (l'ordre et la barrière P3) · `VISION.md` (le filtre de périmètre) ·
 `USE-CASES.md` (les situations) · `SECURITY.md` (la divulgation responsable) ·
-`TASKS.md` (l'état d'avancement) · dossier de validation du dépôt `wisely-site`
-(vocabulaire de preuve, gravité, protocoles de session).
+`TASKS.md` (l'état d'avancement) · `docs/validation/protocoles/` de ce dépôt
+(protocoles des expériences CLI E4 et E5) · dossier de validation du dépôt
+`wisely-site` (vocabulaire de preuve, gravité, protocoles des hypothèses du site).

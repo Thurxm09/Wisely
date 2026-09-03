@@ -1,0 +1,130 @@
+name: "Étiquetage automatique - retours field-test"
+
+# Applique un label de triage aux issues créées via field-test.yml, à partir
+# du champ obligatoire "Ce qui s'est passé" (id: outcome). Design et mapping
+# détaillés dans RECRUITMENT.md §7 et le plan de validation terrain.
+#
+# Limite assumée : le parsing repose sur le texte exact du libellé "label:"
+# de field-test.yml et sur les sept options exactes de son dropdown. Une
+# reformulation future du formulaire casse ce matching silencieusement (le
+# job dégrade en log, jamais en échec bruyant côté Actions) - à surveiller
+# si le formulaire est un jour retouché.
+
+on:
+  issues:
+    types: [opened]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "Numéro de l'issue à (ré)étiqueter, pour un test manuel"
+        required: true
+        type: number
+
+permissions:
+  issues: write
+
+jobs:
+  ensure-labels:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Créer les 10 labels de triage s'ils sont absents
+        uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9.0.0
+        with:
+          script: |
+            // Catégories de RECRUITMENT.md §7. Idempotent : une création qui
+            // échoue en 422 (le label existe déjà) est ignorée, tout autre
+            // statut est propagé.
+            const labels = [
+              { name: "bug", color: "d73a4a", description: "Comportement inattendu de Wisely" },
+              { name: "mesure-fausse", color: "b60205", description: "Un chiffre affiché par Wisely est faux ou trompeur" },
+              { name: "incomprehension", color: "fbca04", description: "La commande a marché mais la sortie n'a pas été comprise" },
+              { name: "ux", color: "c5def5", description: "Friction d'usage, hors bug de mesure" },
+              { name: "installation", color: "e99695", description: "Échec d'installation ou de lancement" },
+              { name: "compatibilite", color: "bfd4f2", description: "Problème lié à une version ou une configuration particulière" },
+              { name: "performance", color: "d4c5f9", description: "Lenteur ou coût ressource excessif" },
+              { name: "securite", color: "ee0701", description: "Signalement de sécurité - ne devrait normalement jamais apparaître ici, voir SECURITY.md" },
+              { name: "manque", color: "0e8a16", description: "Capacité absente, demandée par un testeur" },
+              { name: "hors-perimetre", color: "cccccc", description: "Retour ne passant pas le filtre de VISION.md" },
+            ];
+
+            for (const label of labels) {
+              try {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ...label,
+                });
+                console.log(`Label "${label.name}" créé.`);
+              } catch (err) {
+                if (err.status === 422) {
+                  console.log(`Label "${label.name}" existe déjà - ignoré.`);
+                } else {
+                  throw err;
+                }
+              }
+            }
+
+  apply-label:
+    needs: ensure-labels
+    runs-on: ubuntu-latest
+    steps:
+      - name: Appliquer le label mappé depuis le champ "Ce qui s'est passé"
+        uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9.0.0
+        with:
+          script: |
+            const issue_number = context.eventName === "workflow_dispatch"
+              ? Number(context.payload.inputs.issue_number)
+              : context.payload.issue.number;
+
+            const { data: issue } = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number,
+            });
+
+            const labelNames = issue.labels.map((l) => (typeof l === "string" ? l : l.name));
+            if (!labelNames.includes("field-test")) {
+              console.log(`Issue #${issue_number} ne porte pas le label "field-test" - ignorée (pas un retour de terrain).`);
+              return;
+            }
+
+            const body = issue.body || "";
+
+            // field-test.yml rend son champ obligatoire sous le titre exact
+            // "### Ce qui s'est passé · What happened", suivi de la valeur
+            // choisie sur la ligne suivante non vide. field-test-detailed.yml
+            // n'a pas ce champ (son dropdown s'appelle "reproducibility") :
+            // si le titre est introuvable, on dégrade en log, jamais en échec.
+            const match = body.match(/### Ce qui s'est passé.*\n+([^\n]+)/);
+            if (!match) {
+              console.log(`Issue #${issue_number} : champ "Ce qui s'est passé" introuvable dans le corps (probablement field-test-detailed.yml) - triage manuel nécessaire.`);
+              return;
+            }
+
+            const outcome = match[1].trim();
+
+            // Mapping best-effort de RECRUITMENT.md §7 : 5 des 7 options du
+            // dropdown vers un label, les deux autres ("ça a marché, compris"
+            // et "autre") restent en triage humain plutôt que de forcer une
+            // catégorie qui ne leur correspond pas.
+            const mapping = {
+              "Ça a marché, mais je n'ai pas compris la sortie — It worked, but I didn't understand it": "incomprehension",
+              "Un chiffre me semble faux — A number looks wrong to me": "mesure-fausse",
+              "J'ai eu une erreur — I hit an error": "bug",
+              "Je n'ai pas réussi à l'installer / le lancer — I couldn't install or run it": "installation",
+              "J'ai abandonné avant d'essayer — I gave up before trying": "ux",
+            };
+
+            const label = mapping[outcome];
+            if (!label) {
+              console.log(`Issue #${issue_number} : réponse "${outcome}" ne correspond à aucun label automatique - triage manuel.`);
+              return;
+            }
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number,
+              labels: [label],
+            });
+            console.log(`Issue #${issue_number} : label "${label}" appliqué.`);
