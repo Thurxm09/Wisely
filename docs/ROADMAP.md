@@ -173,8 +173,8 @@ distribution large — délibérément repoussée en P9
    préalable. Elle mesure donc un intérêt réel plutôt qu'une politesse.
 
    > **Première tentative arrêtée le 2026-09-03.** E3a a été publiée le
-   > 2026-09-01 sur X et Bluesky et arrêtée sans conclure : moins de 50 vues
-   > cumulées, donc un dénominateur trop faible pour interpréter le résultat nul.
+   > 2026-09-01 sur X et Bluesky et arrêtée sans conclure : 6 vues
+   > cumulées (X : 6, Bluesky : 0), donc un dénominateur trop faible pour interpréter le résultat nul.
    > A1 et A9 restent `non testées`.
    >
    > La leçon n'est pas sur le produit, elle est sur l'instrument. **Publier sans

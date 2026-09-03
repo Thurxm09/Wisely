@@ -20,7 +20,7 @@
 Wisely a **zéro utilisateur réel**, zéro retour, zéro télémétrie — et la
 télémétrie n'est pas envisagée (voir `DOCTRINE-LECTURE.md` §2.4). Le projet a été
 annoncé publiquement une fois, le 2026-09-01 sur X et Bluesky, et **cette annonce
-n'a atteint personne** : moins de 50 vues cumulées, aucun retour, aucun fork (voir
+n'a atteint personne** : 6 vues cumulées (X : 6, Bluesky : 0), aucun retour, aucun fork (voir
 E3a). Elle ne change donc rien à ce constat, et c'est précisément ce qu'elle
 établit.
 
@@ -303,7 +303,7 @@ enseignement d'E3a, et il est entièrement attribuable.
 
 **A1 et A9 restent `non testées`.** Aucun statut n'est déduit d'E3a.
 
-**Bonne nouvelle, à ne pas perdre de vue :** en dessous de 50 vues, le lancement
+**Bonne nouvelle, à ne pas perdre de vue :** avec seulement 6 vues cumulées, le lancement
 unique que protège [0009](decisions/0009-distribution-apres-le-produit.md) **n'a
 pas été dépensé.**
 
@@ -391,7 +391,7 @@ sans bénéfice — ce qui serait une découverte majeure et contre-intuitive.
 |---|---|---|---|---|---|---|---|
 | **E1** | A5 | 1 (le mainteneur) — biais assumé | Nombre et répartition des entrées `SWITCH` de `data/history.json` | ≥ 1 changement/semaine en moyenne, et ≥ 2 profils réellement utilisés | *non menée* | — | — |
 | **E2** | A2 | 1 (le mainteneur), 1 semaine | Besoin ressenti de baisser le plafond, avec `autoMemoryReclaim=gradual` actif | Le besoin subsiste → A2 tient | *non menée* | — | — |
-| **E3a** | A1, A9 | Utilisateurs externes, après P2 | Utilisations réelles de `wisely diagnose`, et réutilisations | ≥ 5 essais distincts rapportés (étoile, fork, ou retour explicite) et ≥ 1 réutilisation rapportée, sous 4 semaines après publication | **arrêtée — non concluante.** Publiée sur X et Bluesky le 2026-09-01. Exposition mesurée < 50 vues cumulées ; état du dépôt à J+2 : 1 étoile, 0 fork, 0 issue. Dénominateur insuffisant pour interpréter un résultat nul | **Arrêt avant terme.** A1 et A9 restent `non testées` : aucun statut n'est déduit d'E3a. Cause identifiée : ni chaîne de mesure de l'exposition, ni chemin de retour utilisable au moment de la publication. Les deux sont construits, puis E3b est lancée | 2026-09-03 |
+| **E3a** | A1, A9 | Utilisateurs externes, après P2 | Utilisations réelles de `wisely diagnose`, et réutilisations | ≥ 5 essais distincts rapportés (étoile, fork, ou retour explicite) et ≥ 1 réutilisation rapportée, sous 4 semaines après publication | **arrêtée — non concluante.** Publiée sur X et Bluesky le 2026-09-01. Exposition mesurée : 6 vues cumulées (X : 6, Bluesky : 0) ; état du dépôt à J+2 : 1 étoile, 0 fork, 0 issue. Dénominateur insuffisant pour interpréter un résultat nul | **Arrêt avant terme.** A1 et A9 restent `non testées` : aucun statut n'est déduit d'E3a. Cause identifiée : ni chaîne de mesure de l'exposition, ni chemin de retour utilisable au moment de la publication. Les deux sont construits, puis E3b est lancée | 2026-09-03 |
 | **E3b** | A1, A9 | Utilisateurs externes, canaux de `RECRUITMENT.md` §2 | Idem E3a, plus le dénominateur d'exposition | **Validité** (sans quoi le résultat n'est pas interprétable) : ≥ 300 impressions cumulées et ≥ 40 visites uniques de la page testeurs. **Succès** : ≥ 5 essais distincts rapportés et ≥ 1 réutilisation, sous 4 semaines | *non menée* | — | — |
 | **E4** | A9, A10 | ≥ 5 personnes, 3 outillages comparés | Temps pour identifier la cause probable | Réduction ≥ 50 % face au meilleur des deux autres outillages | *non menée* | — | — |
 | **E5** | A11 | ≥ 5 personnes | Part qui déclenche l'action proposée | La sortie sourcée déclenche strictement plus que la brute | *non menée* | — | — |

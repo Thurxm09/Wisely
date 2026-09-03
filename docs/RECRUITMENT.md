@@ -20,7 +20,7 @@
 ## Le constat qui a produit ce document
 
 E3a a été publiée le 2026-09-01 sur X et Bluesky. Deux jours plus tard : **1
-étoile, 0 fork, 0 issue, moins de 50 vues cumulées.**
+étoile, 0 fork, 0 issue, 6 vues cumulées (X : 6, Bluesky : 0).**
 
 La tentation était de lire ce zéro comme un signal contre A1 — « personne n'a ce
 problème ». C'est faux, et c'est le genre d'erreur qui coûte un projet. Un zéro
