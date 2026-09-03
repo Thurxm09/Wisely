@@ -92,16 +92,22 @@ instructions de test.
       `GuestReader`/`Diagnose`, section "ne publiez jamais ceci"
 - [x] **`README.en.md`** : quickstart anglais, volontairement pas une
       traduction integrale
-- [ ] **Activer Discussions** (categorie `Field test`) et le **signalement
-      prive de vulnerabilite** - actions manuelles du mainteneur dans les
-      parametres du depot. Discussions renvoyait encore 404 le 2026-08-31 ;
-      `config.yml` y renvoie deja, donc ce lien est mort tant que ce n'est
-      pas fait
-- [ ] **Corriger la description du depot GitHub** : elle annonce encore
-      "Menu interactif, surveillance RAM et reporting", positionnement
-      d'avant l'ADR 0013. Renseigner aussi `homepage` (vide aujourd'hui,
-      donc le site n'est lie nulle part) et les topics (`wsl`,
-      `windows-subsystem-for-linux`, `vmmem`, `diagnostics`)
+- [x] **Activer Discussions** (2026-09-03) : categorie `Field test` creee
+      (format Open discussion, pas Announcement - n'importe quel testeur doit
+      pouvoir demarrer un fil), message d'accueil publie. `config.yml`
+      pointait deja vers `/discussions` : aucun changement de code requis
+- [x] **Issue epinglee "Field test log"** (2026-09-03, `#67`) : le chemin le
+      plus bas de tous, un commentaire suffit. A epingler manuellement depuis
+      son ecran (bouton Pin issue, non expose par l'API utilisee ici)
+- [ ] **Activer le signalement prive de vulnerabilite** (Settings -> Security
+      -> Code security -> Private vulnerability reporting) - toujours ouvert,
+      distinct de Discussions. Sans lui, le canal prive promis par
+      `SECURITY.md` et cite par `config.yml` n'existe pas reellement
+- [x] **Corriger la description du depot GitHub, `homepage` et les topics**
+      (2026-09-03) : positionnement `diagnose` conforme a l'ADR 0013 ;
+      `homepage` pointe vers le site ; topics wsl/wsl2/windows-subsystem-for-
+      linux/windows/cli/developer-tools/diagnostics/memory-management/vmmem
+      ajoutes
 - [x] **Page testeurs sur le site** (`/beta`, bilingue) : cible des liens
       taggés `?src=<canal>`, seul etage instrumentable de l'entonnoir
       (livree par `wisely-site#17`, fusionnee le 2026-09-03 - la propriete
