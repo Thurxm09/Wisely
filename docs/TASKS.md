@@ -10,7 +10,8 @@ validation bloquante** (`ROADMAP.md`) - aucun palier au-dela ne demarre avant
 qu'elle soit franchie.
 
 **Point de situation du 2026-09-03.** E3a (publication du 2026-09-01 sur X et
-Bluesky) est **arretee, non concluante** : exposition mesuree < 50 vues, donc
+Bluesky) est **arretee, non concluante** : exposition mesuree = 6 vues cumulees
+(X : 6, Bluesky : 0), donc
 denominateur insuffisant pour interpreter le resultat nul. A1 et A9 restent
 `non testees` (journal de validation, `ASSUMPTIONS.md`). Ce n'est pas un echec
 du produit : c'est un echec d'instrument. Le projet ne disposait ni d'une
@@ -20,7 +21,7 @@ Priorite immediate : **construire ces deux choses, puis lancer E3b** avec ses
 conditions de validite fixees d'avance. E6 (recrutement direct) alimente
 ensuite E4 et E5, qui exigent >= 5 testeurs deja recrutes.
 
-Bon a savoir : sous 50 vues, le lancement unique que protege
+Bon a savoir : avec seulement 6 vues cumulees, le lancement unique que protege
 `decisions/0009-distribution-apres-le-produit.md` n'a pas ete depense.
 
 ### P3 / E3b - Relancer la publication avec un denominateur
@@ -137,7 +138,8 @@ refute rien.
 
 - [ ] **E1 - lire `data/history.json`** (10 min) : combien de switchs reels depuis la mise en service ? Teste A5
 - [ ] **E2 - activer `autoMemoryReclaim=gradual` une semaine** : le besoin de baisser le plafond diminue-t-il ? Teste A2
-- [x] ~~**E3a - publier `wisely diagnose` seul**~~ - **arretee le 2026-09-03, non concluante** : exposition < 50 vues, denominateur insuffisant. A1 et A9 restent `non testees`
+- [x] ~~**E3a - publier `wisely diagnose` seul**~~ - **arretee le 2026-09-03, non concluante** : exposition mesuree = 6 vues cumulees
+      (X : 6, Bluesky : 0), denominateur insuffisant. A1 et A9 restent `non testees`
 - [ ] **E3b - republier avec un denominateur** (palier P3, bloquant) : quelqu'un l'utilise-t-il ? Teste A1 et A9
 - [ ] **E4 - temps pour identifier la cause** : Gestionnaire des taches seul vs htop seul vs Wisely. Teste A9 et A10
 - [ ] **E5 - sortie brute vs sortie sourcee** : laquelle declenche l'action ? Teste A11
