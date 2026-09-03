@@ -268,6 +268,12 @@ function Get-DiagnoseMemoryAttribution {
             return [PSCustomObject]@{
                 Available = $false
                 Reason    = "Plusieurs distributions actives ($($activeSessions -join ', ')) - precise -Distro <nom>."
+                # Les memes noms, sous forme structuree. Reason est de la prose
+                # destinee a l'utilisateur ; l'expurgation ne doit pas avoir a
+                # l'analyser pour savoir quels noms y sont cites. Sans ce champ,
+                # un nom present seulement dans la phrase survivrait a -Redact
+                # (trouve par tests/Diagnose.Tests.ps1).
+                Distros   = @($activeSessions)
             }
         }
         $Distro = $activeSessions[0]
@@ -678,6 +684,14 @@ function Get-RedactionIdentifierMap {
     & $collect "$($Report.Distro)" "distro" ([ref]$distroCounter)
     if ($null -ne $Report.Attribution) {
         & $collect "$($Report.Attribution.Distro)" "distro" ([ref]$distroCounter)
+        # Cas degrade : Get-DiagnoseMemoryAttribution cite les distributions
+        # actives dans sa prose (Reason) et les expose ici sous forme
+        # structuree. On lit la seconde, jamais la premiere : une table de
+        # pseudonymes qui dependrait de l'analyse d'un message se casserait a
+        # la premiere reformulation de ce message.
+        foreach ($name in @($Report.Attribution.Distros)) {
+            & $collect "$name" "distro" ([ref]$distroCounter)
+        }
     }
 
     $procCounter = 0
@@ -786,9 +800,18 @@ function ConvertTo-RedactedDiagnoseReport {
                 Processes      = @($processes)
             }
         } else {
+            $redactedDistros = @(
+                foreach ($name in @($attribution.Distros)) {
+                    ConvertTo-RedactedText -Text "$name" -IdentifierMap $map
+                }
+            )
             $attribution = [PSCustomObject]@{
                 Available = $false
                 Reason    = ConvertTo-RedactedText -Text "$($attribution.Reason)" -IdentifierMap $map
+                # Reconduit expurge plutot que supprime : la sortie -Json doit
+                # rester la meme structure avec ou sans -Redact, sinon un
+                # rapport expurge n'est plus comparable a un rapport brut.
+                Distros   = $redactedDistros
             }
         }
     }

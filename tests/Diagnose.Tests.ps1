@@ -611,7 +611,14 @@ Describe "ConvertTo-RedactedDiagnoseReport - stabilite, non-mutation, signalemen
     }
 
     It "un rapport sans avertissement porte une liste vide, jamais `$null" {
-        (ConvertTo-RedactedDiagnoseReport -Report (New-RedactTestReport)).RedactionWarnings | Should -Not -BeNullOrEmpty -Because "la propriete existe toujours"
+        # La propriete existe toujours et vaut un tableau vide : un consommateur
+        # de la sortie -Json ne doit pas avoir a distinguer "absente" de "vide".
+        # (Assertion sur le compte, pas sur -BeNullOrEmpty : un tableau vide EST
+        # null-or-empty au sens de Pester, ce qui rendait la verification
+        # impossible a exprimer dans ce sens-la.)
+        $report = ConvertTo-RedactedDiagnoseReport -Report (New-RedactTestReport)
+        $report.PSObject.Properties.Name | Should -Contain "RedactionWarnings"
+        @($report.RedactionWarnings).Count | Should -Be 0
     }
 }
 
