@@ -1,6 +1,10 @@
 # ============================================================
-#  Wisely v2.0 - Thuram Dev Setup
+#  Wisely - Thuram Dev Setup
 # ============================================================
+#
+#  La version fait foi dans le fichier VERSION a la racine, lu par
+#  Get-AppVersion ci-dessous. Ne pas la coder en dur dans cet en-tete :
+#  un numero fige ici a deja diverge du fichier par le passe.
 #
 #  USAGE
 #  -----
@@ -20,6 +24,8 @@
 #  .\wisely.ps1 -Diagnose          -> diagnostic complet (etat/cause/danger/action)
 #  .\wisely.ps1 -Diagnose -Explain <cle> -> explique une cle .wslconfig non geree par Wisely
 #  .\wisely.ps1 -Diagnose -History -> historique des switchs, attribuable ou ecarte
+#  .\wisely.ps1 -Diagnose -Redact  -> diagnostic expurge, collable dans une issue publique
+#  .\wisely.ps1 -Diagnose -Json    -> diagnostic en JSON (composable avec -Redact)
 #
 # ============================================================
 
@@ -49,7 +55,9 @@ param(
     [switch]$GuestInfo,
     [string]$Distro     = "",
     [switch]$Diagnose,
-    [string]$Explain    = ""
+    [string]$Explain    = "",
+    [switch]$Redact,
+    [switch]$Json
 )
 # Note : $Verbose/$Quiet sont des switches "maison", pas le parametre commun
 # -Verbose de [CmdletBinding()]. Ce script reste volontairement une fonction
@@ -555,10 +563,25 @@ if ($Explain -ne "" -and -not $Diagnose) {
     exit 1
 }
 if ($Diagnose) {
+    # -Redact et -Json ne portent que sur le rapport complet. Les refuser
+    # bruyamment plutot que les ignorer en silence : un testeur qui croit
+    # avoir expurge sa sortie et ne l'a pas fait est exactement le
+    # scenario que -Redact existe pour eviter.
+    if (($Redact -or $Json) -and ($Explain -ne "" -or $History)) {
+        Write-Host "-Redact et -Json ne s'appliquent qu'a -Diagnose seul, pas a -Explain ni a -History." -ForegroundColor Red
+        exit 1
+    }
     try {
         if ($Explain -ne "") { Show-DiagnoseExplain -Key $Explain }
         elseif ($History)    { Show-DiagnoseHistory }
-        else                 { Show-DiagnoseReport -Report (Get-DiagnoseReport -Distro $Distro) }
+        else {
+            $diagnoseReport = Get-DiagnoseReport -Distro $Distro
+            if ($Redact) { $diagnoseReport = ConvertTo-RedactedDiagnoseReport -Report $diagnoseReport }
+            # Write-Output et non Write-Host : la sortie JSON doit rester
+            # redirigeable et survivre a -Quiet, qui shadow Write-Host.
+            if ($Json) { Write-Output (ConvertTo-DiagnoseJson -Report $diagnoseReport) }
+            else       { Show-DiagnoseReport -Report $diagnoseReport }
+        }
     } catch { Write-Host "ERREUR : $_" -ForegroundColor Red; exit 1 }
     exit
 }

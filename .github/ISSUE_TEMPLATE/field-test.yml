@@ -1,0 +1,79 @@
+name: "Retour éclair / Quick feedback"
+description: "Vous avez essayé Wisely ? Dites-nous en 30 secondes. · Tried Wisely? Tell us in 30 seconds."
+title: "[FIELD] "
+labels: ["field-test"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Un seul champ est obligatoire.** Tout le reste est facultatif — remplissez ce que vous voulez, laissez le reste vide. Un retour court vaut infiniment mieux qu'un retour jamais envoyé.
+
+        Français ou anglais, comme vous préférez. *Answer in English if you'd rather.*
+
+        > ⚠️ **Ne collez jamais de sortie brute.** Elle contient les noms de vos distributions et de vos processus. Utilisez `pwsh ./wisely.ps1 -Diagnose -Redact`, qui les pseudonymise en gardant tous les chiffres. Détails : [SECURITY.md](https://github.com/Thurxm09/Wisely/blob/main/SECURITY.md).
+        >
+        > 🔒 **Un problème de sécurité ne se signale pas ici** mais en [rapport privé](https://github.com/Thurxm09/Wisely/security/advisories/new).
+
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: "Ce qui s'est passé · What happened"
+      description: "Le seul champ obligatoire. Prenez le plus proche, même approximativement."
+      options:
+        - "Ça a marché, j'ai compris la sortie — It worked, I understood the output"
+        - "Ça a marché, mais je n'ai pas compris la sortie — It worked, but I didn't understand it"
+        - "Un chiffre me semble faux — A number looks wrong to me"
+        - "J'ai eu une erreur — I hit an error"
+        - "Je n'ai pas réussi à l'installer / le lancer — I couldn't install or run it"
+        - "J'ai abandonné avant d'essayer — I gave up before trying"
+        - "Autre — Something else"
+    validations:
+      required: true
+
+  - type: textarea
+    id: story
+    attributes:
+      label: "Racontez · Tell us"
+      description: "En vos mots, sans format imposé. Ce que vous cherchiez, ce que vous avez vu, ce qui vous a surpris, ce que vous avez fait ensuite. Les phrases valent mieux que les puces."
+      placeholder: |
+        Exemple : « Je cherchais pourquoi VmmemWSL était à 9 Go. J'ai lancé la commande, j'ai vu une ligne "non attribué" négative et je n'ai pas compris si c'était un bug ou normal. J'ai fini par relire le README. »
+    validations:
+      required: false
+
+  - type: input
+    id: env
+    attributes:
+      label: "Votre environnement · Your environment"
+      description: "Format libre, une ligne suffit. Utile surtout si quelque chose a cassé."
+      placeholder: "Windows 11 24H2, PowerShell 7.5, WSL 2.7.11, 16 Go RAM, Docker Desktop"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: reuse
+    attributes:
+      label: "Le relanceriez-vous ? · Would you run it again?"
+      description: "Question inconfortable, et c'est pour ça qu'elle est posée. Un « non » nous apprend plus qu'un « oui » poli."
+      options:
+        - "Je l'ai déjà relancé — I already have"
+        - "Oui, si le problème revient — Yes, if the problem comes back"
+        - "Probablement pas — Probably not"
+        - "Non — No"
+        - "Trop tôt pour le dire — Too early to say"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: followup
+    attributes:
+      label: "Aller plus loin · Going further"
+      options:
+        - label: "J'accepterais 20 minutes d'échange pour montrer ce que j'ai fait (écran partagé ou écrit, comme vous voulez)"
+          required: false
+        - label: "Je veux être prévenu quand ce retour aura donné lieu à un changement"
+          required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        **Merci.** Chaque retour est trié et, s'il donne lieu à un changement, il est cité nommément dans le `CHANGELOG.md` — sauf si vous préférez ne pas l'être, dites-le simplement.

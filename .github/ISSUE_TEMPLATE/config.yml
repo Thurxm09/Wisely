@@ -1,1 +1,14 @@
 blank_issues_enabled: true
+contact_links:
+  - name: "🔒 Signaler une vulnérabilité (privé) / Report a vulnerability (private)"
+    url: https://github.com/Thurxm09/Wisely/security/advisories/new
+    about: "Jamais dans une issue publique. Canal confidentiel, aucune expurgation nécessaire. · Never in a public issue."
+  - name: "💬 Journal de test terrain / Field test log"
+    url: https://github.com/Thurxm09/Wisely/discussions
+    about: "Un commentaire suffit, aucune issue à ouvrir. Le chemin le plus court pour raconter ce qui s'est passé."
+  - name: "🧪 Page testeurs / Tester page"
+    url: https://wisely-site-beta.vercel.app/fr/beta
+    about: "Ce que nous cherchons, ce que ça coûte, et ce que Wisely ne fait pas encore."
+  - name: "📖 Avant de proposer une fonctionnalité"
+    url: https://github.com/Thurxm09/Wisely/blob/main/docs/VISION.md
+    about: "Le filtre de périmètre du produit, et ce qu'il ne deviendra jamais."

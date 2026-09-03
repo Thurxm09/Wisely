@@ -171,6 +171,21 @@ distribution large — délibérément repoussée en P9
    l'expérience E3 de `ASSUMPTIONS.md`. Elle ne demande aucun engagement : pas
    d'installation permanente, pas de modification système, pas de confiance
    préalable. Elle mesure donc un intérêt réel plutôt qu'une politesse.
+
+   > **Première tentative arrêtée le 2026-09-03.** E3a a été publiée le
+   > 2026-09-01 sur X et Bluesky et arrêtée sans conclure : moins de 50 vues
+   > cumulées, donc un dénominateur trop faible pour interpréter le résultat nul.
+   > A1 et A9 restent `non testées`.
+   >
+   > La leçon n'est pas sur le produit, elle est sur l'instrument. **Publier sans
+   > chaîne de mesure de l'exposition, c'est mesurer sans instrument** — et un
+   > zéro y est indiscernable entre « personne n'en a besoin » et « personne n'a
+   > vu ». E3b ajoute donc une **condition de validité** distincte du seuil de
+   > succès : sans un minimum d'exposition atteint, l'expérience est déclarée non
+   > concluante plutôt que négative.
+   >
+   > Où recruter, avec quels messages, et comment mesurer les quatre étages de
+   > l'entonnoir : `RECRUITMENT.md`.
 2. **Mesurer le temps pour identifier la cause probable** — Gestionnaire des
    tâches seul, `htop` seul, Wisely. C'est une métrique produit forte, et elle
    teste A10 directement.
@@ -334,8 +349,8 @@ spike Terminal.Gui.
 ## Documents liés
 
 `PROBLEM.md` · `VISION.md` · `USE-CASES.md` · `PRINCIPLES.md` ·
-`RESOURCE-MODEL.md` · `ASSUMPTIONS.md` · `DOCTRINE-LECTURE.md` · `decisions/` ·
-`AUDIT.md` · `TASKS.md`
+`RESOURCE-MODEL.md` · `ASSUMPTIONS.md` · `DOCTRINE-LECTURE.md` ·
+`RECRUITMENT.md` · `decisions/` · `AUDIT.md` · `TASKS.md`
 
 Le raisonnement qui a produit cette séquence est conservé dans deux pièces
 d'analyse, qui ne font pas foi : `refondation-wisely.html` (2026-08-26, à ouvrir

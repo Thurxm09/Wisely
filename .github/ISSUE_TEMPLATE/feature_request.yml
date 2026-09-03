@@ -1,0 +1,42 @@
+name: "Demande de fonctionnalité / Feature request"
+description: "Proposer une idée ou une amélioration pour Wisely."
+title: "[FEATURE] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Wisely applique un **filtre de périmètre** strict, documenté dans [`docs/VISION.md`](https://github.com/Thurxm09/Wisely/blob/main/docs/VISION.md) : une proposition doit servir un des quatre objets du produit (État, Cause, Politique, Action) pour un maillon nommé de sa boucle, et désigner une situation réelle de [`docs/USE-CASES.md`](https://github.com/Thurxm09/Wisely/blob/main/docs/USE-CASES.md).
+
+        Ce n'est pas une formalité administrative : c'est ce qui empêche la roadmap de redevenir une liste de fonctionnalités. **Décrivez donc votre problème plutôt que votre solution** — c'est le premier champ, et c'est le seul obligatoire. Une demande refusée l'est avec son motif, jamais en silence.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: "Le problème que ça résout"
+      description: "La situation réelle, pas la fonctionnalité. « Je dois toujours faire X manuellement parce que… »"
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: "Solution proposée"
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "Alternatives envisagées"
+      description: "Les autres approches que vous avez considérées, et pourquoi elles sont moins adaptées."
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: "Contexte additionnel"
+      description: "Captures d'écran, exemples de commande, liens vers de la documentation."
+    validations:
+      required: false

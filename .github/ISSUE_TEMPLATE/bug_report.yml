@@ -1,0 +1,81 @@
+name: "Rapport de bug / Bug report"
+description: "Signaler un comportement inattendu de Wisely. · Report unexpected behaviour."
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > ⚠️ **N'y collez rien de sensible.** Chemins absolus, noms d'hôte, noms de distributions et de processus sont à retirer. `pwsh ./wisely.ps1 -Diagnose -Redact` s'en charge pour la sortie du diagnostic. Voir [SECURITY.md](https://github.com/Thurxm09/Wisely/blob/main/SECURITY.md).
+        >
+        > 🔒 **Un problème de sécurité se signale en [rapport privé](https://github.com/Thurxm09/Wisely/security/advisories/new)**, pas dans une issue publique.
+        >
+        > 💡 Vous testez Wisely pour la première fois ? Le [retour éclair](https://github.com/Thurxm09/Wisely/issues/new?template=field-test.yml) est plus adapté et prend 30 secondes.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Description"
+      description: "Ce qui ne va pas, en une ou deux phrases."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Étapes de reproduction"
+      placeholder: |
+        1. Exécuter `wisely -Diagnose`
+        2. Avec le profil `...`
+        3. Observer `...`
+    validations:
+      required: false
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: "Comportement attendu"
+    validations:
+      required: false
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: "Comportement observé"
+      description: "Copier le message d'erreur complet si possible."
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: "Version de Wisely"
+      description: "Sortie de `wisely -Version`."
+      placeholder: "3.0.0"
+    validations:
+      required: false
+
+  - type: input
+    id: env
+    attributes:
+      label: "Environnement"
+      description: "PowerShell (`$PSVersionTable.PSVersion`), Windows, WSL (`wsl --version`)."
+      placeholder: "PowerShell 7.5.0, Windows 11 24H2, WSL 2.7.11"
+    validations:
+      required: false
+
+  - type: textarea
+    id: relevant
+    attributes:
+      label: "Contenu pertinent"
+      description: "Extrait expurgé de `.wslconfig`, `data/profiles.json` ou `data/history.json`, ou sortie de `wisely -Diagnose -Redact`."
+      render: text
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: "Contexte additionnel"
+    validations:
+      required: false
