@@ -13,7 +13,12 @@
 ![WSL](https://img.shields.io/badge/WSL-2-orange?logo=linux&logoColor=white)
 ![License](https://img.shields.io/badge/License-GPL--v3-blue)
 
-🌐 **Site : [wisely-site-beta.vercel.app](https://wisely-site-beta.vercel.app)**
+🌐 **Site : [wisely-site-beta.vercel.app](https://wisely-site-beta.vercel.app)** · 🇬🇧 **[English quickstart](README.en.md)**
+
+> **Wisely cherche des testeurs.** L'outil n'a encore été utilisé par personne d'autre que son
+> mainteneur, et c'est le problème que nous cherchons à corriger en premier. Si vous utilisez
+> WSL2, cinq minutes de votre temps valent plus que n'importe quel audit interne :
+> [essayer sans installer](#essayer-sans-installer) · [page testeurs](https://wisely-site-beta.vercel.app/fr/beta)
 
 ## Table des matières
 
@@ -102,7 +107,27 @@ cd Wisely
 pwsh ./wisely.ps1 -Diagnose
 ```
 
-Un retour d'expérience (bon ou mauvais) est bienvenu via une [issue GitHub](https://github.com/Thurxm09/Wisely/issues/new).
+### Donner un retour
+
+Wisely est en **validation terrain** : nous cherchons volontairement des gens capables de nous
+dire ce qui ne fonctionne pas. Un « je n'ai rien compris à la sortie » nous est plus utile
+qu'un « c'est cool ». Trois chemins, du plus court au plus long :
+
+| Vous voulez… | Chemin | Temps |
+| --- | --- | --- |
+| Signaler quelque chose en deux clics | [Retour éclair](https://github.com/Thurxm09/Wisely/issues/new?template=field-test.yml) — un seul champ obligatoire | 30 s |
+| Raconter en détail ce qui s'est passé | [Retour détaillé](https://github.com/Thurxm09/Wisely/issues/new?template=field-test-detailed.yml) | 5 min |
+| Signaler un problème de sécurité | [Rapport privé](https://github.com/Thurxm09/Wisely/security/advisories/new) — **jamais une issue publique** | — |
+
+**Avant de coller une sortie**, expurgez-la — elle contient les noms de vos distributions et de
+vos processus :
+
+```powershell
+pwsh ./wisely.ps1 -Diagnose -Redact          # pseudonymise, garde tous les chiffres
+pwsh ./wisely.ps1 -Diagnose -Redact -Json    # même chose, sortie structurée
+```
+
+Le détail de ce qu'il ne faut jamais publier est dans [`SECURITY.md`](SECURITY.md).
 
 ---
 

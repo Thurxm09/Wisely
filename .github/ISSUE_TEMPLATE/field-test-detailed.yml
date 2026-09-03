@@ -1,0 +1,108 @@
+name: "Retour détaillé / Detailed feedback"
+description: "Vous voulez aller plus loin qu'un retour éclair. ~5 minutes. · The long form, if you have five minutes."
+title: "[FIELD] "
+labels: ["field-test", "detailed"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci d'y consacrer du temps. **Rien n'est obligatoire sauf le premier champ** : sautez tout ce qui ne s'applique pas à votre cas.
+
+        Français ou anglais. *English is fine.*
+
+        > ⚠️ **Expurgez avant de coller.** `pwsh ./wisely.ps1 -Diagnose -Redact` remplace les noms de distributions et de processus par des pseudonymes et conserve tous les chiffres. Relisez quand même la sortie avant de l'envoyer. Voir [SECURITY.md](https://github.com/Thurxm09/Wisely/blob/main/SECURITY.md).
+        >
+        > 🔒 **Sécurité : [rapport privé](https://github.com/Thurxm09/Wisely/security/advisories/new)**, jamais ici.
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: "Que cherchiez-vous à savoir ou à faire ?"
+      description: "Le contexte réel qui vous a amené à lancer l'outil. C'est le champ le plus utile de ce formulaire : il nous dit si Wisely répond à une vraie question ou à celle que nous avons imaginée."
+      placeholder: "Mon PC ramait, Docker tournait, VmmemWSL affichait 9 Go dans le gestionnaire des tâches et je voulais savoir si je pouvais lui en reprendre."
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: "Ce que vous attendiez"
+      description: "Avant de voir la sortie."
+    validations:
+      required: false
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: "Ce que vous avez obtenu"
+      description: "Y compris le message d'erreur complet, s'il y en a eu un."
+    validations:
+      required: false
+
+  - type: dropdown
+    id: reproducibility
+    attributes:
+      label: "Reproductibilité"
+      description: "Sert directement au tri : un comportement reproductible est prioritaire sur un comportement vu une fois."
+      options:
+        - "Toujours — je peux le refaire à volonté"
+        - "Parfois — c'est arrivé plusieurs fois, pas systématiquement"
+        - "Une seule fois — je n'ai pas su le reproduire"
+        - "Sans objet — ce n'est pas un dysfonctionnement"
+    validations:
+      required: false
+
+  - type: textarea
+    id: diagnose_output
+    attributes:
+      label: "Sortie de `wisely -Diagnose -Redact`"
+      description: "Facultatif, mais c'est ce qui transforme un signalement en diagnostic. Expurgée uniquement."
+      render: text
+      placeholder: |
+        pwsh ./wisely.ps1 -Diagnose -Redact
+    validations:
+      required: false
+
+  - type: textarea
+    id: confusing
+    attributes:
+      label: "Ce que vous n'avez pas compris"
+      description: "Un mot, une ligne, un chiffre, une unité, une étiquette `[portée / classe / confiance]`. Nous partons du principe que si vous n'avez pas compris, c'est notre sortie qui est en cause."
+    validations:
+      required: false
+
+  - type: textarea
+    id: next_action
+    attributes:
+      label: "Qu'avez-vous fait ensuite ?"
+      description: "Rien, changé un réglage, cherché sur le web, fermé la fenêtre… La réponse « rien » est un résultat parfaitement valable, et souvent le plus instructif."
+    validations:
+      required: false
+
+  - type: textarea
+    id: comparison
+    attributes:
+      label: "Qu'utilisiez-vous avant pour répondre à cette question ?"
+      description: "Gestionnaire des tâches, htop, WSL Settings, un article de blog, un autre outil, rien du tout. Wisely vous a-t-il fait gagner du temps par rapport à ça ?"
+    validations:
+      required: false
+
+  - type: input
+    id: env
+    attributes:
+      label: "Environnement"
+      placeholder: "Windows 11 24H2, PowerShell 7.5, WSL 2.7.11, 16 Go RAM, Docker Desktop, 2 distributions"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: followup
+    attributes:
+      label: "Aller plus loin"
+      options:
+        - label: "J'accepterais 20 minutes d'échange pour montrer ce que j'ai fait"
+          required: false
+        - label: "Je veux être prévenu quand ce retour aura donné lieu à un changement"
+          required: false
+        - label: "Merci de ne pas me citer nommément dans le changelog"
+          required: false

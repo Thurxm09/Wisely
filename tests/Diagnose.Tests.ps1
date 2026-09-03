@@ -421,3 +421,212 @@ Describe "Completion documentaire VHDX (RESOURCE-MODEL.md SS8 / DOCTRINE-LECTURE
         $doc | Should -Match "jamais une ouverture du contenu"
     }
 }
+
+# ============================================================
+#  Expurgation (-Redact) - contrat de securite
+#
+#  Ces tests valent contrat : SECURITY.md promet a un testeur que la
+#  sortie expurgee est collable dans une issue publique. Une regression
+#  ici est une vulnerabilite au sens du perimetre declare, pas un bug
+#  d'affichage.
+# ============================================================
+
+Describe "ConvertTo-RedactedDiagnoseReport - ce qui ne doit jamais survivre" {
+
+    BeforeEach {
+        function script:New-RedactTestReport {
+            param([string[]]$Distros = @("Ubuntu-22.04", "Ubuntu"), [string]$VhdxReason = "")
+            $vhdxValue = if ($VhdxReason) { "indisponible - $VhdxReason" } else { "42.5" }
+            $vhdxUnit  = if ($VhdxReason) { "" } else { "GB" }
+            return [PSCustomObject]@{
+                GeneratedAt = "2026-09-03 10:00:00"
+                Distro      = $Distros[0]
+                Lines       = @(
+                    [PSCustomObject]@{ Question = "que se passe-t-il"; Label = "Distributions actives"; Value = ($Distros -join ", "); Unit = ""; Scope = "host"; Class = "directe"; Confidence = "haute"; Source = "wsl --list --running --quiet" }
+                    [PSCustomObject]@{ Question = "que se passe-t-il"; Label = "Taille VHDX ($($Distros[0]))"; Value = $vhdxValue; Unit = $vhdxUnit; Scope = "distro"; Class = "directe"; Confidence = "haute"; Source = "registre Lxss + taille fichier ext4.vhdx" }
+                )
+                Ceiling     = [PSCustomObject]@{ MemoryCeiling = "8GB"; HostTotalRamGB = 16.0; RatioOfHostPct = 50; Scope = "host"; ScopeNote = "s'applique a toutes les distributions" }
+                Attribution = [PSCustomObject]@{
+                    Available = $true; Distro = $Distros[0]
+                    MemTotalGB = 7.8; MemAvailableGB = 4.1; CachedGB = 3.2; UsedGB = 3.7
+                    AttributedGB = 4.1; UnattributedGB = -0.4
+                    Processes = @(
+                        [PSCustomObject]@{ Command = "acme-client-api"; RssGB = 2.1 }
+                        [PSCustomObject]@{ Command = "node";            RssGB = 1.2 }
+                    )
+                }
+            }
+        }
+    }
+
+    It "aucun nom de distribution ne survit, y compris quand un nom est prefixe d'un autre" {
+        # Piege 2 de l'en-tete de section : "Ubuntu" substitue avant
+        # "Ubuntu-22.04" laisserait "distro-N-22.04" en clair.
+        $json = ConvertTo-RedactedDiagnoseReport -Report (New-RedactTestReport) | ConvertTo-Json -Depth 6
+        $json | Should -Not -Match "Ubuntu"
+        $json | Should -Not -Match "distro-\d+-22"
+    }
+
+    It "deux distributions distinctes recoivent deux pseudonymes distincts" {
+        $r = ConvertTo-RedactedDiagnoseReport -Report (New-RedactTestReport)
+        ($r.Lines | Where-Object { $_.Label -eq "Distributions actives" }).Value | Should -Be "distro-1, distro-2"
+    }
+
+    It "aucun nom de processus ne survit, generique compris" {
+        $json = ConvertTo-RedactedDiagnoseReport -Report (New-RedactTestReport) | ConvertTo-Json -Depth 6
+        $json | Should -Not -Match "acme-client-api"
+        $json | Should -Not -Match '"node"'
+    }
+
+    It "les processus sont numerotes par RSS decroissant, ordre deja etabli par Get-DiagnoseMemoryAttribution" {
+        $r = ConvertTo-RedactedDiagnoseReport -Report (New-RedactTestReport)
+        $r.Attribution.Processes[0].Command | Should -Be "proc-1"
+        $r.Attribution.Processes[1].Command | Should -Be "proc-2"
+    }
+
+    It "aucun chemin absolu ni nom d'utilisateur Windows ne survit dans Reason (fuite reelle de Get-DistroVhdxInfo)" {
+        # Piege 1 : Get-DistroVhdxInfo place $vhdxPath complet dans Reason,
+        # rendu tel quel dans la valeur de la ligne "Taille VHDX".
+        $leak = "Fichier ext4.vhdx introuvable a l'emplacement attendu : C:\Users\jdupont\AppData\Local\wsl\Ubuntu-22.04\ext4.vhdx"
+        $json = ConvertTo-RedactedDiagnoseReport -Report (New-RedactTestReport -VhdxReason $leak) | ConvertTo-Json -Depth 6
+        $json | Should -Not -Match "jdupont"
+        $json | Should -Not -Match "AppData"
+        $json | Should -Match ([regex]::Escape($script:RedactedPathPlaceholder))
+    }
+
+    It "expurger un chemin ne mange pas la phrase qui le contient" {
+        $leak = "Fichier ext4.vhdx introuvable a l'emplacement attendu : C:\Temp\x.vhdx"
+        $r = ConvertTo-RedactedDiagnoseReport -Report (New-RedactTestReport -VhdxReason $leak)
+        ($r.Lines | Where-Object { $_.Label -like "Taille VHDX*" }).Value | Should -Match "introuvable a l'emplacement attendu"
+    }
+
+    It "expurge aussi la raison d'un cas degrade, sans la perdre" {
+        $rep = New-RedactTestReport
+        $rep.Attribution = [PSCustomObject]@{ Available = $false; Reason = "Plusieurs distributions actives (Ubuntu-22.04, Debian) - precise -Distro <nom>." }
+        $r = ConvertTo-RedactedDiagnoseReport -Report $rep
+        $r.Attribution.Reason | Should -Match "Plusieurs distributions actives"
+        $r.Attribution.Reason | Should -Not -Match "Ubuntu"
+        $r.Attribution.Reason | Should -Not -Match "Debian"
+    }
+}
+
+Describe "ConvertTo-RedactedDiagnoseReport - ce qui doit survivre intact" {
+
+    BeforeEach {
+        function script:New-RedactTestReport {
+            return [PSCustomObject]@{
+                GeneratedAt = "2026-09-03 10:00:00"
+                Distro      = "Ubuntu"
+                Lines       = @(
+                    [PSCustomObject]@{ Question = "que se passe-t-il"; Label = "Distributions actives"; Value = "Ubuntu"; Unit = ""; Scope = "host"; Class = "directe"; Confidence = "haute"; Source = "wsl --list --running --quiet" }
+                    [PSCustomObject]@{ Question = "que se passe-t-il"; Label = "Taille VHDX (Ubuntu)"; Value = "42.5"; Unit = "GB"; Scope = "distro"; Class = "directe"; Confidence = "haute"; Source = "registre Lxss" }
+                )
+                Ceiling     = [PSCustomObject]@{ MemoryCeiling = "8GB"; HostTotalRamGB = 16.0; RatioOfHostPct = 50; Scope = "host"; ScopeNote = "s'applique a toutes les distributions" }
+                Attribution = [PSCustomObject]@{
+                    Available = $true; Distro = "Ubuntu"
+                    MemTotalGB = 7.8; MemAvailableGB = 4.1; CachedGB = 3.2; UsedGB = 3.7
+                    AttributedGB = 4.1; UnattributedGB = -0.4
+                    Processes = @([PSCustomObject]@{ Command = "node"; RssGB = 1.2 })
+                }
+            }
+        }
+    }
+
+    It "toute valeur numerique survit, y compris un reste non attribue negatif (RESOURCE-MODEL.md SS4.4)" {
+        $r = ConvertTo-RedactedDiagnoseReport -Report (New-RedactTestReport)
+        $r.Attribution.UnattributedGB | Should -Be -0.4
+        $r.Attribution.CachedGB       | Should -Be 3.2
+        $r.Attribution.MemAvailableGB | Should -Be 4.1
+        $r.Attribution.Processes[0].RssGB | Should -Be 1.2
+        ($r.Lines | Where-Object { $_.Label -like "Taille VHDX*" }).Value | Should -Be "42.5"
+    }
+
+    It "portee, classe, confiance et unite survivent sur chaque ligne - un rapport expurge reste exploitable" {
+        $r = ConvertTo-RedactedDiagnoseReport -Report (New-RedactTestReport)
+        foreach ($line in $r.Lines) {
+            $line.Scope      | Should -Not -BeNullOrEmpty
+            $line.Class      | Should -Not -BeNullOrEmpty
+            $line.Confidence | Should -Not -BeNullOrEmpty
+        }
+        ($r.Lines | Where-Object { $_.Label -like "Taille VHDX*" }).Unit | Should -Be "GB"
+    }
+
+    It "le plafond et son ratio survivent tels quels" {
+        $r = ConvertTo-RedactedDiagnoseReport -Report (New-RedactTestReport)
+        $r.Ceiling.RatioOfHostPct | Should -Be 50
+        $r.Ceiling.HostTotalRamGB | Should -Be 16.0
+        $r.Ceiling.MemoryCeiling  | Should -Be "8GB"
+    }
+
+    It "'8GB' n'est pas ampute par la substitution : la frontiere de jeton exclut un chiffre a gauche" {
+        $rep = New-RedactTestReport
+        $rep.Lines[0].Value = "Ubuntu"
+        $rep.Lines[1].Value = "plafond 8GB, hote 16 GB"
+        $r = ConvertTo-RedactedDiagnoseReport -Report $rep
+        $r.Lines[1].Value | Should -Match "8GB"
+    }
+}
+
+Describe "ConvertTo-RedactedDiagnoseReport - stabilite, non-mutation, signalement" {
+
+    BeforeEach {
+        function script:New-RedactTestReport {
+            return [PSCustomObject]@{
+                GeneratedAt = "2026-09-03 10:00:00"
+                Distro      = "Ubuntu"
+                Lines       = @([PSCustomObject]@{ Question = "q"; Label = "Distributions actives"; Value = "Ubuntu"; Unit = ""; Scope = "host"; Class = "directe"; Confidence = "haute"; Source = "wsl" })
+                Ceiling     = $null
+                Attribution = $null
+            }
+        }
+    }
+
+    It "deux expurgations du meme rapport produisent exactement le meme resultat" {
+        $rep = New-RedactTestReport
+        $a = ConvertTo-RedactedDiagnoseReport -Report $rep | ConvertTo-Json -Depth 6
+        $b = ConvertTo-RedactedDiagnoseReport -Report $rep | ConvertTo-Json -Depth 6
+        $a | Should -Be $b
+    }
+
+    It "le rapport d'origine n'est jamais mute - Show-DiagnoseReport peut encore etre appele dessus" {
+        $rep = New-RedactTestReport
+        $before = $rep | ConvertTo-Json -Depth 6
+        $null = ConvertTo-RedactedDiagnoseReport -Report $rep
+        ($rep | ConvertTo-Json -Depth 6) | Should -Be $before
+    }
+
+    It "RedactionApplied marque le rapport, pour qu'un testeur sache qu'il ne lit pas ses vraies valeurs" {
+        (ConvertTo-RedactedDiagnoseReport -Report (New-RedactTestReport)).RedactionApplied | Should -BeTrue
+    }
+
+    It "un identifiant homographe d'une unite est expurge quand meme, et signale (jamais de fuite silencieuse)" {
+        # Piege 3 : abimer visiblement le rapport vaut mieux que fuiter en
+        # silence. C'est l'arbitrage du principe 9.
+        $rep = New-RedactTestReport
+        $rep.Distro = "GB"
+        $rep.Lines[0].Value = "GB"
+        $r = ConvertTo-RedactedDiagnoseReport -Report $rep
+        $r.Lines[0].Value | Should -Be "distro-1"
+        @($r.RedactionWarnings).Count | Should -BeGreaterThan 0
+    }
+
+    It "un rapport sans avertissement porte une liste vide, jamais `$null" {
+        (ConvertTo-RedactedDiagnoseReport -Report (New-RedactTestReport)).RedactionWarnings | Should -Not -BeNullOrEmpty -Because "la propriete existe toujours"
+    }
+}
+
+Describe "ConvertTo-DiagnoseJson" {
+
+    It "serialise Attribution.Processes sans le degrader en chaine de type (profondeur suffisante)" {
+        $rep = [PSCustomObject]@{
+            GeneratedAt = "x"; Distro = ""
+            Lines = @([PSCustomObject]@{ Question = "q"; Label = "l"; Value = "v"; Unit = ""; Scope = "host"; Class = "directe"; Confidence = "haute"; Source = "s" })
+            Ceiling = $null
+            Attribution = [PSCustomObject]@{ Available = $true; Distro = "Ubuntu"; Processes = @([PSCustomObject]@{ Command = "node"; RssGB = 1.2 }) }
+        }
+        $json = ConvertTo-DiagnoseJson -Report $rep
+        $json | Should -Not -Match "System\.Object\["
+        $json | Should -Not -Match "System\.Management\.Automation"
+        @(($json | ConvertFrom-Json).Attribution.Processes).Count | Should -Be 1
+    }
+}

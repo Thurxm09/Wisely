@@ -464,6 +464,20 @@ function Show-DiagnoseReport {
     } else {
         Write-Host "    Rien de mesure ici ne signale un changement necessaire." -ForegroundColor DarkGray
     }
+
+    # Un rapport expurge le dit, et dit ce que l'expurgation a coute. Sans
+    # cela, un testeur ne saurait pas s'il regarde ses vraies valeurs.
+    if ($Report.PSObject.Properties.Name -contains "RedactionApplied" -and $Report.RedactionApplied) {
+        Write-Host ""
+        Write-Host "  RAPPORT EXPURGE" -ForegroundColor Green
+        Write-Host "    Noms de distributions, de processus et chemins absolus remplaces." -ForegroundColor DarkGray
+        Write-Host "    Chiffres, portees, classes et confiances conserves tels quels." -ForegroundColor DarkGray
+        Write-Host "    Relis quand meme avant de coller : SECURITY.md." -ForegroundColor DarkGray
+        foreach ($warning in @($Report.RedactionWarnings)) {
+            Write-Host "    /!\ $warning" -ForegroundColor Yellow
+        }
+    }
+
     Write-Host ""
 }
 
@@ -575,4 +589,229 @@ function Show-DiagnoseHistory {
 
     Write-Host ("  " + ("-" * 60)) -ForegroundColor DarkGray
     Write-Host ""
+}
+
+# ---- Expurgation (-Redact) ---------------------------------------------
+#
+#  Prerequis d'experience, pas fonctionnalite. Voir docs/TASKS.md : la
+#  barriere de validation P3 exige que des testeurs puissent rapporter un
+#  etat verifiable sans exposer leurs donnees. Ce bloc ne sert aucun
+#  maillon de la boucle produit et ne doit pas servir de precedent pour en
+#  faire entrer un.
+#
+#  Contrat de securite (SECURITY.md, section "Ne publiez jamais ceci") :
+#  aucun nom de distribution, de processus, d'utilisateur ou d'hote, ni
+#  aucun chemin absolu, ne survit a ConvertTo-RedactedDiagnoseReport.
+#  Toute valeur numerique, unite, portee, classe et confiance survit
+#  integralement : un rapport expurge reste un rapport exploitable.
+#
+#  Trois pieges, tous couverts par tests/Diagnose.Tests.ps1 :
+#
+#   1. Les chemins passent AVANT les identifiants : un chemin absolu
+#      contient le nom d'utilisateur Windows, et Get-DistroVhdxInfo place
+#      un chemin complet dans son champ Reason, lui-meme rendu dans la
+#      valeur de la ligne "Taille VHDX".
+#
+#   2. Les identifiants sont substitues du plus long au plus court : sans
+#      cela, "Ubuntu" remplace d'abord dans "Ubuntu-22.04" laisserait
+#      "distro-1-22.04" en clair.
+#
+#   3. Aucun identifiant n'est ecarte pour cause de brievete. Un nom court
+#      est expurge comme les autres : la substitution est ancree sur une
+#      frontiere de jeton ((?<![\w-]) ... (?![\w-])), donc un nom "A" ne
+#      touche pas "Ubuntu" ni "4". Le seul cas ou cette ancre ne suffit
+#      pas est un identifiant homographe d'une unite ("GB", "MB") : la
+#      substitution abime alors le rapport sans rien divulguer, et le dit
+#      dans RedactionWarnings. Abimer visiblement vaut mieux que fuiter en
+#      silence - c'est le meme arbitrage que le principe 9.
+
+$script:RedactedPathPlaceholder = "<chemin-expurge>"
+$script:RedactedUserPlaceholder = "<utilisateur>"
+$script:RedactedHostPlaceholder = "<machine>"
+
+# Jetons qui portent un sens dans un rapport et qu'un identifiant homographe
+# ecraserait. Sert uniquement a produire un avertissement, jamais a renoncer
+# a expurger.
+$script:RedactionCollisionTokens = @("GB", "MB", "KB", "TB", "OK")
+
+function Get-RedactionIdentifierMap {
+    <#
+    .SYNOPSIS
+        Construit la table de pseudonymisation d'un rapport : identifiant
+        reel -> pseudonyme stable. Les distributions sont numerotees dans
+        leur ordre d'apparition, les processus par RSS decroissant (ordre
+        deja etabli par Get-DiagnoseMemoryAttribution), ce qui rend la
+        table reproductible pour un meme rapport.
+    .OUTPUTS
+        Tableau d'objets @{ Value; Pseudonym; Collides }, tries par longueur
+        de Value decroissante - l'ordre de substitution fait partie du
+        contrat de securite, pas du confort de lecture.
+    #>
+    param([Parameter(Mandatory)][PSCustomObject]$Report)
+
+    $entries = [System.Collections.Generic.List[PSCustomObject]]::new()
+    $seen    = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+
+    $collect = {
+        param([string]$Value, [string]$Prefix, [ref]$Counter)
+        if ([string]::IsNullOrWhiteSpace($Value)) { return }
+        $trimmed = $Value.Trim()
+        if (-not $seen.Add($trimmed)) { return }
+        $pseudonym = if ($Prefix -like "<*") { $Prefix } else {
+            $Counter.Value++
+            "$Prefix-$($Counter.Value)"
+        }
+        $entries.Add([PSCustomObject]@{
+            Value     = $trimmed
+            Pseudonym = $pseudonym
+            Collides  = ($script:RedactionCollisionTokens -contains $trimmed.ToUpperInvariant())
+        })
+    }
+
+    $distroCounter = 0
+    $distroLine = $Report.Lines | Where-Object { $_.Label -eq "Distributions actives" } | Select-Object -First 1
+    if ($null -ne $distroLine -and "$($distroLine.Value)" -ne "aucune") {
+        foreach ($name in ("$($distroLine.Value)" -split ",")) {
+            & $collect $name "distro" ([ref]$distroCounter)
+        }
+    }
+    & $collect "$($Report.Distro)" "distro" ([ref]$distroCounter)
+    if ($null -ne $Report.Attribution) {
+        & $collect "$($Report.Attribution.Distro)" "distro" ([ref]$distroCounter)
+    }
+
+    $procCounter = 0
+    if ($null -ne $Report.Attribution -and $Report.Attribution.PSObject.Properties.Name -contains "Processes") {
+        foreach ($proc in @($Report.Attribution.Processes)) {
+            if ($null -eq $proc) { continue }
+            & $collect "$($proc.Command)" "proc" ([ref]$procCounter)
+        }
+    }
+
+    # Filet defensif : ni l'un ni l'autre n'est produit par le diagnostic
+    # aujourd'hui, mais tous deux apparaissent dans un chemin absolu, et une
+    # future ligne pourrait les faire entrer autrement.
+    $unusedCounter = 0
+    & $collect "$env:USERNAME"     $script:RedactedUserPlaceholder ([ref]$unusedCounter)
+    & $collect "$env:COMPUTERNAME" $script:RedactedHostPlaceholder ([ref]$unusedCounter)
+
+    return @($entries | Sort-Object { $_.Value.Length } -Descending)
+}
+
+function ConvertTo-RedactedText {
+    <#
+    .SYNOPSIS
+        Applique a une chaine l'expurgation des chemins puis celle des
+        identifiants. L'ordre est significatif (voir l'en-tete de section).
+        Retourne la chaine vide pour une entree nulle ou vide, jamais $null.
+    #>
+    param(
+        [string]$Text,
+        [Parameter(Mandatory)][AllowEmptyCollection()][array]$IdentifierMap
+    )
+
+    if ([string]::IsNullOrEmpty($Text)) { return "" }
+    $result = $Text
+
+    # Chemins Windows absolus, separateur avant ou arriere (data/profiles.json
+    # accepte les deux formes pour swapFile). La classe negative s'arrete au
+    # premier blanc ou guillemet : un chemin cite dans une phrase ne mange pas
+    # la fin de la phrase.
+    $result = [regex]::Replace($result, '[A-Za-z]:[\\/][^\s"'']*', $script:RedactedPathPlaceholder)
+
+    foreach ($entry in $IdentifierMap) {
+        $pattern = "(?<![\w-])" + [regex]::Escape($entry.Value) + "(?![\w-])"
+        $result = [regex]::Replace(
+            $result, $pattern, $entry.Pseudonym,
+            [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+    }
+
+    return $result
+}
+
+function ConvertTo-RedactedDiagnoseReport {
+    <#
+    .SYNOPSIS
+        Retourne une COPIE expurgee du rapport - l'objet d'origine n'est
+        jamais modifie, Show-DiagnoseReport pouvant etre appele sur lui.
+        Ajoute RedactionApplied et RedactionWarnings : une expurgation qui
+        abime le rapport doit le dire plutot que de degrader en silence
+        (principe 9, docs/PRINCIPLES.md).
+    #>
+    param([Parameter(Mandatory)][PSCustomObject]$Report)
+
+    $map      = Get-RedactionIdentifierMap -Report $Report
+    $warnings = [System.Collections.Generic.List[string]]::new()
+
+    foreach ($entry in $map) {
+        if ($entry.Collides) {
+            $warnings.Add("L'identifiant '$($entry.Value)' est homographe d'une unite de mesure : les occurrences de cette unite ont ete remplacees par '$($entry.Pseudonym)'. Le rapport est expurge mais partiellement illisible - signale-le en ouvrant l'issue.")
+        }
+    }
+
+    $lines = [System.Collections.Generic.List[PSCustomObject]]::new()
+    foreach ($line in @($Report.Lines)) {
+        $lines.Add([PSCustomObject]@{
+            Question   = $line.Question
+            Label      = ConvertTo-RedactedText -Text "$($line.Label)"  -IdentifierMap $map
+            Value      = ConvertTo-RedactedText -Text "$($line.Value)"  -IdentifierMap $map
+            Unit       = $line.Unit
+            Scope      = $line.Scope
+            Class      = $line.Class
+            Confidence = $line.Confidence
+            Source     = ConvertTo-RedactedText -Text "$($line.Source)" -IdentifierMap $map
+        })
+    }
+
+    $attribution = $Report.Attribution
+    if ($null -ne $attribution) {
+        if ($attribution.Available) {
+            $processes = [System.Collections.Generic.List[PSCustomObject]]::new()
+            foreach ($proc in @($attribution.Processes)) {
+                if ($null -eq $proc) { continue }
+                $processes.Add([PSCustomObject]@{
+                    Command = ConvertTo-RedactedText -Text "$($proc.Command)" -IdentifierMap $map
+                    RssGB   = $proc.RssGB
+                })
+            }
+            $attribution = [PSCustomObject]@{
+                Available      = $true
+                Distro         = ConvertTo-RedactedText -Text "$($attribution.Distro)" -IdentifierMap $map
+                MemTotalGB     = $attribution.MemTotalGB
+                MemAvailableGB = $attribution.MemAvailableGB
+                CachedGB       = $attribution.CachedGB
+                UsedGB         = $attribution.UsedGB
+                AttributedGB   = $attribution.AttributedGB
+                UnattributedGB = $attribution.UnattributedGB
+                Processes      = @($processes)
+            }
+        } else {
+            $attribution = [PSCustomObject]@{
+                Available = $false
+                Reason    = ConvertTo-RedactedText -Text "$($attribution.Reason)" -IdentifierMap $map
+            }
+        }
+    }
+
+    return [PSCustomObject]@{
+        GeneratedAt       = $Report.GeneratedAt
+        Distro            = ConvertTo-RedactedText -Text "$($Report.Distro)" -IdentifierMap $map
+        Lines             = @($lines)
+        Ceiling           = $Report.Ceiling
+        Attribution       = $attribution
+        RedactionApplied  = $true
+        RedactionWarnings = @($warnings)
+    }
+}
+
+function ConvertTo-DiagnoseJson {
+    <#
+    .SYNOPSIS
+        Serialise un rapport. La profondeur couvre Attribution.Processes,
+        le niveau le plus profond produit par Get-DiagnoseReport ; une
+        profondeur insuffisante rendrait un tableau en chaine de type sans
+        le signaler.
+    #>
+    param([Parameter(Mandatory)][PSCustomObject]$Report)
+    return ($Report | ConvertTo-Json -Depth 6)
 }
