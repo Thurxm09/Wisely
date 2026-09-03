@@ -102,8 +102,11 @@ instructions de test.
       d'avant l'ADR 0013. Renseigner aussi `homepage` (vide aujourd'hui,
       donc le site n'est lie nulle part) et les topics (`wsl`,
       `windows-subsystem-for-linux`, `vmmem`, `diagnostics`)
-- [ ] **Page testeurs sur le site** (`/beta`, bilingue) : cible des liens
+- [x] **Page testeurs sur le site** (`/beta`, bilingue) : cible des liens
       taggés `?src=<canal>`, seul etage instrumentable de l'entonnoir
+      (livree par `wisely-site#17`, fusionnee le 2026-09-03 - la propriete
+      `src` du `$pageview` porte le canal, et la page de confidentialite a
+      ete corrigee en consequence)
 - [ ] **Relever les impressions reelles** des deux posts du 2026-09-01 et
       les consigner - c'est la ligne de base d'E3b
 

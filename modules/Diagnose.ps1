@@ -311,7 +311,11 @@ function Get-DiagnoseMemoryAttribution {
             Processes      = @($processes | Sort-Object RssGB -Descending)
         }
     } catch {
-        return [PSCustomObject]@{ Available = $false; Reason = "$_" }
+        # Reason porte ici un message d'exception non maitrise : c'est le seul
+        # endroit de la chaine ou du texte libre externe entre dans le rapport.
+        # La distribution est connue a ce stade, donc declaree - sans quoi son
+        # nom, s'il apparait dans le message, ne serait pas expurgeable.
+        return [PSCustomObject]@{ Available = $false; Reason = "$_"; Distros = @($Distro) }
     }
 }
 
@@ -621,6 +625,16 @@ function Show-DiagnoseHistory {
 #   2. Les identifiants sont substitues du plus long au plus court : sans
 #      cela, "Ubuntu" remplace d'abord dans "Ubuntu-22.04" laisserait
 #      "distro-1-22.04" en clair.
+#
+#  Perimetre, a connaitre avant d'ajouter un champ au rapport : ce mecanisme
+#  substitue un ensemble d'identifiants DECLARES (Distros, Processes, plus le
+#  filet utilisateur/hote et la passe sur les chemins). Il ne devine aucun nom
+#  dans de la prose, et c'est delibere : une table de pseudonymes qui
+#  dependrait de l'analyse d'un message se casserait a la premiere
+#  reformulation de ce message. Consequence contraignante : TOUT champ de
+#  texte libre neuf doit declarer ses identifiants a cote, comme le font
+#  Reason/Distros dans Get-DiagnoseMemoryAttribution. Un test nomme
+#  "declare sa limite" fige cette regle.
 #
 #   3. Aucun identifiant n'est ecarte pour cause de brievete. Un nom court
 #      est expurge comme les autres : la substitution est ancree sur une

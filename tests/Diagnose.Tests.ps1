@@ -501,12 +501,53 @@ Describe "ConvertTo-RedactedDiagnoseReport - ce qui ne doit jamais survivre" {
     }
 
     It "expurge aussi la raison d'un cas degrade, sans la perdre" {
+        # Reproduit la forme reelle produite par Get-DiagnoseMemoryAttribution
+        # quand plusieurs distributions sont actives : les noms sont cites dans
+        # la prose de Reason ET declares dans Distros. C'est le second champ qui
+        # rend l'expurgation possible - "Debian" n'apparait nulle part ailleurs
+        # dans le rapport, donc sans lui il survivrait.
         $rep = New-RedactTestReport
-        $rep.Attribution = [PSCustomObject]@{ Available = $false; Reason = "Plusieurs distributions actives (Ubuntu-22.04, Debian) - precise -Distro <nom>." }
+        $rep.Attribution = [PSCustomObject]@{
+            Available = $false
+            Reason    = "Plusieurs distributions actives (Ubuntu-22.04, Debian) - precise -Distro <nom>."
+            Distros   = @("Ubuntu-22.04", "Debian")
+        }
         $r = ConvertTo-RedactedDiagnoseReport -Report $rep
         $r.Attribution.Reason | Should -Match "Plusieurs distributions actives"
         $r.Attribution.Reason | Should -Not -Match "Ubuntu"
         $r.Attribution.Reason | Should -Not -Match "Debian"
+        @($r.Attribution.Distros).Count | Should -Be 2
+        (@($r.Attribution.Distros) -join ",") | Should -Not -Match "Ubuntu|Debian"
+    }
+
+    It "expurge le nom porte par la branche d'exception, ou entre du texte libre non maitrise" {
+        # C'est le seul endroit de la chaine ou un message externe arrive tel
+        # quel dans le rapport. La distribution y est declaree pour cette raison.
+        $rep = New-RedactTestReport
+        $rep.Attribution = [PSCustomObject]@{
+            Available = $false
+            Reason    = "Echec de lecture invitee sur Ubuntu-22.04 : commande interrompue."
+            Distros   = @("Ubuntu-22.04")
+        }
+        $r = ConvertTo-RedactedDiagnoseReport -Report $rep
+        $r.Attribution.Reason | Should -Match "Echec de lecture invitee"
+        $r.Attribution.Reason | Should -Not -Match "Ubuntu"
+    }
+
+    It "declare sa limite : un nom qui n'est ni structure ni present ailleurs n'est pas devinable" {
+        # Pas une lacune a corriger en douce, mais le perimetre du mecanisme :
+        # l'expurgation substitue un ensemble d'identifiants DECLARES, elle ne
+        # devine pas des noms dans de la prose. Toute nouvelle source de texte
+        # libre doit donc declarer ses identifiants, comme le font Distros et
+        # Processes. Ce test existe pour que la regle se casse bruyamment si
+        # quelqu'un ajoute un champ libre sans son pendant structure.
+        $rep = New-RedactTestReport
+        $rep.Attribution = [PSCustomObject]@{
+            Available = $false
+            Reason    = "Distribution NonDeclaree indisponible."
+        }
+        $r = ConvertTo-RedactedDiagnoseReport -Report $rep
+        $r.Attribution.Reason | Should -Match "NonDeclaree"
     }
 }
 
