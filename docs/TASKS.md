@@ -7,11 +7,23 @@
 P0 / v2.5 "Verite", P1 / v2.6 "Contrat" et P2 / v3.0 "Diagnostic" sont
 termines (voir Done ci-dessous). Palier en cours : **P3 - barriere de
 validation bloquante** (`ROADMAP.md`) - aucun palier au-dela ne demarre avant
-qu'elle soit franchie. Priorite immediate : E3, seule chose qui ne depend que
-du mainteneur pour demarrer (E4/E5 ont besoin de >= 5 testeurs deja
-recrutes).
+qu'elle soit franchie.
 
-### P3 / E3 - Publier `wisely diagnose` seul
+**Point de situation du 2026-09-03.** E3a (publication du 2026-09-01 sur X et
+Bluesky) est **arretee, non concluante** : exposition mesuree < 50 vues, donc
+denominateur insuffisant pour interpreter le resultat nul. A1 et A9 restent
+`non testees` (journal de validation, `ASSUMPTIONS.md`). Ce n'est pas un echec
+du produit : c'est un echec d'instrument. Le projet ne disposait ni d'une
+chaine de mesure de l'exposition, ni d'un chemin de retour utilisable.
+
+Priorite immediate : **construire ces deux choses, puis lancer E3b** avec ses
+conditions de validite fixees d'avance. E6 (recrutement direct) alimente
+ensuite E4 et E5, qui exigent >= 5 testeurs deja recrutes.
+
+Bon a savoir : sous 50 vues, le lancement unique que protege
+`decisions/0009-distribution-apres-le-produit.md` n'a pas ete depense.
+
+### P3 / E3b - Relancer la publication avec un denominateur
 
 Constat verifie par lecture du code : `-Diagnose`/`-Explain`/`-History` sont
 deja 100% lecture seule (aucun `Set-Content`/`Out-File`/`Add-Content` dans
@@ -54,15 +66,59 @@ instructions de test.
       >
       > Feedback welcome
 - [x] Publier (action du mainteneur, pas de Claude) : poste sur X et Bluesky
-      le 2026-09-01 (texte retenu ci-dessus). Fenetre de 4 semaines ouverte
-      jusqu'au 2026-09-29 (voir `ASSUMPTIONS.md`, ligne E3)
-- [ ] Mecanisme de mesure minimal, sans telemetrie silencieuse (coherent
-      avec `guestReadConsent`) : GitHub Insights (etoiles/forks/clones) + une
-      issue GitHub dediee au retour d'experience (Discussions n'est pas
-      active sur ce repo - verifie le 2026-08-31, https://github.com/Thurxm09/Wisely/discussions
-      renvoie 404 ; activable dans Settings si prefere aux issues plus tard)
-- [ ] Consigner le resultat dans le journal de validation d'`ASSUMPTIONS.md`
-      (ligne E3) a la date fixee - que le seuil soit atteint ou non
+      le 2026-09-01 (texte retenu ci-dessus)
+- [x] Consigner le resultat d'E3a dans le journal de validation
+      d'`ASSUMPTIONS.md` (2026-09-03) : **arretee, non concluante**, motif
+      ecrit, A1/A9 laissees `non testees`. La regle du journal impose de
+      marquer une experience arretee avec son motif, jamais de l'effacer
+
+#### Ce qui manquait, et qu'il faut livrer avant E3b
+
+- [x] **Expurgation de la sortie** : `wisely -Diagnose -Redact` / `-Json`
+      (`modules/Diagnose.ps1`). Sans elle, rapporter un comportement
+      obligeait a coller des noms de distributions et de processus dans une
+      issue publique. **Qualification a conserver : prerequis d'experience,
+      pas fonctionnalite** - ce bloc ne sert aucun maillon de la boucle
+      produit et ne doit pas servir de precedent pour en faire entrer un par
+      le filtre de perimetre de `VISION.md`. Meme statut que l'ecriture non
+      destructive de `.wslconfig` en P0. Corrige au passage une divulgation
+      reelle : `Get-DistroVhdxInfo` place le chemin complet de `ext4.vhdx`
+      (donc le nom d'utilisateur Windows) dans son champ `Reason`, rendu tel
+      quel dans la ligne "Taille VHDX"
+- [x] **Chemins de retour** : Issue Forms YAML (`field-test.yml`,
+      `field-test-detailed.yml`), un seul champ obligatoire chacun, plus
+      `config.yml` routant la securite vers le rapport prive
+- [x] **`SECURITY.md` a jour** : versions 3.x, perimetre etendu a
+      `GuestReader`/`Diagnose`, section "ne publiez jamais ceci"
+- [x] **`README.en.md`** : quickstart anglais, volontairement pas une
+      traduction integrale
+- [ ] **Activer Discussions** (categorie `Field test`) et le **signalement
+      prive de vulnerabilite** - actions manuelles du mainteneur dans les
+      parametres du depot. Discussions renvoyait encore 404 le 2026-08-31 ;
+      `config.yml` y renvoie deja, donc ce lien est mort tant que ce n'est
+      pas fait
+- [ ] **Corriger la description du depot GitHub** : elle annonce encore
+      "Menu interactif, surveillance RAM et reporting", positionnement
+      d'avant l'ADR 0013. Renseigner aussi `homepage` (vide aujourd'hui,
+      donc le site n'est lie nulle part) et les topics (`wsl`,
+      `windows-subsystem-for-linux`, `vmmem`, `diagnostics`)
+- [ ] **Page testeurs sur le site** (`/beta`, bilingue) : cible des liens
+      taggés `?src=<canal>`, seul etage instrumentable de l'entonnoir
+- [ ] **Relever les impressions reelles** des deux posts du 2026-09-01 et
+      les consigner - c'est la ligne de base d'E3b
+
+#### Lancer E3b
+
+- [x] Fixer les seuils d'E3b **avant** publication : une condition de
+      validite (>= 300 impressions, >= 40 visites de la page testeurs) et un
+      seuil de succes (>= 5 essais, >= 1 reutilisation, 4 semaines). La
+      distinction est ce qui manquait a E3a - un seuil de succes sans seuil
+      de validite laisse un resultat nul se faire passer pour une refutation
+- [ ] Publier sur les canaux de priorite 1 de `RECRUITMENT.md` §2, un canal
+      par jour, jamais deux : `microsoft/WSL#4166`, r/bashonubuntuonwindows,
+      r/PowerShell, puis l'article technique
+- [ ] Consigner le resultat d'E3b dans le journal de validation - que le
+      seuil soit atteint ou non
 
 ## Experiences a mener (hors code)
 
@@ -72,9 +128,11 @@ refute rien.
 
 - [ ] **E1 - lire `data/history.json`** (10 min) : combien de switchs reels depuis la mise en service ? Teste A5
 - [ ] **E2 - activer `autoMemoryReclaim=gradual` une semaine** : le besoin de baisser le plafond diminue-t-il ? Teste A2
-- [ ] **E3 - publier `wisely diagnose` seul** (palier P3, bloquant) : quelqu'un l'utilise-t-il ? Teste A1 et A9
+- [x] ~~**E3a - publier `wisely diagnose` seul**~~ - **arretee le 2026-09-03, non concluante** : exposition < 50 vues, denominateur insuffisant. A1 et A9 restent `non testees`
+- [ ] **E3b - republier avec un denominateur** (palier P3, bloquant) : quelqu'un l'utilise-t-il ? Teste A1 et A9
 - [ ] **E4 - temps pour identifier la cause** : Gestionnaire des taches seul vs htop seul vs Wisely. Teste A9 et A10
 - [ ] **E5 - sortie brute vs sortie sourcee** : laquelle declenche l'action ? Teste A11
+- [ ] **E6 - recruter 8 a 15 testeurs** via le canal "20 minutes d'echange" du formulaire de retour. Prerequis d'E4 et E5, qui exigent >= 5 personnes deja recrutees
 
 ## Annule
 

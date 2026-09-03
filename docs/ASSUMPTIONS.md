@@ -11,15 +11,18 @@
 > fait dans une décision produit tant que sa colonne « statut » indique
 > `non testée`.
 >
-> Statut : vivant, à réviser à chaque cycle. Dernière révision : 2026-08-27.
+> Statut : vivant, à réviser à chaque cycle. Dernière révision : 2026-09-03.
 
 ---
 
 ## Contexte : ce que nous ne savons vraiment pas
 
 Wisely a **zéro utilisateur réel**, zéro retour, zéro télémétrie — et la
-télémétrie n'est pas envisagée (voir `DOCTRINE-LECTURE.md` §2.4). Le projet n'a
-jamais été annoncé publiquement.
+télémétrie n'est pas envisagée (voir `DOCTRINE-LECTURE.md` §2.4). Le projet a été
+annoncé publiquement une fois, le 2026-09-01 sur X et Bluesky, et **cette annonce
+n'a atteint personne** : moins de 50 vues cumulées, aucun retour, aucun fork (voir
+E3a). Elle ne change donc rien à ce constat, et c'est précisément ce qu'elle
+établit.
 
 Cela a une conséquence directe et inconfortable : **tout ce qui, dans
 `PROBLEM.md`, concerne les utilisateurs est une hypothèse**, y compris les
@@ -41,6 +44,8 @@ l'hypothèse est fausse ; l'incertitude, notre ignorance actuelle.
 |---|---|---|---|---|
 | **A1** | Quelqu'un d'autre que le mainteneur a ce problème assez fort pour installer un outil | Maximal | Maximale | non testée |
 | **A9** | Le diagnostic a plus de valeur que le switch | Maximal | Maximale | non testée |
+| **A12** | La valeur perçue du diagnostic survit à sa première utilisation | Maximal | Maximale | non testée |
+| **A13** | Il existe un contexte où quelqu'un paierait pour cette capacité | Fort | Maximale | non testée |
 | **A2** | `autoMemoryReclaim` n'a pas déjà résolu la moitié « RAM » du problème fondateur | Fort | Forte | non testée |
 | **A5** | Le coût du `wsl --shutdown` est acceptable, et les gens rencontrent des problèmes de ressources assez souvent | Fort | Forte | **testable immédiatement** |
 | **A10** | L'attribution Windows → distribution → processus change réellement la décision de l'utilisateur | Fort | Forte | non testée |
@@ -55,6 +60,15 @@ l'hypothèse est fausse ; l'incertitude, notre ignorance actuelle.
 > ([0013](decisions/0013-adoption-audit-strategique-externe.md)). Ce sont
 > exactement les paris que cette adoption engage : elles doivent donc figurer ici,
 > et non être citées comme des acquis parce qu'une décision les suppose.
+
+> **A12 et A13 sont nées le 2026-09-03**, quand la finalité du projet a été
+> énoncée comme « produit, à terme monétisable ». Elles sont ici pour la même
+> raison que les précédentes : une finalité qui suppose une valeur récurrente et
+> un consentement à payer engage deux paris, et un pari non écrit devient un fait
+> à force d'être répété. Aucune décision de monétisation n'est prise ni préparée
+> par leur présence — elles sont testables **au coût marginal nul** dans les
+> mêmes sessions qu'A9 et A11, ce qui est la seule raison de les ouvrir
+> maintenant plutôt qu'après la barrière P3.
 
 ---
 
@@ -106,6 +120,71 @@ ce que l'expérience E3 mesure.
 assumée comme telle. La décision 0013 est meilleure que ses alternatives quelle
 que soit la réponse — même si le switch domine, un outil qui explique ce qu'il
 mesure vaut mieux qu'un outil qui affiche des chiffres dont il ignore le sens.
+
+### A12 — La valeur survit à la première utilisation
+
+**Ce qu'elle affirme.** Un utilisateur qui a lancé `wisely diagnose` une fois a une
+raison de le relancer — parce que la question « pourquoi WSL2 consomme ce qu'il
+consomme » se repose, ou parce que le diagnostic a révélé quelque chose qui
+demande un suivi.
+
+**Ce qui s'effondre si elle est fausse.** La finalité « produit ». Un outil qu'on
+lance une fois, qui donne sa réponse et qu'on oublie est un **service rendu**, pas
+un produit : il ne soutient ni rétention, ni relation, ni modèle économique. Ce
+serait une conclusion honorable et parfaitement défendable — mais elle change
+l'investissement à consacrer au projet, exactement comme A1.
+
+**Ce qui la fragilise.** `ASSUMPTIONS.md` le disait déjà en défendant A9 : *« un
+diagnostic se consomme une fois »*. Cette phrase était une objection à A9 ; elle
+devient ici l'hypothèse centrale, parce que la finalité a changé.
+
+**Ce qui la rend plausible.** L'état de WSL2 n'est pas stable : un projet qui
+grossit, un conteneur ajouté, une mise à jour de WSL déplacent le problème. Et
+P4 (l'historique) transformerait un instantané en série — c'est-à-dire
+précisément une raison de revenir. Mais **P4 est derrière la barrière P3** : on ne
+peut pas construire la réponse avant d'avoir mesuré la question.
+
+**Comment la tester.** Le champ « le relanceriez-vous ? » du formulaire de retour
+éclair, croisé avec les réutilisations réellement rapportées d'E3b. Une intention
+déclarée n'est pas une réutilisation : les deux se comparent, et l'écart est le
+résultat.
+
+### A13 — Il existe un contexte où quelqu'un paierait
+
+**Ce qu'elle affirme.** Au moins un contexte d'usage — poste d'entreprise, parc de
+machines, support interne, prestation — attribue à cette capacité une valeur
+supérieure à son coût d'acquisition.
+
+**Ce qui s'effondre si elle est fausse.** Rien de technique. Uniquement la finalité
+commerciale, qui redeviendrait « excellent outil open source ».
+
+**Ce qui la fragilise, et il faut le dire franchement.** Deux choses, aujourd'hui
+non résolues :
+
+1. **La licence GPL-3.0** et la distribution par `git clone` contraignent
+   fortement les modèles possibles. Ce n'est pas rédhibitoire — l'open core,
+   l'hébergement, le support et la double licence existent — mais aucune de ces
+   voies n'est ouverte par défaut, et certaines exigeraient une décision de
+   licence prise **avant** toute contribution externe significative.
+2. **Le segment individuel est le moins solvable** de ceux que `PROBLEM.md`
+   décrit. Un développeur qui règle son `.wslconfig` deux fois par an ne paie pas
+   pour un diagnostic ; une DSI qui gère 400 postes WSL2 pourrait payer pour une
+   flotte — mais ce contexte n'a jamais été observé, et il dépend d'A1 avant tout
+   le reste.
+
+**Ce qui ne doit pas se produire.** Que cette hypothèse déforme le produit avant
+d'être testée. Aucune fonctionnalité, aucun découpage, aucune restriction ne se
+justifie par A13 tant qu'elle reste `non testée` — c'est la règle d'usage en tête
+de ce document, et elle s'applique ici avec une force particulière.
+
+**Comment la tester.** Sans jamais demander « combien paieriez-vous ? », question
+qui ne mesure que la politesse. Deux questions ouvertes dans les sessions
+qualitatives : *dans quel contexte professionnel ce problème coûte-t-il de
+l'argent aujourd'hui ?* et *qui, chez vous, décide de ce genre d'outil ?* Un
+contexte solvable se raconte ; il ne se coche pas.
+
+**Décision à ne pas prendre maintenant.** Tout choix de licence ou de modèle
+économique. Il appartiendra à un ADR, argumenté, quand A1 et A12 auront un statut.
 
 ### A2 — La plateforme n'a pas déjà résolu le problème
 
@@ -188,7 +267,7 @@ disque. Si le besoin subsiste, A2 tient et la direction est confirmée.
 (`PRINCIPLES.md`) — dans l'état actuel du code, le premier changement de profil
 effacera ce réglage.
 
-### E3 — Publier le diagnostic seul · une version · teste A1
+### E3 — Publier le diagnostic seul · teste A1 et A9
 
 Publier la commande de diagnostic sans le reste, et observer si quelqu'un
 l'utilise.
@@ -201,6 +280,76 @@ informatif qu'un outil adopté.
 
 **À ne pas confondre avec un lancement.** Ce n'est pas la distribution large,
 délibérément repoussée (voir `decisions/0009-distribution-apres-le-produit.md`).
+
+Cette expérience a été menée une première fois puis **arrêtée sans conclure**.
+Elle se lit désormais en deux temps.
+
+#### E3a — première tentative · arrêtée le 2026-09-03, non concluante
+
+Publiée sur X et Bluesky le 2026-09-01, fenêtre prévue jusqu'au 2026-09-29.
+**Arrêtée avant son terme, sans résultat**, pour une raison qui n'a rien à voir
+avec l'outil : l'exposition mesurée des deux publications est **inférieure à 50
+vues cumulées**.
+
+**Pourquoi c'est un arrêt et non un échec.** Un zéro obtenu sur un dénominateur
+inconnu ne réfute rien. Il aurait dit « personne n'a vu », pas « personne n'en a
+besoin » — et il aurait été consigné comme un signal contre A1, ce qui aurait été
+faux. Attendre le 2026-09-29 pour obtenir cette non-information était un coût pur.
+
+**Ce que l'arrêt établit malgré tout, et qui est utile :** le projet ne disposait
+d'aucune chaîne de mesure de l'exposition, ni d'aucun chemin de retour utilisable.
+Publier sans les avoir, c'était mesurer avec un instrument absent. C'est le vrai
+enseignement d'E3a, et il est entièrement attribuable.
+
+**A1 et A9 restent `non testées`.** Aucun statut n'est déduit d'E3a.
+
+**Bonne nouvelle, à ne pas perdre de vue :** en dessous de 50 vues, le lancement
+unique que protège [0009](decisions/0009-distribution-apres-le-produit.md) **n'a
+pas été dépensé.**
+
+#### E3b — seconde tentative · conditions de validité fixées d'avance
+
+Identique dans son principe, corrigée sur les deux points qui ont fait échouer la
+mesure : un dénominateur, et des chemins de retour.
+
+**Conditions de validité — nouveauté, et le point important.** E3b comporte deux
+seuils, et l'ordre compte :
+
+1. **Un seuil de validité de la mesure**, sans lequel le résultat n'est pas
+   interprétable : ≥ 300 impressions cumulées et ≥ 40 visites uniques sur la page
+   testeurs. S'il n'est pas atteint, l'expérience est **de nouveau non
+   concluante** — on ajoute des canaux, on ne conclut pas.
+2. **Un seuil de succès** sur l'hypothèse elle-même : ≥ 5 essais distincts
+   rapportés et ≥ 1 réutilisation, sous 4 semaines.
+
+Cette distinction est ce qui manquait à E3a. Un seuil de succès sans seuil de
+validité laisse un résultat nul se faire passer pour une réfutation.
+
+**Chaîne de mesure**, sans télémétrie (`DOCTRINE-LECTURE.md` §2.4) : impressions
+relevées à la main sur chaque canal → visites de la page testeurs par lien taggé
+(PostHog, côté site) → clones et vues uniques (API GitHub Traffic) → retours
+déclarés (formulaires, discussions). Détail dans `RECRUITMENT.md` §6.
+
+**Limite connue et assumée.** L'analytique du site est configurée sans cookie ni
+`localStorage` : elle mesure l'exposition et le premier clic, **jamais le retour
+d'un visiteur**. La réutilisation ne sera donc connue que par déclaration. Ce
+renoncement est cohérent avec l'absence de bannière de consentement ; il n'est pas
+un défaut à corriger, mais une limite à énoncer plutôt qu'à contourner.
+
+### E6 — Recruter directement des testeurs · teste A9, A10, A11, A12, A13
+
+E4 et E5 exigent au moins cinq personnes déjà recrutées. E3b ne les fournit pas :
+elle mesure des essais, pas des volontaires.
+
+Recruter 8 à 15 testeurs par le canal explicite du formulaire de retour éclair
+(« accepteriez-vous 20 minutes d'échange ? »), en priorisant les personas de
+`RECRUITMENT.md` §1 dans l'ordre P1 > P3 > P2.
+
+**Comment lire le résultat.** Le taux de volontariat parmi ceux qui ont donné un
+retour est lui-même un signal sur A1 : quelqu'un qui accepte de donner vingt
+minutes a un problème réel, pas une curiosité. Un taux nul avec des retours
+positifs est une contradiction utile — et signalerait de la politesse plutôt que
+du besoin.
 
 ### E4 — Temps pour identifier la cause · teste A9 et A10
 
@@ -242,9 +391,11 @@ sans bénéfice — ce qui serait une découverte majeure et contre-intuitive.
 |---|---|---|---|---|---|---|---|
 | **E1** | A5 | 1 (le mainteneur) — biais assumé | Nombre et répartition des entrées `SWITCH` de `data/history.json` | ≥ 1 changement/semaine en moyenne, et ≥ 2 profils réellement utilisés | *non menée* | — | — |
 | **E2** | A2 | 1 (le mainteneur), 1 semaine | Besoin ressenti de baisser le plafond, avec `autoMemoryReclaim=gradual` actif | Le besoin subsiste → A2 tient | *non menée* | — | — |
-| **E3** | A1, A9 | Utilisateurs externes, après P2 | Utilisations réelles de `wisely diagnose`, et réutilisations | ≥ 5 essais distincts rapportés (étoile, fork, ou retour explicite) et ≥ 1 réutilisation rapportée (quelqu'un relance l'outil une deuxième fois), sous 4 semaines après publication | *en cours — publiée sur X et Bluesky le 2026-09-01, fenêtre jusqu'au 2026-09-29* | — | — |
+| **E3a** | A1, A9 | Utilisateurs externes, après P2 | Utilisations réelles de `wisely diagnose`, et réutilisations | ≥ 5 essais distincts rapportés (étoile, fork, ou retour explicite) et ≥ 1 réutilisation rapportée, sous 4 semaines après publication | **arrêtée — non concluante.** Publiée sur X et Bluesky le 2026-09-01. Exposition mesurée < 50 vues cumulées ; état du dépôt à J+2 : 1 étoile, 0 fork, 0 issue. Dénominateur insuffisant pour interpréter un résultat nul | **Arrêt avant terme.** A1 et A9 restent `non testées` : aucun statut n'est déduit d'E3a. Cause identifiée : ni chaîne de mesure de l'exposition, ni chemin de retour utilisable au moment de la publication. Les deux sont construits, puis E3b est lancée | 2026-09-03 |
+| **E3b** | A1, A9 | Utilisateurs externes, canaux de `RECRUITMENT.md` §2 | Idem E3a, plus le dénominateur d'exposition | **Validité** (sans quoi le résultat n'est pas interprétable) : ≥ 300 impressions cumulées et ≥ 40 visites uniques de la page testeurs. **Succès** : ≥ 5 essais distincts rapportés et ≥ 1 réutilisation, sous 4 semaines | *non menée* | — | — |
 | **E4** | A9, A10 | ≥ 5 personnes, 3 outillages comparés | Temps pour identifier la cause probable | Réduction ≥ 50 % face au meilleur des deux autres outillages | *non menée* | — | — |
 | **E5** | A11 | ≥ 5 personnes | Part qui déclenche l'action proposée | La sortie sourcée déclenche strictement plus que la brute | *non menée* | — | — |
+| **E6** | A9, A10, A11, A12, A13 | Répondants aux formulaires de retour | Nombre de volontaires pour 20 min d'échange, et leur part parmi les répondants | ≥ 5 volontaires effectivement disponibles, dont ≥ 2 du persona P1 | *non menée* | — | — |
 
 **Règle de tenue.** Chaque expérience menée remplit ses colonnes `Résultat`,
 `Décision` et `Date`, **y compris quand le résultat infirme l'hypothèse** — c'est
@@ -266,6 +417,8 @@ construire sur du sable.
 | GPU, état d'alimentation | Aucune preuve de besoin ; à rouvrir sur demande réelle |
 | Distribution large (PowerShell Gallery, Winget) | Dépend de tout le reste |
 | Réécriture dans un autre langage, interface graphique | Moyens en quête d'une fin |
+| **Modèle économique, changement ou clarification de licence** | **A13, et A1 avant elle.** Une décision de licence prise avant les premières contributions externes est facile ; prise après, elle exige l'accord de chaque contributeur. C'est donc la seule décision de ce tableau dont le **coût augmente avec le temps** — à surveiller, sans la précipiter pour autant |
+| **Toute fonctionnalité justifiée par la rétention** | **A12.** Construire une raison de revenir avant d'avoir vérifié que quelqu'un revient, c'est répondre à une question qu'on ne s'est pas posée |
 
 ---
 
