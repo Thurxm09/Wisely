@@ -125,8 +125,17 @@ instructions de test.
       distinction est ce qui manquait a E3a - un seuil de succes sans seuil
       de validite laisse un resultat nul se faire passer pour une refutation
 - [ ] Publier sur les canaux de priorite 1 de `RECRUITMENT.md` §2, un canal
-      par jour, jamais deux : `microsoft/WSL#4166`, r/bashonubuntuonwindows,
-      r/PowerShell, puis l'article technique
+      par jour, jamais deux :
+  - [x] `microsoft/WSL#4166` (2026-09-03) - commentaire poste (cache vs somme
+        des RSS, `MemAvailable` != `MemTotal - used`, `autoMemoryReclaim`
+        eteint par defaut). Un seul commentaire, jamais de relance
+  - [ ] r/bashonubuntuonwindows (au plus tot 2026-09-05, >= 48h apres le
+        canal precedent)
+  - [ ] r/PowerShell
+  - [ ] Article technique
+- [ ] Relever le denominateur d'exposition (impressions du commentaire
+      `microsoft/WSL#4166`, visites de `/beta` par `?src=`) avant de statuer
+      sur la condition de validite (>= 300 impressions, >= 40 visites)
 - [ ] Consigner le resultat d'E3b dans le journal de validation - que le
       seuil soit atteint ou non
 
