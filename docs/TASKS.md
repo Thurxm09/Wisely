@@ -99,10 +99,10 @@ instructions de test.
 - [x] **Issue epinglee "Field test log"** (2026-09-03, `#67`) : le chemin le
       plus bas de tous, un commentaire suffit. A epingler manuellement depuis
       son ecran (bouton Pin issue, non expose par l'API utilisee ici)
-- [ ] **Activer le signalement prive de vulnerabilite** (Settings -> Security
-      -> Code security -> Private vulnerability reporting) - toujours ouvert,
-      distinct de Discussions. Sans lui, le canal prive promis par
-      `SECURITY.md` et cite par `config.yml` n'existe pas reellement
+- [x] **Activer le signalement prive de vulnerabilite** (Settings -> Security
+      -> Code security -> Private vulnerability reporting) - confirme actif
+      le 2026-09-03. Le canal prive promis par `SECURITY.md` et cite par
+      `config.yml` existe donc reellement
 - [x] **Corriger la description du depot GitHub, `homepage` et les topics**
       (2026-09-03) : positionnement `diagnose` conforme a l'ADR 0013 ;
       `homepage` pointe vers le site ; topics wsl/wsl2/windows-subsystem-for-
