@@ -129,8 +129,9 @@ instructions de test.
   - [x] `microsoft/WSL#4166` (2026-09-03) - commentaire poste (cache vs somme
         des RSS, `MemAvailable` != `MemTotal - used`, `autoMemoryReclaim`
         eteint par defaut). Un seul commentaire, jamais de relance
-  - [ ] r/bashonubuntuonwindows (au plus tot 2026-09-05, >= 48h apres le
-        canal precedent)
+  - [ ] r/bashonubuntuonwindows (au plus tot 2026-09-04, un canal par jour
+        maximum - RECRUITMENT.md SS5 regle 1. Verifier d'abord que les
+        regles de self-promo n'ont pas change depuis le 2026-08-31)
   - [ ] r/PowerShell
   - [ ] Article technique
 - [ ] Relever le denominateur d'exposition (impressions du commentaire
