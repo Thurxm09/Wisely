@@ -427,7 +427,7 @@ un seul endroit :
 | Date | Impressions cumulées (tous canaux) | Visites cumulées `/beta` | Clones + vues uniques GitHub (14 j glissants) | Retours déclarés cumulés | Notes |
 |---|---|---|---|---|---|
 | 2026-09-03 | 6 | — | — | 0 | Relevé de lancement, avant activation du canal 1/4 (`microsoft/WSL#4166`) |
-| 2026-09-04 | non relevé | non relevé | non relevé | 1 | Canal 2/4 lancé (`r/bashonubuntuonwindows`). Premier retour reçu sur le canal 1 (`microsoft/WSL#4166`) : réactions 👍1/👎1, commentaire sceptique — catégorie `incomprehension`, `observation unique`. Impressions et visites toujours non relevées (voir TASKS.md) |
+| 2026-09-04 | non relevé | non relevé | non relevé | 1 | Canal 2/4 lancé (`r/bashonubuntuonwindows`). Premier retour reçu sur le canal 1 (`microsoft/WSL#4166`) : réactions 👍1/👎1, commentaire sceptique — catégorie `incomprehension`, `observation unique`. Impressions et visites toujours non relevées (voir TASKS.md). **Second signal, sur le même retour** : le mainteneur a répondu lui-même sur le fil, en confirmant publiquement l'usage d'une IA pour rédiger le message initial, en re-justifiant le fond, et en renouvelant l'appel à tester — trois choses que la règle 8 ci-dessus (ne jamais discuter un retour négatif publiquement) déconseille. Rien d'irréversible à corriger (pas d'édition du commentaire) ; leçon consignée, pas de relance à faire quel que soit le résultat |
 
 ---
 
