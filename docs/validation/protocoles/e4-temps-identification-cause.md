@@ -6,9 +6,9 @@
 >
 > Ce document ne contient ni l'hypothèse testée, ni son seuil de succès
 > (`ASSUMPTIONS.md`, section E4 et tableau `Journal de validation`), ni les
-> personas à recruter (`RECRUITMENT.md` §1), ni le vocabulaire de confiance
-> utilisé pour consigner un résultat (`RECRUITMENT.md` §7). Il les cite, il ne
-> les redit pas.
+> personas à recruter (`RECRUITMENT.md` §1, privé — `Thurxm09/dotfiles`), ni le
+> vocabulaire de confiance utilisé pour consigner un résultat (`RECRUITMENT.md`
+> §7, idem). Il les cite, il ne les redit pas.
 >
 > Statut : contrat. Dernière révision : 2026-09-03.
 
@@ -16,7 +16,7 @@
 
 ## 1. Recrutement
 
-Persona et priorité : `RECRUITMENT.md` §1, ordre **P1 > P3 > P2**. Aucun critère
+Persona et priorité : `RECRUITMENT.md` §1 *(privé)*, ordre **P1 > P3 > P2**. Aucun critère
 de recrutement supplémentaire — E4 ne dépend pas d'un profil particulier de
 connaissance de WSL2, contrairement au Niveau B du site (voir la note
 d'`ASSUMPTIONS.md` entre E6 et E4 sur pourquoi les deux programmes restent

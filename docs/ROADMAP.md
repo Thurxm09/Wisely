@@ -185,7 +185,8 @@ distribution large — délibérément repoussée en P9
    > concluante plutôt que négative.
    >
    > Où recruter, avec quels messages, et comment mesurer les quatre étages de
-   > l'entonnoir : `RECRUITMENT.md`.
+   > l'entonnoir : `RECRUITMENT.md` *(privé — `Thurxm09/dotfiles`, voir
+   > `decisions/0014`)*.
 2. **Mesurer le temps pour identifier la cause probable** — Gestionnaire des
    tâches seul, `htop` seul, Wisely. C'est une métrique produit forte, et elle
    teste A10 directement.
@@ -350,7 +351,7 @@ spike Terminal.Gui.
 
 `PROBLEM.md` · `VISION.md` · `USE-CASES.md` · `PRINCIPLES.md` ·
 `RESOURCE-MODEL.md` · `ASSUMPTIONS.md` · `DOCTRINE-LECTURE.md` ·
-`RECRUITMENT.md` · `decisions/` · `AUDIT.md` · `TASKS.md`
+`RECRUITMENT.md` *(privé)* · `decisions/` · `AUDIT.md` · `TASKS.md` *(privé)*
 
 Le raisonnement qui a produit cette séquence est conservé dans deux pièces
 d'analyse, qui ne font pas foi : `refondation-wisely.html` (2026-08-26, à ouvrir
