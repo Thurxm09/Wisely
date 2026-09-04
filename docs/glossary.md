@@ -66,7 +66,7 @@
 | `ROADMAP.md` | Qu'est-ce qu'on fait ensuite, et pourquoi dans cet ordre ? |
 | `decisions/` | Pourquoi a-t-on tranché ainsi, et quand ? |
 | `AUDIT.md` | Quels défauts de qualité ont été constatés et corrigés ? |
-| `TASKS.md` | Qu'est-ce qui est en cours ? |
+| `TASKS.md` *(privé)* | Qu'est-ce qui est en cours ? — vit désormais dans `Thurxm09/dotfiles`, voir `decisions/0014` |
 | `refondation-wisely.html` | Document de travail de l'analyse stratégique du 2026-08-26 — trace du raisonnement, à ouvrir dans un navigateur. Ce sont les documents ci-dessus qui font foi |
 | `audits/` | Audits **stratégiques** externes, archivés intégralement et jamais réécrits. Ne font pas foi ; chacun a son ADR de réponse. **À ne pas confondre avec `AUDIT.md`**, qui est l'audit qualité du code |
 | `archive/` | Documents historiques conservés pour mémoire — **ne pas suivre** |

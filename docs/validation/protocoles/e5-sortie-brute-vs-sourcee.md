@@ -6,7 +6,8 @@
 >
 > Ce document ne contient ni l'hypothèse testée, ni son seuil de succès
 > (`ASSUMPTIONS.md`, section E5 et tableau `Journal de validation`), ni les
-> personas à recruter (`RECRUITMENT.md` §1). Il les cite, il ne les redit pas.
+> personas à recruter (`RECRUITMENT.md` §1, privé — `Thurxm09/dotfiles`). Il les
+> cite, il ne les redit pas.
 >
 > Statut : contrat. Dernière révision : 2026-09-03.
 
@@ -14,7 +15,7 @@
 
 ## 1. Recrutement
 
-Persona et priorité : `RECRUITMENT.md` §1, ordre **P1 > P3 > P2**. Même
+Persona et priorité : `RECRUITMENT.md` §1 *(privé)*, ordre **P1 > P3 > P2**. Même
 population que E4 (`ASSUMPTIONS.md`, tableau `Journal de validation`, ligne
 E5 : « ≥ 5 personnes » — une seule population, pas deux groupes de 5), donc un
 volontaire peut faire E4 et E5 dans le même échange sans que ça double

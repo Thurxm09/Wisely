@@ -37,3 +37,4 @@ réviser une seule sans toucher au reste.
 | [0011](0011-auto-switch-reporte.md) | Changement de profil automatique reporté | acceptée | 2026-08-26 |
 | [0012](0012-hooks-echec-par-regle.md) | Hooks : comportement d'échec choisi par règle | en attente | 2026-08-25 |
 | [0013](0013-adoption-audit-strategique-externe.md) | Adoption de l'audit stratégique externe d'août 2026 | acceptée | 2026-08-27 |
+| [0014](0014-vie-privee-docs-recrutement.md) | Vie privée : les docs d'exécution du recrutement sortent du dépôt public | acceptée | 2026-09-04 |

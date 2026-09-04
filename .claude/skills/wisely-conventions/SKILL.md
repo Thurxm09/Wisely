@@ -24,7 +24,9 @@ Quatre consequences a connaitre avant toute proposition :
 
 Version actuelle : lire `VERSION` a la racine du repo (ne pas la coder en dur ici). Repo : `git@github.com:Thurxm09/Wisely.git`.
 
-Toute la documentation de fond vit dans `docs/`, **un document par question** : `PROBLEM.md` (quel probleme, pour qui), `VISION.md` (la capacite fondamentale), `USE-CASES.md` (les situations reelles, jamais des personas), `PRINCIPLES.md` (les criteres d'arbitrage), `DOCTRINE-LECTURE.md` (ce que Wisely a le droit de lire dans Linux), `RESOURCE-MODEL.md` (ce que chaque chiffre signifie — les deux listes de commandes doivent rester identiques), `ASSUMPTIONS.md` (ce qui n'est pas verifie, plus le journal de validation), `ROADMAP.md` (les paliers et leur ordre), `decisions/` (les ADR), `AUDIT.md` (audit qualite du code), `TASKS.md` (taches courantes).
+Toute la documentation de fond vit dans `docs/`, **un document par question** : `PROBLEM.md` (quel probleme, pour qui), `VISION.md` (la capacite fondamentale), `USE-CASES.md` (les situations reelles, jamais des personas), `PRINCIPLES.md` (les criteres d'arbitrage), `DOCTRINE-LECTURE.md` (ce que Wisely a le droit de lire dans Linux), `RESOURCE-MODEL.md` (ce que chaque chiffre signifie — les deux listes de commandes doivent rester identiques), `ASSUMPTIONS.md` (ce qui n'est pas verifie, plus le journal de validation), `ROADMAP.md` (les paliers et leur ordre), `decisions/` (les ADR), `AUDIT.md` (audit qualite du code).
+
+**Prives, hors de ce depot depuis `decisions/0014`** : `TASKS.md` (taches courantes), `RECRUITMENT.md` (strategie de recrutement des testeurs) et l'ancien `CLAUDE.md` vivent desormais dans `Thurxm09/dotfiles` (`wisely/`) -- exposer le detail d'execution de la campagne ou des infos personnelles a un lecteur du depot public n'a aucune necessite.
 
 Deux repertoires qui ne font **pas** foi : `docs/audits/` (audits strategiques externes, archives integralement, chacun avec son ADR de reponse — a ne pas confondre avec `AUDIT.md`) et `docs/archive/` (documents historiques perimes, a **ne pas suivre**).
 

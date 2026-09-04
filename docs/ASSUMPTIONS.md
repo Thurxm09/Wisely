@@ -328,7 +328,7 @@ validité laisse un résultat nul se faire passer pour une réfutation.
 **Chaîne de mesure**, sans télémétrie (`DOCTRINE-LECTURE.md` §2.4) : impressions
 relevées à la main sur chaque canal → visites de la page testeurs par lien taggé
 (PostHog, côté site) → clones et vues uniques (API GitHub Traffic) → retours
-déclarés (formulaires, discussions). Détail dans `RECRUITMENT.md` §6.
+déclarés (formulaires, discussions). Détail dans `RECRUITMENT.md` §6 *(privé — `Thurxm09/dotfiles`)*.
 
 **Limite connue et assumée.** L'analytique du site est configurée sans cookie ni
 `localStorage` : elle mesure l'exposition et le premier clic, **jamais le retour
@@ -343,7 +343,7 @@ elle mesure des essais, pas des volontaires.
 
 Recruter 8 à 15 testeurs par le canal explicite du formulaire de retour éclair
 (« accepteriez-vous 20 minutes d'échange ? »), en priorisant les personas de
-`RECRUITMENT.md` §1 dans l'ordre P1 > P3 > P2.
+`RECRUITMENT.md` §1 *(privé)* dans l'ordre P1 > P3 > P2.
 
 **Comment lire le résultat.** Le taux de volontariat parmi ceux qui ont donné un
 retour est lui-même un signal sur A1 : quelqu'un qui accepte de donner vingt
@@ -406,7 +406,7 @@ sans bénéfice — ce qui serait une découverte majeure et contre-intuitive.
 | **E1** | A5 | 1 (le mainteneur) — biais assumé | Nombre et répartition des entrées `SWITCH` de `data/history.json` | ≥ 1 changement/semaine en moyenne, et ≥ 2 profils réellement utilisés | *non menée* | — | — |
 | **E2** | A2 | 1 (le mainteneur), 1 semaine | Besoin ressenti de baisser le plafond, avec `autoMemoryReclaim=gradual` actif | Le besoin subsiste → A2 tient | *non menée* | — | — |
 | **E3a** | A1, A9 | Utilisateurs externes, après P2 | Utilisations réelles de `wisely diagnose`, et réutilisations | ≥ 5 essais distincts rapportés (étoile, fork, ou retour explicite) et ≥ 1 réutilisation rapportée, sous 4 semaines après publication | **arrêtée — non concluante.** Publiée sur X et Bluesky le 2026-09-01. Exposition mesurée : 6 vues cumulées (X : 6, Bluesky : 0) ; état du dépôt à J+2 : 1 étoile, 0 fork, 0 issue. Dénominateur insuffisant pour interpréter un résultat nul | **Arrêt avant terme.** A1 et A9 restent `non testées` : aucun statut n'est déduit d'E3a. Cause identifiée : ni chaîne de mesure de l'exposition, ni chemin de retour utilisable au moment de la publication. Les deux sont construits, puis E3b est lancée | 2026-09-03 |
-| **E3b** | A1, A9 | Utilisateurs externes, canaux de `RECRUITMENT.md` §2 | Idem E3a, plus le dénominateur d'exposition | **Validité** (sans quoi le résultat n'est pas interprétable) : ≥ 300 impressions cumulées et ≥ 40 visites uniques de la page testeurs. **Succès** : ≥ 5 essais distincts rapportés et ≥ 1 réutilisation, sous 4 semaines | **en cours** — canal 2/4 lancé : `microsoft/WSL#4166` (2026-09-03) puis `r/bashonubuntuonwindows` (2026-09-04). Premier retour qualitatif reçu sur le canal 1 : un commentaire sceptique (réactions 👍1/👎1), catégorie `incomprehension` — `observation unique`, aucun correctif engagé sur le fond. Chiffres bruts datés : voir « Relevé hebdomadaire de l'entonnoir d'exposition » ci-dessous | — | 2026-09-04 |
+| **E3b** | A1, A9 | Utilisateurs externes, canaux de `RECRUITMENT.md` §2 *(privé)* | Idem E3a, plus le dénominateur d'exposition | **Validité** (sans quoi le résultat n'est pas interprétable) : ≥ 300 impressions cumulées et ≥ 40 visites uniques de la page testeurs. **Succès** : ≥ 5 essais distincts rapportés et ≥ 1 réutilisation, sous 4 semaines | **en cours** — canal 2/4 lancé : `microsoft/WSL#4166` (2026-09-03) puis `r/bashonubuntuonwindows` (2026-09-04). Premier retour qualitatif reçu sur le canal 1 : un commentaire sceptique (réactions 👍1/👎1), catégorie `incomprehension` — `observation unique`, aucun correctif engagé sur le fond. Chiffres bruts datés : voir « Relevé hebdomadaire de l'entonnoir d'exposition » ci-dessous | — | 2026-09-04 |
 | **E4** | A9, A10 | ≥ 5 personnes, 3 outillages comparés | Temps pour identifier la cause probable | Réduction ≥ 50 % face au meilleur des deux autres outillages | *non menée* | — | — |
 | **E5** | A11 | ≥ 5 personnes | Part qui déclenche l'action proposée | La sortie sourcée déclenche strictement plus que la brute | *non menée* | — | — |
 | **E6** | A9, A10, A11, A12, A13 | Répondants aux formulaires de retour | Nombre de volontaires pour 20 min d'échange, et leur part parmi les répondants | ≥ 5 volontaires effectivement disponibles, dont ≥ 2 du persona P1 | *non menée* | — | — |
@@ -419,7 +419,7 @@ son motif ; elle n'est pas effacée.
 
 ### Relevé hebdomadaire de l'entonnoir d'exposition (E3b)
 
-`RECRUITMENT.md` §6 exige un relevé chaque lundi des quatre étages de la chaîne
+`RECRUITMENT.md` §6 *(privé — `Thurxm09/dotfiles`)* exige un relevé chaque lundi des quatre étages de la chaîne
 de mesure ; le tableau ci-dessus est structuré par expérience, pas par semaine,
 et n'a pas de colonne pour une série datée. Les chiffres bruts vivent ici,
 un seul endroit :
