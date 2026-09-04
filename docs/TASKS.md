@@ -137,6 +137,22 @@ instructions de test.
 - [ ] Relever le denominateur d'exposition (impressions du commentaire
       `microsoft/WSL#4166`, visites de `/beta` par `?src=`) avant de statuer
       sur la condition de validite (>= 300 impressions, >= 40 visites)
+- [x] **Constat du 2026-09-04, decide** : le commit 8804892 citait
+      `microsoft/WSL#4166` dans son message - GitHub a cree un renvoi public
+      automatique ("referenced this in Thurxm09/Wisely") visible directement
+      sous le commentaire sur l'issue Microsoft, exposant le vocabulaire
+      interne de la campagne (canal, E3b) a des lecteurs habitues a reperer
+      l'autopromo. Rien corrige retroactivement (pas de reecriture
+      d'historique). **Regle 9 validee par le mainteneur et ajoutee a
+      `RECRUITMENT.md` SS5** le 2026-09-04
+- [ ] **Second constat, meme jour** : le mainteneur a repondu lui-meme au
+      commentaire sceptique sur `microsoft/WSL#4166`, en confirmant
+      publiquement l'usage d'une IA pour rediger le message initial, en
+      re-justifiant le fond, et en renouvelant l'appel a tester - trois choses
+      que la regle 8 de `RECRUITMENT.md` SS5 deconseille. Consigne dans le
+      journal de validation d'`ASSUMPTIONS.md`. Rien a corriger (pas d'edition
+      du commentaire) ; aucune relance a faire sur ce fil quel que soit le
+      resultat
 - [ ] Consigner le resultat d'E3b dans le journal de validation - que le
       seuil soit atteint ou non
 

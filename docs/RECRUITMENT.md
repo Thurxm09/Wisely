@@ -367,6 +367,14 @@ Non négociables. Chacune vient d'un mode d'échec observable.
 7. **Répondre à tout retour sous 48 h**, y compris négatif, y compris injuste.
 8. **Ne jamais discuter un retour négatif publiquement.** On remercie, on
    consigne, on corrige ou on explique pourquoi non.
+9. **Ne jamais citer la référence courte (`owner/repo#numéro`) ni l'URL
+   complète d'un canal externe dans un message de commit ou de PR.** GitHub
+   crée un renvoi public automatique ("mentioned this issue") visible
+   directement sur l'issue ciblée, quel que soit le dépôt d'où part le
+   commit — exposant le vocabulaire interne de la campagne (canal,
+   expérience, dénominateur) à des lecteurs habitués à repérer l'autopromo.
+   Décrire le canal en prose suffit et ne déclenche aucun renvoi. Constat :
+   2026-09-04, sur `microsoft/WSL#4166` via le commit `8804892`.
 
 ---
 
