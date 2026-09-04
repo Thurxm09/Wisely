@@ -137,6 +137,15 @@ instructions de test.
 - [ ] Relever le denominateur d'exposition (impressions du commentaire
       `microsoft/WSL#4166`, visites de `/beta` par `?src=`) avant de statuer
       sur la condition de validite (>= 300 impressions, >= 40 visites)
+- [ ] **Constat du 2026-09-04, en attente de decision** : le commit 8804892
+      cite `microsoft/WSL#4166` dans son message - GitHub cree un renvoi
+      public automatique ("referenced this in Thurxm09/Wisely") visible
+      directement sous le commentaire sur l'issue Microsoft, exposant le
+      vocabulaire interne de la campagne (canal, E3b) a des lecteurs
+      habitues a reperer l'autopromo. Rien a corriger retroactivement (pas
+      de reecriture d'historique). Proposition en attente : ajouter une
+      regle 9 a `RECRUITMENT.md` SS5 - ne plus jamais citer `owner/repo#numero`
+      ni l'URL complete d'un canal externe dans un message de commit/PR
 - [ ] Consigner le resultat d'E3b dans le journal de validation - que le
       seuil soit atteint ou non
 
