@@ -21,23 +21,29 @@ jobs:
 
       - name: Check for external repo/issue references (leak guard)
         shell: bash
+        env:
+          REPO_SELF: ${{ github.repository }}
+          EVENT_NAME: ${{ github.event_name }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.event.after }}
         run: |
           set -e
-          REPO_SELF="${{ github.repository }}"
           PATTERN='[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+#[0-9]+'
           URL_PATTERN='github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/(issues|pull)/[0-9]+'
 
           {
-            echo "${{ github.event.pull_request.title }}"
-            echo "${{ github.event.pull_request.body }}"
-            if [ "${{ github.event_name }}" = "pull_request" ]; then
-              git log --format='%s%n%b' "origin/${{ github.event.pull_request.base.ref }}..HEAD"
+            printf '%s\n' "$PR_TITLE"
+            printf '%s\n' "$PR_BODY"
+            if [ "$EVENT_NAME" = "pull_request" ]; then
+              git log --format='%s%n%b' "origin/${PR_BASE_REF}..HEAD"
             else
-              BEFORE="${{ github.event.before }}"
-              if [ -z "$BEFORE" ] || [[ "$BEFORE" =~ ^0+$ ]]; then
+              if [ -z "$PUSH_BEFORE" ] || [[ "$PUSH_BEFORE" =~ ^0+$ ]]; then
                 git log -1 --format='%s%n%b'
               else
-                git log --format='%s%n%b' "$BEFORE..${{ github.event.after }}"
+                git log --format='%s%n%b' "${PUSH_BEFORE}..${PUSH_AFTER}"
               fi
             fi
           } > /tmp/leak-check-text.txt
