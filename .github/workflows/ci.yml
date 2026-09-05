@@ -16,6 +16,53 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Check for external repo/issue references (leak guard)
+        shell: bash
+        env:
+          REPO_SELF: ${{ github.repository }}
+          EVENT_NAME: ${{ github.event_name }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.event.after }}
+        run: |
+          set -e
+          PATTERN='[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+#[0-9]+'
+          URL_PATTERN='github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/(issues|pull)/[0-9]+'
+
+          {
+            printf '%s\n' "$PR_TITLE"
+            printf '%s\n' "$PR_BODY"
+            if [ "$EVENT_NAME" = "pull_request" ]; then
+              git log --format='%s%n%b' "origin/${PR_BASE_REF}..HEAD"
+            else
+              if [ -z "$PUSH_BEFORE" ] || [[ "$PUSH_BEFORE" =~ ^0+$ ]]; then
+                git log -1 --format='%s%n%b'
+              else
+                git log --format='%s%n%b' "${PUSH_BEFORE}..${PUSH_AFTER}"
+              fi
+            fi
+          } > /tmp/leak-check-text.txt
+
+          HIT=$(grep -oE "$PATTERN" /tmp/leak-check-text.txt | grep -vi "^${REPO_SELF}#" || true)
+          if [ -n "$HIT" ]; then
+            echo "::error::Reference courte vers un depot externe trouvee dans un message de commit ou une PR : $HIT"
+            echo "Decrire le canal/l'issue en prose plutot que par sa reference courte ou son URL."
+            exit 1
+          fi
+
+          HIT=$(grep -oE "$URL_PATTERN" /tmp/leak-check-text.txt | grep -vi "github.com/${REPO_SELF}/" || true)
+          if [ -n "$HIT" ]; then
+            echo "::error::URL vers une issue/PR externe trouvee dans un message de commit ou une PR : $HIT"
+            echo "Decrire le canal/l'issue en prose plutot que par sa reference courte ou son URL."
+            exit 1
+          fi
+
+          echo "Aucune reference courte ni URL vers un depot externe trouvee."
 
       - name: Check PowerShell syntax
         shell: pwsh
