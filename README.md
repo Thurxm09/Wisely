@@ -13,12 +13,12 @@
 ![WSL](https://img.shields.io/badge/WSL-2-orange?logo=linux&logoColor=white)
 ![License](https://img.shields.io/badge/License-GPL--v3-blue)
 
-🌐 **Site : [wisely-site-beta.vercel.app](https://wisely-site-beta.vercel.app)** · 🇬🇧 **[English quickstart](README.en.md)**
+🌐 **Site : [wsly.dev](https://www.wsly.dev/)** · 🇬🇧 **[English quickstart](README.en.md)**
 
 > **Wisely cherche des testeurs.** L'outil n'a encore été utilisé par personne d'autre que son
 > mainteneur, et c'est le problème que nous cherchons à corriger en premier. Si vous utilisez
 > WSL2, cinq minutes de votre temps valent plus que n'importe quel audit interne :
-> [essayer sans installer](#essayer-sans-installer) · [page testeurs](https://wisely-site-beta.vercel.app/fr/beta)
+> [essayer sans installer](#essayer-sans-installer) · [page testeurs](https://wsly.dev/fr/beta)
 
 ## Table des matières
 
