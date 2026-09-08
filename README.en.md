@@ -11,7 +11,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D4?logo=windows&logoColor=white)
 ![License](https://img.shields.io/badge/License-GPL--v3-blue)
 
-🌐 [wisely-site-beta.vercel.app](https://wisely-site-beta.vercel.app) · 🇫🇷 [Documentation complète en français](README.md)
+🌐 [wsly.dev](https://www.wsly.dev) · 🇫🇷 [Documentation complète en français](README.md)
 
 > **This is a short quickstart, not a translation.** The full documentation — architecture,
 > product rationale, decision records, resource model — lives in French in [`README.md`](README.md)
